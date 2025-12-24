@@ -3,20 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rapporti Clienti – Reperibilità</title>
+
+<!-- “Stile app” su iPhone -->
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Reperibilità">
-<link rel="apple-touch-icon" href="icon.png">
+
 <link rel="manifest" href="manifest.json">
-<title>Rapporti Clienti – Reperibilità</title>
 
 <style>
 body{font-family:system-ui;background:#f3f4f6;margin:0}
-.app{max-width:900px;margin:auto;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+.app{
+  max-width:900px;margin:auto;
+  padding:12px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+}
 .card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 10px rgba(0,0,0,.08)}
-textarea,input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #d1d5db;margin-bottom:6px;font-size:16px}
-button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer}
+textarea,input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #d1d5db;margin-bottom:8px;font-size:16px}
+button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
 .btn-secondary{background:#e5e7eb}
 .btn-danger{background:#dc2626;color:#fff}
@@ -36,16 +43,16 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
 .gc-rifiutato{background:#fee2e2}
 .gc-ripartita{background:#ede9fe}
 
-.gc-title{font-size:18px;font-weight:800}
-.gc-big{font-size:16px;font-weight:700;margin-top:6px}
+.gc-title{font-size:18px;font-weight:900}
+.gc-big{font-size:16px;font-weight:800;margin-top:6px}
 .gc-row{font-size:13px;margin-top:4px}
 .gc-link{cursor:pointer;text-decoration:underline;color:inherit}
 
 .gc-stato{
   position:absolute;top:10px;right:12px;
-  font-size:12px;font-weight:800;
-  padding:2px 6px;border-radius:999px;
-  background:rgba(255,255,255,.7);
+  font-size:12px;font-weight:900;
+  padding:3px 8px;border-radius:999px;
+  background:rgba(255,255,255,.75);
   cursor:pointer;
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
@@ -56,36 +63,19 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
   background:rgba(0,0,0,.45);
   display:flex; align-items:center; justify-content:center;
   z-index:9999;
+  padding:12px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
 }
 .modal{
-  width:92%; max-width:420px;
+  width:100%; max-width:420px;
   background:#fff;border-radius:14px;padding:12px;
 }
 .modal h3{margin:0 0 10px}
 .modal .row{margin-bottom:8px}
-.modal .btn-row{display:flex;gap:8px;justify-content:flex-end}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .small{font-size:12px}
 
-
-/* ===== INBOX SMS (FASE 2) ===== */
-.inbox-wrap{
-  background:#f9fafb;
-  border:1px dashed #d1d5db;
-  border-radius:14px;
-  padding:10px;
-  margin:10px 0;
-}
-.inbox-item{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:10px;
-  margin-top:8px;
-}
-.inbox-item.active{outline:3px solid rgba(37,99,235,.35)}
-.inbox-title{font-weight:900}
-.inbox-sub{font-size:12px;color:#6b7280;margin-top:4px}
-.inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 /* ===== FEEDBACK FASE 2 ===== */
 .fase2-attesa{
   background:#fff7ed;
@@ -105,6 +95,8 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
   background:#f3f4f6;
   z-index:9998;
   padding:12px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
   overflow:auto;
 }
 .cards-fullscreen #cards{
@@ -122,17 +114,26 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
   background:rgba(0,0,0,.05);
   margin:14px 0 8px;
 }
-.cards-fullscreen .group-title{
-  grid-column: 1 / -1;
+.cards-fullscreen .group-title{ grid-column: 1 / -1; }
+
+/* ===== INBOX SMS (FASE 2) ===== */
+.inbox-item{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:10px;
+  margin-top:8px;
 }
+.inbox-title{font-weight:900}
+.inbox-sub{font-size:12px;color:#6b7280;margin-top:4px}
+.inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 </style>
-<link rel="manifest" href="manifest.json">
 </head>
 
 <body>
 <div class="app">
 
-  <!-- FASE 1 -->
+  <!-- FASE 1 (manuale) -->
   <div class="card" id="fase1">
     <h3>1. Incolla SMS</h3>
     <textarea id="sms" placeholder="Incolla qui l'SMS..."></textarea>
@@ -141,7 +142,7 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
       <button id="initBtn" class="btn-primary">▶️ Inizializza</button>
       <button id="clearSmsBtn" class="btn-secondary">🧹 Pulisci SMS</button>
       <span id="led" class="led"></span>
-      <span id="ledTxt" style="font-weight:700;color:#6b7280">Non inizializzato</span>
+      <span id="ledTxt" style="font-weight:800;color:#6b7280">Non inizializzato</span>
     </div>
   </div>
 
@@ -149,7 +150,8 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
   <div class="card" id="fase2">
     <h3>2. Gestione</h3>
 
-    <div id="inboxWrap" class="inbox-wrap hidden">
+    <!-- Inbox SMS (automatico) -->
+    <div id="inboxWrap" class="hidden" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:14px;padding:10px;margin:10px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div style="font-weight:900">📩 SMS in attesa</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -159,7 +161,7 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
       </div>
       <div id="inboxList"></div>
       <div class="small" style="margin-top:8px;color:#6b7280">
-        Tocca <b>Apri</b> su un SMS, scegli <b>PROBLEMA</b> e <b>TIPO GESTIONE</b>, poi premi <b>Aggiungi</b>.
+        Tocca <b>Apri</b> su un SMS, poi seleziona <b>PROBLEMA</b> e <b>TIPO GESTIONE</b> e premi <b>Aggiungi</b>.
       </div>
     </div>
 
@@ -173,7 +175,7 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
       <input id="nome" placeholder="Nome">
       <input id="via" placeholder="Via">
       <input id="citta" placeholder="Comune">
-      <input id="telefono" placeholder="Telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ ]*">
+      <input id="telefono" placeholder="Telefono" type="tel" inputmode="numeric" autocomplete="tel">
       <input id="modello" placeholder="Modello caldaia">
     </div>
 
@@ -224,11 +226,14 @@ button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:p
 
 <div id="modalRoot" class="hidden"></div>
 
-<!-- PDF: offline (no CDN) -->
+<!-- Librerie PDF (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
 <script>
 function $(id){ return document.getElementById(id); }
-function pad2(n){ n = parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
+function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 
 var sms = $("sms");
 var initBtn = $("initBtn");
@@ -240,6 +245,7 @@ var fase1 = $("fase1");
 var fase2 = $("fase2");
 var fase3 = $("fase3");
 
+var manualModeBtn = $("manualModeBtn");
 var toggleCliente = $("toggleCliente");
 var newClientBtn = $("newClientBtn");
 var clearFieldsBtn = $("clearFieldsBtn");
@@ -259,176 +265,22 @@ var addBtn = $("addBtn");
 
 var cards = $("cards");
 var modalRoot = $("modalRoot");
+
+// Inbox SMS (fase 2)
 var inboxWrap = $("inboxWrap");
 var inboxList = $("inboxList");
 var inboxCount = $("inboxCount");
 var clearInboxBtn = $("clearInboxBtn");
-var manualModeBtn = $("manualModeBtn");
 
 var clients = [];
 var fase2Armed = false;
 
-/* ===== INBOX + MODALITÀ AUTOMATICA ===== */
+// Inbox: SMS in attesa
 var inbox = [];
 var selectedInboxIndex = -1;
-// manualMode=false => modalità automatica (FASE 1 nascosta + Nuovo cliente nascosto)
+
+// Modalità: false = AUTOMATICA (fase1 + nuovo cliente nascosti)
 var manualMode = false;
-
-function salvaInbox(){
-  try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
-}
-function caricaInbox(){
-  try{
-    var dati = localStorage.getItem("rapportiInbox");
-    if(dati) inbox = JSON.parse(dati) || [];
-  }catch(e){ inbox = []; }
-}
-function salvaMode(){
-  try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
-}
-function caricaMode(){
-  try{ manualMode = (localStorage.getItem("rapportiManualMode") === "1"); }catch(e){ manualMode=false; }
-}
-
-function updateInboxUI(){
-  if(!inboxWrap) return;
-
-  if(inbox.length){
-    inboxWrap.classList.remove("hidden");
-    if(inboxCount) inboxCount.textContent = inbox.length + " in attesa";
-  }else{
-    inboxWrap.classList.add("hidden");
-    if(inboxCount) inboxCount.textContent = "";
-  }
-
-  if(!inboxList) return;
-  inboxList.innerHTML = "";
-
-  for(var i=0;i<inbox.length;i++){
-    (function(idx){
-      var it = inbox[idx] || {};
-      var p = it.parsed || {};
-      var title = safeTrim(p.nome) || "SMS senza nome";
-      var addr = "";
-      if(p.via) addr += p.via;
-      if(p.citta) addr += (addr ? " - " : "") + p.citta;
-
-      var box = document.createElement("div");
-      box.className = "inbox-item" + (idx===selectedInboxIndex ? " active" : "");
-
-      var t = document.createElement("div");
-      t.className = "inbox-title";
-      t.textContent = title;
-      box.appendChild(t);
-
-      if(addr){
-        var s = document.createElement("div");
-        s.className = "inbox-sub";
-        s.textContent = "📍 " + addr;
-        box.appendChild(s);
-      }
-
-      if(it.raw){
-        var s2 = document.createElement("div");
-        s2.className = "inbox-sub";
-        s2.textContent = "✉️ " + String(it.raw).slice(0,140);
-        box.appendChild(s2);
-      }
-
-      var actions = document.createElement("div");
-      actions.className = "inbox-actions";
-
-      var open = document.createElement("button");
-      open.className = "btn-primary";
-      open.textContent = "Apri";
-      open.onclick = function(){
-        selectedInboxIndex = idx;
-
-        // compila campi
-        nome.value = p.nome || "";
-        via.value = p.via || "";
-        citta.value = p.citta || "";
-        telefono.value = p.telefono || "";
-        modello.value = p.modello || "";
-
-        // mostra cliente e vai in fase2
-        clienteBox.classList.remove("hidden");
-        setLedOk(true);
-        armFase2();
-        updateInboxUI();
-      };
-
-      var del = document.createElement("button");
-      del.className = "btn-danger";
-      del.textContent = "Elimina";
-      del.onclick = function(){
-        if(!confirm("Eliminare questo SMS dall'Inbox?")) return;
-        inbox.splice(idx,1);
-        if(selectedInboxIndex === idx) selectedInboxIndex = -1;
-        if(selectedInboxIndex > idx) selectedInboxIndex--;
-        salvaInbox();
-        updateInboxUI();
-      };
-
-      actions.appendChild(open);
-      actions.appendChild(del);
-      box.appendChild(actions);
-
-      inboxList.appendChild(box);
-    })(i);
-  }
-}
-
-function addInboxSms(rawText){
-  var raw = safeTrim(rawText);
-  if(!raw) return;
-
-  // evita duplicati identici consecutivi
-  if(inbox.length && inbox[inbox.length-1] && inbox[inbox.length-1].raw === raw){
-    updateInboxUI();
-    return;
-  }
-
-  inbox.push({
-    raw: raw,
-    parsed: parseSMS(raw),
-    ts: Date.now()
-  });
-
-  salvaInbox();
-  updateInboxUI();
-}
-
-function readSmsFromUrl(){
-  try{
-    var p = new URLSearchParams(window.location.search);
-    var smsParam = p.get("sms");
-    if(!smsParam) return;
-
-    smsParam = safeTrim(smsParam);
-    if(smsParam){
-      addInboxSms(smsParam);
-    }
-
-    // pulisci URL per evitare doppi inserimenti al refresh
-    try{ window.history.replaceState({}, "", window.location.pathname); }catch(e){}
-  }catch(e){}
-}
-
-function applyMode(){
-  if(!manualMode){
-    // automatico
-    fase1.classList.add("hidden");
-    if(newClientBtn) newClientBtn.classList.add("hidden");
-    if(manualModeBtn) manualModeBtn.textContent = "✍️ Modalità manuale";
-  }else{
-    // manuale
-    fase1.classList.remove("hidden");
-    if(newClientBtn) newClientBtn.classList.remove("hidden");
-    if(manualModeBtn) manualModeBtn.textContent = "✅ Manuale attivo";
-  }
-  updateInboxUI();
-}
 
 /* ===== SALVATAGGIO ===== */
 function salvaDati(){
@@ -439,6 +291,23 @@ function caricaDati(){
     var dati = localStorage.getItem("rapportiClienti");
     if(dati) clients = JSON.parse(dati);
   }catch(e){ clients=[]; }
+}
+
+function salvaInbox(){
+  try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
+}
+function caricaInbox(){
+  try{
+    var d = localStorage.getItem("rapportiInbox");
+    if(d) inbox = JSON.parse(d) || [];
+  }catch(e){ inbox=[]; }
+}
+
+function salvaModo(){
+  try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
+}
+function caricaModo(){
+  try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; }
 }
 
 /* ===== STATO LABEL ===== */
@@ -521,6 +390,162 @@ function setLedOk(on){
   }
 }
 
+/* ===== MODALITÀ MANUALE/AUTOMATICA ===== */
+function applyMode(){
+  if(manualMode){
+    // manuale ON: mostra fase 1 e nuovo cliente
+    fase1.classList.remove("hidden");
+    newClientBtn.classList.remove("hidden");
+    manualModeBtn.textContent = "⚡ Modalità automatica";
+  }else{
+    // automatico ON: nascondi fase 1 e nuovo cliente
+    fase1.classList.add("hidden");
+    newClientBtn.classList.add("hidden");
+    manualModeBtn.textContent = "✍️ Modalità manuale";
+  }
+  renderInbox();
+}
+
+if(manualModeBtn){
+  manualModeBtn.onclick = function(){
+    manualMode = !manualMode;
+    salvaModo();
+    applyMode();
+  };
+}
+
+/* ===== INBOX SMS (FASE 2) ===== */
+function addSmsToInbox(text){
+  text = safeTrim(text);
+  if(!text) return;
+  inbox.unshift({ raw: text, ts: Date.now() });
+  salvaInbox();
+  renderInbox();
+}
+
+function renderInbox(){
+  if(!inboxWrap) return;
+
+  if(!inbox.length){
+    inboxWrap.classList.add("hidden");
+    if(inboxList) inboxList.innerHTML = "";
+    if(inboxCount) inboxCount.textContent = "";
+    return;
+  }
+
+  inboxWrap.classList.remove("hidden");
+  inboxCount.textContent = inbox.length + " in attesa";
+  inboxList.innerHTML = "";
+
+  for(var i=0;i<inbox.length;i++){
+    (function(ii){
+      var it = inbox[ii];
+
+      var div = document.createElement("div");
+      div.className = "inbox-item";
+
+      var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
+
+      div.innerHTML =
+        '<div class="inbox-title">SMS • ' + preview + '</div>' +
+        '<div class="inbox-sub">Tocca Apri per gestirlo</div>';
+
+      var actions = document.createElement("div");
+      actions.className = "inbox-actions";
+
+      var openBtn = document.createElement("button");
+      openBtn.className = "btn-primary";
+      openBtn.textContent = "Apri";
+      openBtn.onclick = function(){
+        selectedInboxIndex = ii;
+        loadFromSmsText(it.raw);
+      };
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "btn-danger";
+      delBtn.textContent = "Elimina";
+      delBtn.onclick = function(){
+        inbox.splice(ii,1);
+        salvaInbox();
+        if(selectedInboxIndex === ii) selectedInboxIndex = -1;
+        renderInbox();
+      };
+
+      actions.appendChild(openBtn);
+      actions.appendChild(delBtn);
+      div.appendChild(actions);
+
+      inboxList.appendChild(div);
+    })(i);
+  }
+}
+
+if(clearInboxBtn){
+  clearInboxBtn.onclick = function(){
+    showModal(function(m){
+      m.innerHTML =
+        '<h3>Svuotare tutti gli SMS in attesa?</h3>'+
+        '<div class="btn-row">'+
+          '<button class="btn-secondary" id="noClr">NO</button>'+
+          '<button class="btn-danger" id="siClr">SI</button>'+
+        '</div>';
+      m.querySelector("#noClr").onclick = closeModal;
+      m.querySelector("#siClr").onclick = function(){
+        inbox = [];
+        selectedInboxIndex = -1;
+        salvaInbox();
+        renderInbox();
+        closeModal();
+      };
+    });
+  };
+}
+
+function loadFromSmsText(testo){
+  var d = parseSMS(testo);
+
+  clienteBox.classList.remove("hidden");
+
+  nome.value = d.nome;
+  via.value = d.via;
+  citta.value = d.citta;
+  telefono.value = d.telefono;
+  modello.value = d.modello;
+
+  // utile: lascia il testo SMS nelle note (puoi cancellarlo se vuoi)
+  note.value = testo;
+
+  setLedOk(true);
+  armFase2();
+}
+
+function handleIncomingSmsFromUrl(){
+  try{
+    var p = new URLSearchParams(window.location.search);
+    var smsText = p.get("sms");
+    if(!smsText) return;
+
+    // evita doppioni se l’URL resta in cache
+    var key = smsText.slice(0,80);
+    var last = localStorage.getItem("lastIncomingSmsKey") || "";
+    if(last === key){
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+    localStorage.setItem("lastIncomingSmsKey", key);
+
+    addSmsToInbox(smsText);
+
+    // torna in automatico
+    manualMode = false;
+    salvaModo();
+    applyMode();
+
+    // pulisci URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }catch(e){}
+}
+
 /* ===== RESET UI ===== */
 function resetCampiGestione(){
   nome.value="";
@@ -541,19 +566,18 @@ function resetUICompleta(){
   clienteBox.classList.add("hidden");
   disarmFase2();
   selectedInboxIndex = -1;
-  applyMode();
 }
 
- ===== */
+/* ===== FASE 1 (manuale) ===== */
 initBtn.onclick=function(){
-  selectedInboxIndex = -1;
-  updateInboxUI();
   var testo = safeTrim(sms.value);
   if(!testo){
     alert("Incolla prima l'SMS.");
     return;
   }
   var d = parseSMS(testo);
+
+  clienteBox.classList.remove("hidden");
   nome.value = d.nome;
   via.value = d.via;
   citta.value = d.citta;
@@ -563,46 +587,19 @@ initBtn.onclick=function(){
   setLedOk(true);
   armFase2();
 };
-
-clearSmsBtn.onclick=function(){
-  resetUICompleta();
-};
+clearSmsBtn.onclick=function(){ resetUICompleta(); };
 
 /* ===== FASE 2 ===== */
-if(manualModeBtn){
-  manualModeBtn.onclick = function(){
-    manualMode = !manualMode;
-    salvaMode();
-    applyMode();
-  };
-}
-
-if(clearInboxBtn){
-  clearInboxBtn.onclick = function(){
-    if(!inbox.length) return;
-    if(!confirm("Svuotare TUTTI gli SMS in attesa?")) return;
-    inbox = [];
-    selectedInboxIndex = -1;
-    salvaInbox();
-    updateInboxUI();
-  };
-}
-
 toggleCliente.onclick=function(){
   if(clienteBox.classList.contains("hidden")) clienteBox.classList.remove("hidden");
   else clienteBox.classList.add("hidden");
 };
 
 newClientBtn.onclick=function(){
-  selectedInboxIndex = -1;
-  updateInboxUI();
-  fase1.classList.add("hidden");
   clienteBox.classList.remove("hidden");
-
   resetCampiGestione();
   sms.value="";
   setLedOk(false);
-
   armFase2();
 };
 
@@ -621,6 +618,8 @@ stato.onchange=function(){ checkFase2Ready(); };
 
 clearFieldsBtn.onclick=function(){
   resetUICompleta();
+  // se sei in automatico, resta così; se sei in manuale, non tocchiamo
+  applyMode();
 };
 
 addBtn.onclick=function(){
@@ -649,17 +648,18 @@ addBtn.onclick=function(){
     note:note.value
   });
 
-  // Se il cliente arrivava da Inbox (SMS automatico), rimuovi l'SMS dalla lista di attesa
+  // se veniva dall’inbox, lo rimuove
   if(selectedInboxIndex >= 0){
     inbox.splice(selectedInboxIndex, 1);
     selectedInboxIndex = -1;
     salvaInbox();
-    updateInboxUI();
+    renderInbox();
   }
 
   salvaDati();
   render();
   resetUICompleta();
+  applyMode();
 };
 
 /* ===== MODALI ===== */
@@ -695,10 +695,7 @@ function buildCard(c, i){
     var s=document.createElement("select");
     s.innerHTML=stato.innerHTML;
     s.value=c.stato||"";
-
-    // compatibile al posto di replaceWith
     stEl.parentNode.replaceChild(s, stEl);
-
     try{ s.focus(); }catch(e){}
     s.onchange=function(){ c.stato=s.value; render(); salvaDati(); };
   };
@@ -723,14 +720,14 @@ function buildCard(c, i){
     d.appendChild(a);
   }
 
- if(c.telefono){
-  var clean = String(c.telefono).replace(/\s+/g,"");
-  var t=document.createElement("a");
-  t.className="gc-big gc-link";
-  t.textContent="📞 "+clean;
-  t.href = "tel:%2331%23" + clean;   // ✅ *31# davanti
-  d.appendChild(t);
-}
+  if(c.telefono){
+    var clean = String(c.telefono).replace(/\s+/g,"");
+    var t=document.createElement("a");
+    t.className="gc-big gc-link";
+    t.textContent="📞 "+clean;
+    t.href="tel:%2331%23"+clean;   // ✅ #31# davanti
+    d.appendChild(t);
+  }
 
   if(c.modello) d.appendChild(row("🔥 Modello: "+c.modello));
   if(c.problema) d.appendChild(row("❗ Problema: "+c.problema));
@@ -756,12 +753,12 @@ function buildCard(c, i){
   return d;
 }
 
-/* ===== RENDER (raggruppa per comune mantenendo ordine prima comparsa) ===== */
+/* ===== RENDER (raggruppa per comune) ===== */
 function render(){
   cards.innerHTML="";
 
   var order = [];
-  var groups = {}; // key -> {label, items:[]}
+  var groups = {};
 
   for(var idx=0; idx<clients.length; idx++){
     var c = clients[idx];
@@ -780,8 +777,8 @@ function render(){
     var g = groups[key2];
 
     var header = document.createElement("div");
-    header.className = "group-title";
-    header.textContent = "🏘️ " + g.label;
+    header.className="group-title";
+    header.textContent="🏘️ " + g.label;
     cards.appendChild(header);
 
     for(var j=0; j<g.items.length; j++){
@@ -790,22 +787,21 @@ function render(){
   }
 }
 
-/* ===== MODIFICA ===== */
+/* ===== MODIFICA (con PROBLEMA + ALTRO) ===== */
 function openEdit(i){
-  var c = clients[i] || {};
+  var c = clients[i];
 
   function esc(v){
-    return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    return String(v||"").replace(/"/g,"&quot;");
   }
 
   var probSel = "";
   var probAlt = "";
-  var p0 = String(c.problema||"");
-  if(p0.toUpperCase().indexOf("ALTRO:") === 0){
+  if((c.problema||"").toUpperCase().indexOf("ALTRO:") === 0){
     probSel = "ALTRO";
-    probAlt = p0.substring(6).replace(/^\s+/,"");
-  }else{
-    probSel = p0;
+    probAlt = (c.problema||"").substring(6).trim();
+  } else {
+    probSel = c.problema || "";
   }
 
   showModal(function(modal){
@@ -817,12 +813,14 @@ function openEdit(i){
       '<div class="row"><div class="small">Comune</div><input id="e_citta" value="'+esc(c.citta)+'"></div>'+
 
       '<div class="row"><div class="small">Telefono</div>'+
-        '<input id="e_telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ ]*" value="'+esc(c.telefono)+'">'+
+        '<input id="e_telefono" type="tel" inputmode="numeric" autocomplete="tel" value="'+esc(c.telefono)+'">'+
       '</div>'+
 
       '<div class="row"><div class="small">Modello caldaia</div><input id="e_modello" value="'+esc(c.modello)+'"></div>'+
 
-      '<div class="row"><div class="small">Problema</div><select id="e_problema">'+problema.innerHTML+'</select></div>'+
+      '<div class="row"><div class="small">Problema</div>'+
+        '<select id="e_problema">'+problema.innerHTML+'</select>'+
+      '</div>'+
 
       '<div class="row" id="e_prob_alt_row" style="display:none">'+
         '<div class="small">Scrivi il problema</div>'+
@@ -838,7 +836,7 @@ function openEdit(i){
       '</div>';
 
     modal.querySelector("#e_stato").value = c.stato || "";
-    modal.querySelector("#e_problema").value = probSel || "";
+    modal.querySelector("#e_problema").value = probSel;
 
     function refreshAlt(){
       var v = modal.querySelector("#e_problema").value;
@@ -866,7 +864,7 @@ function openEdit(i){
       if(p === "ALTRO"){
         var txt = safeTrim(modal.querySelector("#e_problemaAltro").value);
         c.problema = txt ? ("ALTRO: " + txt) : "ALTRO";
-      }else{
+      } else {
         c.problema = p;
       }
 
@@ -917,217 +915,115 @@ function cancellaTutto(){
   });
 }
 
-/* ===== PDF (offline, senza librerie esterne) =====
-   Nota: per compatibilità WebView: niente emoji nel PDF e testo normalizzato. */
-function _pdfNormAscii(s){
-  s = (s==null ? "" : String(s));
-  var map = {"à":"a","è":"e","é":"e","ì":"i","ò":"o","ù":"u","À":"A","È":"E","É":"E","Ì":"I","Ò":"O","Ù":"U","ç":"c","Ç":"C"};
-  var out = "";
-  for(var i=0;i<s.length;i++){ var ch=s.charAt(i); out += (map[ch]?map[ch]:ch); }
-  out = out.replace(/[^\x20-\x7E]/g, " "); // elimina non-ASCII (incluse emoji)
-  out = out.replace(/\s+/g," ").replace(/^\s+|\s+$/g,"");
-  return out;
-}
-function _pdfEscape(str){
-  str = _pdfNormAscii(str);
-  return str.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");
-}
-function _pad10(n){ n=String(n); while(n.length<10) n="0"+n; return n; }
-function _toUint8(str){
-  if(window.TextEncoder) return new TextEncoder().encode(str);
-  var arr=new Uint8Array(str.length);
-  for(var i=0;i<str.length;i++) arr[i]=str.charCodeAt(i)&0xFF;
-  return arr;
-}
-function _wrapText(txt, maxChars){
-  txt=_pdfNormAscii(txt);
-  if(!txt) return [""];
-  var words=txt.split(" ");
-  var lines=[], line="";
-  for(var i=0;i<words.length;i++){
-    var w=words[i]; if(!w) continue;
-    var cand = line ? (line+" "+w) : w;
-    if(cand.length<=maxChars){ line=cand; }
-    else{
-      if(line) lines.push(line);
-      while(w.length>maxChars){ lines.push(w.substring(0,maxChars)); w=w.substring(maxChars); }
-      line=w;
-    }
+/* ===== PDF ===== */
+function generaPdfWhatsapp(){
+  if(!clients.length){
+    alert("Nessun cliente");
+    return;
   }
-  if(line) lines.push(line);
-  return lines.length?lines:[""];
-}
-function _statoRgb01(s){
-  var map = {
-    telefonica:[220/255,252/255,231/255],
-    richiamare:[255/255,237/255,213/255],
-    da_richiamare:[254/255,249/255,195/255],
-    uscita:[219/255,234/255,254/255],
-    rifiutato:[254/255,226/255,226/255],
-    ripartita:[237/255,233/255,254/255],
-    "":[229/255,231/255,235/255],
-    none:[229/255,231/255,235/255]
-  };
-  return map[s||""] || [229/255,231/255,235/255];
-}
-function _buildRapportiPdfBytes(list){
-  var W=842, H=595; // A4 landscape (pt)
-  var left=30, top=40, bottom=30;
-  var yStart=H-top, lineH=12;
 
-  var giorni=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
-  var now=new Date();
-  var dataLabel = giorni[now.getDay()]+" "+pad2(now.getDate())+"/"+pad2(now.getMonth()+1)+"/"+String(now.getFullYear()).slice(-2);
-
-  function textCmd(x,y,size,txt){ return "BT /F1 "+size+" Tf 1 0 0 1 "+x+" "+y+" Tm ("+_pdfEscape(txt)+") Tj ET\n"; }
-  function rectCmd(x,y,w,h,rgb){ return rgb[0]+" "+rgb[1]+" "+rgb[2]+" rg "+x+" "+y+" "+w+" "+h+" re f\n"; }
-
-  var pages=[], cur="", y=yStart;
-  function newPage(){
-    if(cur) pages.push(cur);
-    cur=""; y=yStart;
-    cur += "0 0 0 rg\n";
-    cur += textCmd(left, y, 16, "RAPPORTI CLIENTI - REPERIBILITA");
-    y-=18;
-    cur += textCmd(left, y, 11, "Data: "+dataLabel);
-    y-=18;
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    alert("PDF non disponibile: jsPDF non caricato. Apri in Safari/Chrome con internet.");
+    return;
   }
-  newPage();
 
-  for(var i=0;i<list.length;i++){
-    var c=list[i]||{};
-    var indirizzo="";
-    if(c.via) indirizzo+=c.via;
-    if(c.citta) indirizzo+=(indirizzo?" - ":"")+c.citta;
+  var jsPDF = window.jspdf.jsPDF;
+  var pdf = new jsPDF("l", "mm", "a4");
 
-    if(y < bottom + 10*lineH) newPage();
+  if(typeof pdf.autoTable !== "function"){
+    alert("PDF non disponibile: AutoTable non caricato.");
+    return;
+  }
 
-    var rgb=_statoRgb01(c.stato);
-    cur += rectCmd(left-6, y-6, (W-2*left)+12, 18, rgb);
-    cur += "0 0 0 rg\n";
+  var giorni = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+  var now = new Date();
+  var dataLabel = giorni[now.getDay()] + " " + pad2(now.getDate()) + "/" + pad2(now.getMonth()+1) + "/" + String(now.getFullYear()).slice(-2);
 
-    function addField(label, value, maxChars){
-      maxChars = maxChars || 92;
-      var vLines=_wrapText(value, maxChars);
-      for(var k=0;k<vLines.length;k++){
-        var line=(k===0 ? (label+": "+vLines[k]) : ("          "+vLines[k]));
-        cur += textCmd(left, y, 11, line);
-        y -= lineH;
-        if(y < bottom + lineH) newPage();
+  function statoColor(s){
+    var map = {
+      telefonica:   [220,252,231],
+      richiamare:   [255,237,213],
+      da_richiamare:[254,249,195],
+      uscita:       [219,234,254],
+      rifiutato:    [254,226,226],
+      ripartita:    [237,233,254],
+      "":           [229,231,235],
+      none:         [229,231,235]
+    };
+    return map[s || ""] || [229,231,235];
+  }
+
+  pdf.setFontSize(14);
+  pdf.text("RAPPORTI CLIENTI – REPERIBILITÀ", 14, 14);
+  pdf.setFontSize(11);
+  pdf.text("Data: " + dataLabel, 14, 20);
+
+  var head = [[ "NOME","INDIRIZZO","TELEFONO","MODELLO","PROBLEMA","GESTIONE","NOTE" ]];
+
+  var body = [];
+  for(var i=0;i<clients.length;i++){
+    var c = clients[i];
+    var indirizzo = "";
+    if(c.via) indirizzo += c.via;
+    if(c.citta) indirizzo += (indirizzo ? " - " : "") + c.citta;
+
+    body.push([
+      c.nome || "",
+      indirizzo,
+      c.telefono || "",
+      c.modello || "",
+      c.problema || "",
+      statoLabel(c.stato),
+      c.note || ""
+    ]);
+  }
+
+  pdf.autoTable({
+    head: head,
+    body: body,
+    startY: 24,
+    styles: { fontSize: 9, cellPadding: 3, valign: "middle" },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: "bold" },
+    margin: { left: 10, right: 10 },
+    didParseCell: function (data) {
+      if (data.section === "body") {
+        var rowIndex = data.row.index;
+        var c = clients[rowIndex];
+        var s = c ? c.stato : "";
+        data.cell.styles.fillColor = statoColor(s);
+        data.cell.styles.textColor = [0,0,0];
       }
     }
+  });
 
-    addField("NOME", c.nome||"");
-    addField("INDIRIZZO", indirizzo);
-    addField("TELEFONO", c.telefono||"");
-    addField("MODELLO", c.modello||"");
-    addField("PROBLEMA", c.problema||"");
-    addField("GESTIONE", statoLabel(c.stato));
-    addField("NOTE", c.note||"");
-    y -= 6;
+  var blob = pdf.output("blob");
+  var file = null;
+  try { file = new File([blob], "rapporti-clienti.pdf", { type: "application/pdf" }); } catch(e){ file=null; }
+
+  if(file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
+    navigator.share({ files: [file] }).catch(function(){
+      openPdfFallback(pdf, blob);
+    });
+  } else {
+    openPdfFallback(pdf, blob);
   }
-  if(cur) pages.push(cur);
-
-  // Build PDF objects
-  var parts=[], offsets=[], pos=0;
-  function pushStr(s){ var b=_toUint8(s); parts.push(b); pos+=b.length; }
-  pushStr("%PDF-1.4\n");
-
-  var nPages=pages.length;
-  var firstPageObj=4, firstContentObj=5;
-  var lastObj = 3 + nPages*2;
-
-  function addObj(num, body){
-    offsets[num]=pos;
-    pushStr(num+" 0 obj\n"+body+"\nendobj\n");
-  }
-
-  addObj(1, "<< /Type /Catalog /Pages 2 0 R >>");
-  var kids=[];
-  for(var p=0;p<nPages;p++) kids.push((firstPageObj+p*2)+" 0 R");
-  addObj(2, "<< /Type /Pages /Kids [ "+kids.join(" ")+" ] /Count "+nPages+" >>");
-  addObj(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
-
-  for(var p2=0;p2<nPages;p2++){
-    var pageNum=firstPageObj+p2*2;
-    var contNum=firstContentObj+p2*2;
-    var content=pages[p2]||"";
-    var len=content.length;
-    addObj(contNum, "<< /Length "+len+" >>\nstream\n"+content+"endstream");
-    addObj(pageNum, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+W+" "+H+"] /Resources << /Font << /F1 3 0 R >> >> /Contents "+contNum+" 0 R >>");
-  }
-
-  var xrefPos=pos;
-  var xref="xref\n0 "+(lastObj+1)+"\n";
-  xref+="0000000000 65535 f \n";
-  for(var iObj=1;iObj<=lastObj;iObj++){
-    xref += _pad10(offsets[iObj]||0)+" 00000 n \n";
-  }
-  pushStr(xref);
-  pushStr("trailer\n<< /Size "+(lastObj+1)+" /Root 1 0 R >>\nstartxref\n"+xrefPos+"\n%%EOF\n");
-
-  var out=new Uint8Array(pos), off=0;
-  for(var iPart=0;iPart<parts.length;iPart++){ out.set(parts[iPart], off); off+=parts[iPart].length; }
-  return out;
 }
 
-function _showPdfOverlay(bytes, filename){
-  filename = filename || "rapporti-clienti.pdf";
-  var blob=new Blob([bytes], {type:"application/pdf"});
-  var url=URL.createObjectURL(blob);
-
-  var ov=document.createElement("div");
-  ov.style.position="fixed";
-  ov.style.left="0"; ov.style.top="0"; ov.style.right="0"; ov.style.bottom="0";
-  ov.style.background="#111827";
-  ov.style.zIndex="10000";
-  ov.innerHTML =
-    '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;background:#0b1220;color:#fff;position:sticky;top:0;z-index:1">'+
-      '<div style="font-weight:800">PDF</div>'+
-      '<div style="display:flex;gap:8px">'+
-        '<button id="pdfShareBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#2563eb;color:#fff">Condividi</button>'+
-        '<button id="pdfDlBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#e5e7eb;color:#111827">Scarica</button>'+
-        '<button id="pdfCloseBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#dc2626;color:#fff">Chiudi</button>'+
-      '</div>'+
-    '</div>'+
-    '<iframe style="width:100%;height:calc(100% - 54px);border:0;background:#fff" src="'+url+'"></iframe>';
-  document.body.appendChild(ov);
-
-  function cleanup(){
-    try{ URL.revokeObjectURL(url); }catch(e){}
-    try{ ov.remove(); }catch(e2){ ov.parentNode && ov.parentNode.removeChild(ov); }
-  }
-  ov.querySelector("#pdfCloseBtn").onclick = cleanup;
-
-  ov.querySelector("#pdfDlBtn").onclick = function(){
-    try{
-      var a=document.createElement("a");
-      a.href=url; a.download=filename;
-      document.body.appendChild(a); a.click(); a.remove();
-    }catch(e){ window.open(url, "_blank"); }
-  };
-
-  ov.querySelector("#pdfShareBtn").onclick = function(){
-    var file=null;
-    try{ file=new File([blob], filename, {type:"application/pdf"}); }catch(e){ file=null; }
-    if(file && navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file]}).catch(function(){ alert("Condivisione annullata. Usa Scarica."); });
-    } else {
-      alert("Condivisione diretta non supportata qui. Premi Scarica e poi invia su WhatsApp.");
-    }
-  };
-}
-
-function generaPdfWhatsapp(){
-  if(!clients.length){ alert("Nessun cliente"); return; }
+function openPdfFallback(pdf, blob){
   try{
-    var bytes=_buildRapportiPdfBytes(clients);
-    _showPdfOverlay(bytes, "rapporti-clienti.pdf");
-  }catch(e){
-    alert("Errore PDF: "+(e && e.message ? e.message : e));
+    var url = URL.createObjectURL(blob);
+    var w = window.open(url, "_blank");
+    if(!w) window.location.href = url;
+    return;
+  }catch(e){}
+
+  try{
+    var dataUri = pdf.output("datauristring");
+    window.location.href = dataUri;
+  }catch(e2){
+    try{ pdf.save("rapporti-clienti.pdf"); }catch(e3){ alert("Impossibile aprire il PDF su questo browser."); }
   }
 }
-
 
 /* ===== FULLSCREEN FASE 3 ===== */
 function toggleCardsFullscreen(){
@@ -1143,20 +1039,31 @@ function toggleCardsFullscreen(){
 /* INIT */
 caricaDati();
 caricaInbox();
-caricaMode();
+caricaModo();
+
+// default: AUTOMATICO (se non hai mai salvato manuale)
+if(localStorage.getItem("rapportiManualMode") === null){
+  manualMode = false;
+  salvaModo();
+}
+
 render();
+renderInbox();
 applyMode();
-readSmsFromUrl();
-updateInboxUI();
+
+// se l’app viene aperta con ?sms=TESTO... aggiunge in inbox
+handleIncomingSmsFromUrl();
 </script>
 
 <script>
-  // PWA: service worker (cache base, migliora aggiornamenti su iPhone)
+  // PWA: service worker (aumenta SW_VER per forzare update)
+  const SW_VER = 9;
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("service-worker.js").catch(function(){});
+      navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
     });
   }
 </script>
+
 </body>
 </html>
