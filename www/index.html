@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Reperibilità">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Rapporti Clienti – Reperibilità</title>
+
+<style>
+body{font-family:system-ui;background:#f3f4f6;margin:0}
+.app{max-width:900px;margin:auto;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 10px rgba(0,0,0,.08)}
+textarea,input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #d1d5db;margin-bottom:6px;font-size:16px}
+button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#e5e7eb}
+.btn-danger{background:#dc2626;color:#fff}
+.hidden{display:none}
+
+/* LED più visibile */
+.led{width:14px;height:14px;border-radius:50%;background:#9ca3af;display:inline-block;margin-left:8px;vertical-align:middle}
+.led.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25), 0 0 14px rgba(34,197,94,.6)}
+
+/* CARD */
+.gc-card{border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
+.gc-none{background:#e5e7eb}
+.gc-telefonica{background:#dcfce7}
+.gc-richiamare{background:#ffedd5}
+.gc-da_richiamare{background:#fef9c3}
+.gc-uscita{background:#dbeafe}
+.gc-rifiutato{background:#fee2e2}
+.gc-ripartita{background:#ede9fe}
+
+.gc-title{font-size:18px;font-weight:800}
+.gc-big{font-size:16px;font-weight:700;margin-top:6px}
+.gc-row{font-size:13px;margin-top:4px}
+.gc-link{cursor:pointer;text-decoration:underline;color:inherit}
+
+.gc-stato{
+  position:absolute;top:10px;right:12px;
+  font-size:12px;font-weight:800;
+  padding:2px 6px;border-radius:999px;
+  background:rgba(255,255,255,.7);
+  cursor:pointer;
+}
+.gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
+
+/* MODALE */
+.modal-backdrop{
+  position:fixed;left:0;top:0;right:0;bottom:0;
+  background:rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999;
+}
+.modal{
+  width:92%; max-width:420px;
+  background:#fff;border-radius:14px;padding:12px;
+}
+.modal h3{margin:0 0 10px}
+.modal .row{margin-bottom:8px}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end}
+.small{font-size:12px}
+
+
+/* ===== INBOX SMS (FASE 2) ===== */
+.inbox-wrap{
+  background:#f9fafb;
+  border:1px dashed #d1d5db;
+  border-radius:14px;
+  padding:10px;
+  margin:10px 0;
+}
+.inbox-item{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:10px;
+  margin-top:8px;
+}
+.inbox-item.active{outline:3px solid rgba(37,99,235,.35)}
+.inbox-title{font-weight:900}
+.inbox-sub{font-size:12px;color:#6b7280;margin-top:4px}
+.inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+/* ===== FEEDBACK FASE 2 ===== */
+.fase2-attesa{
+  background:#fff7ed;
+  outline:3px solid rgba(251,146,60,.65);
+  box-shadow:0 8px 20px rgba(251,146,60,.18);
+}
+.fase2-ok{
+  background:#f0fdf4;
+  outline:3px solid rgba(34,197,94,.65);
+  box-shadow:0 8px 20px rgba(34,197,94,.18);
+}
+
+/* ===== FULLSCREEN FASE 3 ===== */
+.cards-fullscreen{
+  position:fixed;
+  left:0; top:0; right:0; bottom:0;
+  background:#f3f4f6;
+  z-index:9998;
+  padding:12px;
+  overflow:auto;
+}
+.cards-fullscreen #cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:12px;
+}
+
+/* ===== GRUPPI PER COMUNE (FASE 3) ===== */
+.group-title{
+  font-size:14px;
+  font-weight:900;
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.05);
+  margin:14px 0 8px;
+}
+.cards-fullscreen .group-title{
+  grid-column: 1 / -1;
+}
+</style>
+<link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+<div class="app">
+
+  <!-- FASE 1 -->
+  <div class="card" id="fase1">
+    <h3>1. Incolla SMS</h3>
+    <textarea id="sms" placeholder="Incolla qui l'SMS..."></textarea>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button id="initBtn" class="btn-primary">▶️ Inizializza</button>
+      <button id="clearSmsBtn" class="btn-secondary">🧹 Pulisci SMS</button>
+      <span id="led" class="led"></span>
+      <span id="ledTxt" style="font-weight:700;color:#6b7280">Non inizializzato</span>
+    </div>
+  </div>
+
+  <!-- FASE 2 -->
+  <div class="card" id="fase2">
+    <h3>2. Gestione</h3>
+
+    <div id="inboxWrap" class="inbox-wrap hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-weight:900">📩 SMS in attesa</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="inboxCount" class="small" style="color:#6b7280"></span>
+          <button id="clearInboxBtn" class="btn-danger">🗑️ Svuota</button>
+        </div>
+      </div>
+      <div id="inboxList"></div>
+      <div class="small" style="margin-top:8px;color:#6b7280">
+        Tocca <b>Apri</b> su un SMS, scegli <b>PROBLEMA</b> e <b>TIPO GESTIONE</b>, poi premi <b>Aggiungi</b>.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <button id="manualModeBtn" class="btn-secondary">✍️ Modalità manuale</button>
+      <button id="toggleCliente" class="btn-secondary">👁️ Mostra cliente</button>
+      <button id="newClientBtn" class="btn-primary">➕ Nuovo cliente</button>
+    </div>
+
+    <div id="clienteBox" class="hidden">
+      <input id="nome" placeholder="Nome">
+      <input id="via" placeholder="Via">
+      <input id="citta" placeholder="Comune">
+      <input id="telefono" placeholder="Telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ ]*">
+      <input id="modello" placeholder="Modello caldaia">
+    </div>
+
+    <select id="problema">
+      <option value="">-- PROBLEMA --</option>
+      <option>NO ACQUA CALDA</option>
+      <option>RISCALDAMENTO NON VA</option>
+      <option>RUMOROSA</option>
+      <option>PERDITA D'ACQUA</option>
+      <option>TUTTO FERMO</option>
+      <option>ALTRO</option>
+    </select>
+
+    <input id="problemaAltro" class="hidden" placeholder="Scrivi il problema...">
+
+    <select id="stato">
+      <option value="">-- TIPO GESTIONE --</option>
+      <option value="telefonica">GESTITA AL TELEFONO</option>
+      <option value="richiamare">RICHIAMANO LORO</option>
+      <option value="da_richiamare">DA RICHIAMARE</option>
+      <option value="uscita">USCITA</option>
+      <option value="rifiutato">RIFIUTATO</option>
+      <option value="ripartita">RIPARTITA</option>
+    </select>
+
+    <input id="note" placeholder="Note">
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="addBtn" class="btn-primary">➕ Aggiungi alla lista</button>
+      <button id="clearFieldsBtn" class="btn-secondary">🧹 Pulisci campi</button>
+    </div>
+  </div>
+
+  <!-- FASE 3 -->
+  <div class="card" id="fase3">
+    <h3>3. Clienti</h3>
+
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="generaPdfWhatsapp()">📤 PDF WhatsApp</button>
+      <button class="btn-secondary" id="fsBtn" onclick="toggleCardsFullscreen()">🖥️ Schermo intero</button>
+      <button class="btn-danger" onclick="cancellaTutto()">🗑️ Elimina tutto</button>
+    </div>
+
+    <div id="cards"></div>
+  </div>
+
+</div>
+
+<div id="modalRoot" class="hidden"></div>
+
+<!-- PDF: offline (no CDN) -->
+<script>
+function $(id){ return document.getElementById(id); }
+function pad2(n){ n = parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
+function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
+
+var sms = $("sms");
+var initBtn = $("initBtn");
+var clearSmsBtn = $("clearSmsBtn");
+var led = $("led");
+var ledTxt = $("ledTxt");
+
+var fase1 = $("fase1");
+var fase2 = $("fase2");
+var fase3 = $("fase3");
+
+var toggleCliente = $("toggleCliente");
+var newClientBtn = $("newClientBtn");
+var clearFieldsBtn = $("clearFieldsBtn");
+var clienteBox = $("clienteBox");
+
+var nome = $("nome");
+var via = $("via");
+var citta = $("citta");
+var telefono = $("telefono");
+var modello = $("modello");
+
+var problema = $("problema");
+var problemaAltro = $("problemaAltro");
+var stato = $("stato");
+var note = $("note");
+var addBtn = $("addBtn");
+
+var cards = $("cards");
+var modalRoot = $("modalRoot");
+var inboxWrap = $("inboxWrap");
+var inboxList = $("inboxList");
+var inboxCount = $("inboxCount");
+var clearInboxBtn = $("clearInboxBtn");
+var manualModeBtn = $("manualModeBtn");
+
+var clients = [];
+var fase2Armed = false;
+
+/* ===== INBOX + MODALITÀ AUTOMATICA ===== */
+var inbox = [];
+var selectedInboxIndex = -1;
+// manualMode=false => modalità automatica (FASE 1 nascosta + Nuovo cliente nascosto)
+var manualMode = false;
+
+function salvaInbox(){
+  try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
+}
+function caricaInbox(){
+  try{
+    var dati = localStorage.getItem("rapportiInbox");
+    if(dati) inbox = JSON.parse(dati) || [];
+  }catch(e){ inbox = []; }
+}
+function salvaMode(){
+  try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
+}
+function caricaMode(){
+  try{ manualMode = (localStorage.getItem("rapportiManualMode") === "1"); }catch(e){ manualMode=false; }
+}
+
+function updateInboxUI(){
+  if(!inboxWrap) return;
+
+  if(inbox.length){
+    inboxWrap.classList.remove("hidden");
+    if(inboxCount) inboxCount.textContent = inbox.length + " in attesa";
+  }else{
+    inboxWrap.classList.add("hidden");
+    if(inboxCount) inboxCount.textContent = "";
+  }
+
+  if(!inboxList) return;
+  inboxList.innerHTML = "";
+
+  for(var i=0;i<inbox.length;i++){
+    (function(idx){
+      var it = inbox[idx] || {};
+      var p = it.parsed || {};
+      var title = safeTrim(p.nome) || "SMS senza nome";
+      var addr = "";
+      if(p.via) addr += p.via;
+      if(p.citta) addr += (addr ? " - " : "") + p.citta;
+
+      var box = document.createElement("div");
+      box.className = "inbox-item" + (idx===selectedInboxIndex ? " active" : "");
+
+      var t = document.createElement("div");
+      t.className = "inbox-title";
+      t.textContent = title;
+      box.appendChild(t);
+
+      if(addr){
+        var s = document.createElement("div");
+        s.className = "inbox-sub";
+        s.textContent = "📍 " + addr;
+        box.appendChild(s);
+      }
+
+      if(it.raw){
+        var s2 = document.createElement("div");
+        s2.className = "inbox-sub";
+        s2.textContent = "✉️ " + String(it.raw).slice(0,140);
+        box.appendChild(s2);
+      }
+
+      var actions = document.createElement("div");
+      actions.className = "inbox-actions";
+
+      var open = document.createElement("button");
+      open.className = "btn-primary";
+      open.textContent = "Apri";
+      open.onclick = function(){
+        selectedInboxIndex = idx;
+
+        // compila campi
+        nome.value = p.nome || "";
+        via.value = p.via || "";
+        citta.value = p.citta || "";
+        telefono.value = p.telefono || "";
+        modello.value = p.modello || "";
+
+        // mostra cliente e vai in fase2
+        clienteBox.classList.remove("hidden");
+        setLedOk(true);
+        armFase2();
+        updateInboxUI();
+      };
+
+      var del = document.createElement("button");
+      del.className = "btn-danger";
+      del.textContent = "Elimina";
+      del.onclick = function(){
+        if(!confirm("Eliminare questo SMS dall'Inbox?")) return;
+        inbox.splice(idx,1);
+        if(selectedInboxIndex === idx) selectedInboxIndex = -1;
+        if(selectedInboxIndex > idx) selectedInboxIndex--;
+        salvaInbox();
+        updateInboxUI();
+      };
+
+      actions.appendChild(open);
+      actions.appendChild(del);
+      box.appendChild(actions);
+
+      inboxList.appendChild(box);
+    })(i);
+  }
+}
+
+function addInboxSms(rawText){
+  var raw = safeTrim(rawText);
+  if(!raw) return;
+
+  // evita duplicati identici consecutivi
+  if(inbox.length && inbox[inbox.length-1] && inbox[inbox.length-1].raw === raw){
+    updateInboxUI();
+    return;
+  }
+
+  inbox.push({
+    raw: raw,
+    parsed: parseSMS(raw),
+    ts: Date.now()
+  });
+
+  salvaInbox();
+  updateInboxUI();
+}
+
+function readSmsFromUrl(){
+  try{
+    var p = new URLSearchParams(window.location.search);
+    var smsParam = p.get("sms");
+    if(!smsParam) return;
+
+    smsParam = safeTrim(smsParam);
+    if(smsParam){
+      addInboxSms(smsParam);
+    }
+
+    // pulisci URL per evitare doppi inserimenti al refresh
+    try{ window.history.replaceState({}, "", window.location.pathname); }catch(e){}
+  }catch(e){}
+}
+
+function applyMode(){
+  if(!manualMode){
+    // automatico
+    fase1.classList.add("hidden");
+    if(newClientBtn) newClientBtn.classList.add("hidden");
+    if(manualModeBtn) manualModeBtn.textContent = "✍️ Modalità manuale";
+  }else{
+    // manuale
+    fase1.classList.remove("hidden");
+    if(newClientBtn) newClientBtn.classList.remove("hidden");
+    if(manualModeBtn) manualModeBtn.textContent = "✅ Manuale attivo";
+  }
+  updateInboxUI();
+}
+
+/* ===== SALVATAGGIO ===== */
+function salvaDati(){
+  try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){}
+}
+function caricaDati(){
+  try{
+    var dati = localStorage.getItem("rapportiClienti");
+    if(dati) clients = JSON.parse(dati);
+  }catch(e){ clients=[]; }
+}
+
+/* ===== STATO LABEL ===== */
+function statoLabel(s){
+  var map = {
+    telefonica:"GESTITA AL TELEFONO",
+    richiamare:"RICHIAMANO LORO",
+    da_richiamare:"DA RICHIAMARE",
+    uscita:"USCITA",
+    rifiutato:"RIFIUTATO",
+    ripartita:"RIPARTITA"
+  };
+  return map[s] || "DA DECIDERE";
+}
+
+/* ===== PARSE SMS ===== */
+function parseSMS(t){
+  var r={nome:"",via:"",citta:"",telefono:"",modello:""};
+  t = t || "";
+  var low=t.toLowerCase();
+
+  var tel=t.match(/tel\.?\s*([0-9 ]+)/i);
+  if(tel) r.telefono=tel[1].replace(/\s+/g,"");
+
+  var m=t.match(/modello\s*(.*?)\s*id\b/i);
+  if(m) r.modello=safeTrim(m[1]);
+
+  var idx=low.indexOf(" via ");
+  if(idx!==-1){
+    r.nome=safeTrim(t.substring(0,idx));
+    var rest=t.substring(idx+1);
+    var civ=rest.match(/(\d+)/);
+    if(civ){
+      r.via=safeTrim(rest.substring(0,civ.index+civ[1].length));
+      r.citta=safeTrim(rest.substring(civ.index+civ[1].length).replace(/tel.*/i,""));
+    }
+  }
+  return r;
+}
+
+/* ===== FEEDBACK FASE 2 ===== */
+function setFase2State(state){
+  fase2.classList.remove("fase2-attesa","fase2-ok");
+  if(state==="attesa") fase2.classList.add("fase2-attesa");
+  if(state==="ok") fase2.classList.add("fase2-ok");
+}
+function armFase2(){
+  fase2Armed = true;
+  setFase2State("attesa");
+  checkFase2Ready();
+  try{ fase2.scrollIntoView(true); }catch(e){}
+}
+function disarmFase2(){
+  fase2Armed = false;
+  setFase2State("normal");
+}
+function checkFase2Ready(){
+  if(!fase2Armed) return;
+
+  var problemOk = !!problema.value;
+  if(problema.value === "ALTRO"){
+    problemOk = safeTrim(problemaAltro.value).length > 0;
+  }
+  var statoOk = !!stato.value;
+
+  if(problemOk && statoOk) setFase2State("ok");
+  else setFase2State("attesa");
+}
+
+/* ===== LED ===== */
+function setLedOk(on){
+  if(on){
+    led.classList.add("ok");
+    ledTxt.textContent = "✅ Inizializzato";
+    ledTxt.style.color = "#16a34a";
+  }else{
+    led.classList.remove("ok");
+    ledTxt.textContent = "Non inizializzato";
+    ledTxt.style.color = "#6b7280";
+  }
+}
+
+/* ===== RESET UI ===== */
+function resetCampiGestione(){
+  nome.value="";
+  via.value="";
+  citta.value="";
+  telefono.value="";
+  modello.value="";
+  problema.value="";
+  problemaAltro.value="";
+  problemaAltro.classList.add("hidden");
+  stato.value="";
+  note.value="";
+}
+function resetUICompleta(){
+  resetCampiGestione();
+  sms.value="";
+  setLedOk(false);
+  clienteBox.classList.add("hidden");
+  disarmFase2();
+  selectedInboxIndex = -1;
+  applyMode();
+}
+
+ ===== */
+initBtn.onclick=function(){
+  selectedInboxIndex = -1;
+  updateInboxUI();
+  var testo = safeTrim(sms.value);
+  if(!testo){
+    alert("Incolla prima l'SMS.");
+    return;
+  }
+  var d = parseSMS(testo);
+  nome.value = d.nome;
+  via.value = d.via;
+  citta.value = d.citta;
+  telefono.value = d.telefono;
+  modello.value = d.modello;
+
+  setLedOk(true);
+  armFase2();
+};
+
+clearSmsBtn.onclick=function(){
+  resetUICompleta();
+};
+
+/* ===== FASE 2 ===== */
+if(manualModeBtn){
+  manualModeBtn.onclick = function(){
+    manualMode = !manualMode;
+    salvaMode();
+    applyMode();
+  };
+}
+
+if(clearInboxBtn){
+  clearInboxBtn.onclick = function(){
+    if(!inbox.length) return;
+    if(!confirm("Svuotare TUTTI gli SMS in attesa?")) return;
+    inbox = [];
+    selectedInboxIndex = -1;
+    salvaInbox();
+    updateInboxUI();
+  };
+}
+
+toggleCliente.onclick=function(){
+  if(clienteBox.classList.contains("hidden")) clienteBox.classList.remove("hidden");
+  else clienteBox.classList.add("hidden");
+};
+
+newClientBtn.onclick=function(){
+  selectedInboxIndex = -1;
+  updateInboxUI();
+  fase1.classList.add("hidden");
+  clienteBox.classList.remove("hidden");
+
+  resetCampiGestione();
+  sms.value="";
+  setLedOk(false);
+
+  armFase2();
+};
+
+problema.onchange=function(){
+  if(problema.value === "ALTRO"){
+    problemaAltro.classList.remove("hidden");
+    try{ problemaAltro.focus(); }catch(e){}
+  }else{
+    problemaAltro.value="";
+    problemaAltro.classList.add("hidden");
+  }
+  checkFase2Ready();
+};
+problemaAltro.oninput=function(){ checkFase2Ready(); };
+stato.onchange=function(){ checkFase2Ready(); };
+
+clearFieldsBtn.onclick=function(){
+  resetUICompleta();
+};
+
+addBtn.onclick=function(){
+  var problemOk = !!problema.value;
+  if(problema.value === "ALTRO"){
+    problemOk = safeTrim(problemaAltro.value).length > 0;
+  }
+  if(!problemOk || !stato.value){
+    alert("Seleziona PROBLEMA e TIPO GESTIONE. Se scegli ALTRO, scrivi il problema.");
+    return;
+  }
+
+  var problemaFinale = problema.value;
+  if(problema.value === "ALTRO"){
+    problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
+  }
+
+  clients.push({
+    nome:nome.value,
+    via:via.value,
+    citta:citta.value,
+    telefono:telefono.value,
+    modello:modello.value,
+    problema:problemaFinale,
+    stato:stato.value,
+    note:note.value
+  });
+
+  // Se il cliente arrivava da Inbox (SMS automatico), rimuovi l'SMS dalla lista di attesa
+  if(selectedInboxIndex >= 0){
+    inbox.splice(selectedInboxIndex, 1);
+    selectedInboxIndex = -1;
+    salvaInbox();
+    updateInboxUI();
+  }
+
+  salvaDati();
+  render();
+  resetUICompleta();
+};
+
+/* ===== MODALI ===== */
+function showModal(build){
+  modalRoot.innerHTML="";
+  modalRoot.classList.remove("hidden");
+  var b=document.createElement("div");
+  b.className="modal-backdrop";
+  var m=document.createElement("div");
+  m.className="modal";
+  build(m);
+  b.appendChild(m);
+  modalRoot.appendChild(b);
+}
+function closeModal(){ modalRoot.classList.add("hidden"); modalRoot.innerHTML=""; }
+
+/* ===== RENDER HELPERS ===== */
+function row(t){
+  var r=document.createElement("div");
+  r.className="gc-row";
+  r.textContent=t;
+  return r;
+}
+
+function buildCard(c, i){
+  var d=document.createElement("div");
+  d.className="gc-card gc-"+(c.stato||"none");
+
+  var stEl=document.createElement("span");
+  stEl.className="gc-stato";
+  stEl.textContent=statoLabel(c.stato);
+  stEl.onclick=function(){
+    var s=document.createElement("select");
+    s.innerHTML=stato.innerHTML;
+    s.value=c.stato||"";
+
+    // compatibile al posto di replaceWith
+    stEl.parentNode.replaceChild(s, stEl);
+
+    try{ s.focus(); }catch(e){}
+    s.onchange=function(){ c.stato=s.value; render(); salvaDati(); };
+  };
+  d.appendChild(stEl);
+
+  var title=document.createElement("div");
+  title.className="gc-title";
+  title.textContent=c.nome||"";
+  d.appendChild(title);
+
+  var addr = "";
+  if(c.via) addr += c.via;
+  if(c.citta) addr += (addr ? " - " : "") + c.citta;
+
+  if(addr){
+    var a=document.createElement("div");
+    a.className="gc-big gc-link";
+    a.textContent="📍 "+addr;
+    a.onclick=function(){
+      window.open("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(addr));
+    };
+    d.appendChild(a);
+  }
+
+ if(c.telefono){
+  var clean = String(c.telefono).replace(/\s+/g,"");
+  var t=document.createElement("a");
+  t.className="gc-big gc-link";
+  t.textContent="📞 "+clean;
+  t.href = "tel:%2331%23" + clean;   // ✅ *31# davanti
+  d.appendChild(t);
+}
+
+  if(c.modello) d.appendChild(row("🔥 Modello: "+c.modello));
+  if(c.problema) d.appendChild(row("❗ Problema: "+c.problema));
+  if(c.note) d.appendChild(row("📝 Note: "+c.note));
+
+  var act=document.createElement("div");
+  act.className="gc-actions";
+
+  var ed=document.createElement("button");
+  ed.className="btn-secondary";
+  ed.textContent="✏️ Modifica";
+  ed.onclick=function(){ openEdit(i); };
+
+  var del=document.createElement("button");
+  del.className="btn-danger";
+  del.textContent="🗑️ Elimina";
+  del.onclick=function(){ openDelete(i); };
+
+  act.appendChild(ed);
+  act.appendChild(del);
+  d.appendChild(act);
+
+  return d;
+}
+
+/* ===== RENDER (raggruppa per comune mantenendo ordine prima comparsa) ===== */
+function render(){
+  cards.innerHTML="";
+
+  var order = [];
+  var groups = {}; // key -> {label, items:[]}
+
+  for(var idx=0; idx<clients.length; idx++){
+    var c = clients[idx];
+    var raw = safeTrim(c.citta);
+    var key = raw ? raw.toLowerCase() : "__no_city__";
+
+    if(!groups[key]){
+      groups[key] = { label: raw || "SENZA COMUNE", items: [] };
+      order.push(key);
+    }
+    groups[key].items.push({ c: c, idx: idx });
+  }
+
+  for(var k=0; k<order.length; k++){
+    var key2 = order[k];
+    var g = groups[key2];
+
+    var header = document.createElement("div");
+    header.className = "group-title";
+    header.textContent = "🏘️ " + g.label;
+    cards.appendChild(header);
+
+    for(var j=0; j<g.items.length; j++){
+      cards.appendChild(buildCard(g.items[j].c, g.items[j].idx));
+    }
+  }
+}
+
+/* ===== MODIFICA ===== */
+function openEdit(i){
+  var c = clients[i] || {};
+
+  function esc(v){
+    return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  var probSel = "";
+  var probAlt = "";
+  var p0 = String(c.problema||"");
+  if(p0.toUpperCase().indexOf("ALTRO:") === 0){
+    probSel = "ALTRO";
+    probAlt = p0.substring(6).replace(/^\s+/,"");
+  }else{
+    probSel = p0;
+  }
+
+  showModal(function(modal){
+    modal.innerHTML =
+      '<h3>Modifica cliente</h3>'+
+
+      '<div class="row"><div class="small">Nome</div><input id="e_nome" value="'+esc(c.nome)+'"></div>'+
+      '<div class="row"><div class="small">Via</div><input id="e_via" value="'+esc(c.via)+'"></div>'+
+      '<div class="row"><div class="small">Comune</div><input id="e_citta" value="'+esc(c.citta)+'"></div>'+
+
+      '<div class="row"><div class="small">Telefono</div>'+
+        '<input id="e_telefono" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9+ ]*" value="'+esc(c.telefono)+'">'+
+      '</div>'+
+
+      '<div class="row"><div class="small">Modello caldaia</div><input id="e_modello" value="'+esc(c.modello)+'"></div>'+
+
+      '<div class="row"><div class="small">Problema</div><select id="e_problema">'+problema.innerHTML+'</select></div>'+
+
+      '<div class="row" id="e_prob_alt_row" style="display:none">'+
+        '<div class="small">Scrivi il problema</div>'+
+        '<input id="e_problemaAltro" value="'+esc(probAlt)+'">'+
+      '</div>'+
+
+      '<div class="row"><div class="small">Tipo gestione</div><select id="e_stato">'+stato.innerHTML+'</select></div>'+
+      '<div class="row"><div class="small">Note</div><input id="e_note" value="'+esc(c.note)+'"></div>'+
+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="annullaEdit">Annulla</button>'+
+        '<button class="btn-primary" id="salvaEdit">Salva</button>'+
+      '</div>';
+
+    modal.querySelector("#e_stato").value = c.stato || "";
+    modal.querySelector("#e_problema").value = probSel || "";
+
+    function refreshAlt(){
+      var v = modal.querySelector("#e_problema").value;
+      var row = modal.querySelector("#e_prob_alt_row");
+      if(v === "ALTRO"){
+        row.style.display = "block";
+      }else{
+        row.style.display = "none";
+        modal.querySelector("#e_problemaAltro").value = "";
+      }
+    }
+    refreshAlt();
+    modal.querySelector("#e_problema").onchange = refreshAlt;
+
+    modal.querySelector("#annullaEdit").onclick = closeModal;
+
+    modal.querySelector("#salvaEdit").onclick = function(){
+      c.nome = modal.querySelector("#e_nome").value;
+      c.via = modal.querySelector("#e_via").value;
+      c.citta = modal.querySelector("#e_citta").value;
+      c.telefono = modal.querySelector("#e_telefono").value;
+      c.modello = modal.querySelector("#e_modello").value;
+
+      var p = modal.querySelector("#e_problema").value;
+      if(p === "ALTRO"){
+        var txt = safeTrim(modal.querySelector("#e_problemaAltro").value);
+        c.problema = txt ? ("ALTRO: " + txt) : "ALTRO";
+      }else{
+        c.problema = p;
+      }
+
+      c.stato = modal.querySelector("#e_stato").value;
+      c.note = modal.querySelector("#e_note").value;
+
+      closeModal();
+      render();
+      salvaDati();
+    };
+  });
+}
+
+/* ===== ELIMINA ===== */
+function openDelete(i){
+  showModal(function(m){
+    m.innerHTML=
+      '<h3>Eliminare cliente?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noDel">NO</button>'+
+        '<button class="btn-danger" id="siDel">SI</button>'+
+      '</div>';
+    m.querySelector("#noDel").onclick = closeModal;
+    m.querySelector("#siDel").onclick = function(){
+      clients.splice(i,1);
+      closeModal();
+      render();
+      salvaDati();
+    };
+  });
+}
+
+function cancellaTutto(){
+  showModal(function(m){
+    m.innerHTML=
+      '<h3>Eliminare TUTTI i clienti?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noAll">NO</button>'+
+        '<button class="btn-danger" id="siAll">SI</button>'+
+      '</div>';
+    m.querySelector("#noAll").onclick = closeModal;
+    m.querySelector("#siAll").onclick = function(){
+      clients=[];
+      closeModal();
+      render();
+      salvaDati();
+    };
+  });
+}
+
+/* ===== PDF (offline, senza librerie esterne) =====
+   Nota: per compatibilità WebView: niente emoji nel PDF e testo normalizzato. */
+function _pdfNormAscii(s){
+  s = (s==null ? "" : String(s));
+  var map = {"à":"a","è":"e","é":"e","ì":"i","ò":"o","ù":"u","À":"A","È":"E","É":"E","Ì":"I","Ò":"O","Ù":"U","ç":"c","Ç":"C"};
+  var out = "";
+  for(var i=0;i<s.length;i++){ var ch=s.charAt(i); out += (map[ch]?map[ch]:ch); }
+  out = out.replace(/[^\x20-\x7E]/g, " "); // elimina non-ASCII (incluse emoji)
+  out = out.replace(/\s+/g," ").replace(/^\s+|\s+$/g,"");
+  return out;
+}
+function _pdfEscape(str){
+  str = _pdfNormAscii(str);
+  return str.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");
+}
+function _pad10(n){ n=String(n); while(n.length<10) n="0"+n; return n; }
+function _toUint8(str){
+  if(window.TextEncoder) return new TextEncoder().encode(str);
+  var arr=new Uint8Array(str.length);
+  for(var i=0;i<str.length;i++) arr[i]=str.charCodeAt(i)&0xFF;
+  return arr;
+}
+function _wrapText(txt, maxChars){
+  txt=_pdfNormAscii(txt);
+  if(!txt) return [""];
+  var words=txt.split(" ");
+  var lines=[], line="";
+  for(var i=0;i<words.length;i++){
+    var w=words[i]; if(!w) continue;
+    var cand = line ? (line+" "+w) : w;
+    if(cand.length<=maxChars){ line=cand; }
+    else{
+      if(line) lines.push(line);
+      while(w.length>maxChars){ lines.push(w.substring(0,maxChars)); w=w.substring(maxChars); }
+      line=w;
+    }
+  }
+  if(line) lines.push(line);
+  return lines.length?lines:[""];
+}
+function _statoRgb01(s){
+  var map = {
+    telefonica:[220/255,252/255,231/255],
+    richiamare:[255/255,237/255,213/255],
+    da_richiamare:[254/255,249/255,195/255],
+    uscita:[219/255,234/255,254/255],
+    rifiutato:[254/255,226/255,226/255],
+    ripartita:[237/255,233/255,254/255],
+    "":[229/255,231/255,235/255],
+    none:[229/255,231/255,235/255]
+  };
+  return map[s||""] || [229/255,231/255,235/255];
+}
+function _buildRapportiPdfBytes(list){
+  var W=842, H=595; // A4 landscape (pt)
+  var left=30, top=40, bottom=30;
+  var yStart=H-top, lineH=12;
+
+  var giorni=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+  var now=new Date();
+  var dataLabel = giorni[now.getDay()]+" "+pad2(now.getDate())+"/"+pad2(now.getMonth()+1)+"/"+String(now.getFullYear()).slice(-2);
+
+  function textCmd(x,y,size,txt){ return "BT /F1 "+size+" Tf 1 0 0 1 "+x+" "+y+" Tm ("+_pdfEscape(txt)+") Tj ET\n"; }
+  function rectCmd(x,y,w,h,rgb){ return rgb[0]+" "+rgb[1]+" "+rgb[2]+" rg "+x+" "+y+" "+w+" "+h+" re f\n"; }
+
+  var pages=[], cur="", y=yStart;
+  function newPage(){
+    if(cur) pages.push(cur);
+    cur=""; y=yStart;
+    cur += "0 0 0 rg\n";
+    cur += textCmd(left, y, 16, "RAPPORTI CLIENTI - REPERIBILITA");
+    y-=18;
+    cur += textCmd(left, y, 11, "Data: "+dataLabel);
+    y-=18;
+  }
+  newPage();
+
+  for(var i=0;i<list.length;i++){
+    var c=list[i]||{};
+    var indirizzo="";
+    if(c.via) indirizzo+=c.via;
+    if(c.citta) indirizzo+=(indirizzo?" - ":"")+c.citta;
+
+    if(y < bottom + 10*lineH) newPage();
+
+    var rgb=_statoRgb01(c.stato);
+    cur += rectCmd(left-6, y-6, (W-2*left)+12, 18, rgb);
+    cur += "0 0 0 rg\n";
+
+    function addField(label, value, maxChars){
+      maxChars = maxChars || 92;
+      var vLines=_wrapText(value, maxChars);
+      for(var k=0;k<vLines.length;k++){
+        var line=(k===0 ? (label+": "+vLines[k]) : ("          "+vLines[k]));
+        cur += textCmd(left, y, 11, line);
+        y -= lineH;
+        if(y < bottom + lineH) newPage();
+      }
+    }
+
+    addField("NOME", c.nome||"");
+    addField("INDIRIZZO", indirizzo);
+    addField("TELEFONO", c.telefono||"");
+    addField("MODELLO", c.modello||"");
+    addField("PROBLEMA", c.problema||"");
+    addField("GESTIONE", statoLabel(c.stato));
+    addField("NOTE", c.note||"");
+    y -= 6;
+  }
+  if(cur) pages.push(cur);
+
+  // Build PDF objects
+  var parts=[], offsets=[], pos=0;
+  function pushStr(s){ var b=_toUint8(s); parts.push(b); pos+=b.length; }
+  pushStr("%PDF-1.4\n");
+
+  var nPages=pages.length;
+  var firstPageObj=4, firstContentObj=5;
+  var lastObj = 3 + nPages*2;
+
+  function addObj(num, body){
+    offsets[num]=pos;
+    pushStr(num+" 0 obj\n"+body+"\nendobj\n");
+  }
+
+  addObj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  var kids=[];
+  for(var p=0;p<nPages;p++) kids.push((firstPageObj+p*2)+" 0 R");
+  addObj(2, "<< /Type /Pages /Kids [ "+kids.join(" ")+" ] /Count "+nPages+" >>");
+  addObj(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+  for(var p2=0;p2<nPages;p2++){
+    var pageNum=firstPageObj+p2*2;
+    var contNum=firstContentObj+p2*2;
+    var content=pages[p2]||"";
+    var len=content.length;
+    addObj(contNum, "<< /Length "+len+" >>\nstream\n"+content+"endstream");
+    addObj(pageNum, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+W+" "+H+"] /Resources << /Font << /F1 3 0 R >> >> /Contents "+contNum+" 0 R >>");
+  }
+
+  var xrefPos=pos;
+  var xref="xref\n0 "+(lastObj+1)+"\n";
+  xref+="0000000000 65535 f \n";
+  for(var iObj=1;iObj<=lastObj;iObj++){
+    xref += _pad10(offsets[iObj]||0)+" 00000 n \n";
+  }
+  pushStr(xref);
+  pushStr("trailer\n<< /Size "+(lastObj+1)+" /Root 1 0 R >>\nstartxref\n"+xrefPos+"\n%%EOF\n");
+
+  var out=new Uint8Array(pos), off=0;
+  for(var iPart=0;iPart<parts.length;iPart++){ out.set(parts[iPart], off); off+=parts[iPart].length; }
+  return out;
+}
+
+function _showPdfOverlay(bytes, filename){
+  filename = filename || "rapporti-clienti.pdf";
+  var blob=new Blob([bytes], {type:"application/pdf"});
+  var url=URL.createObjectURL(blob);
+
+  var ov=document.createElement("div");
+  ov.style.position="fixed";
+  ov.style.left="0"; ov.style.top="0"; ov.style.right="0"; ov.style.bottom="0";
+  ov.style.background="#111827";
+  ov.style.zIndex="10000";
+  ov.innerHTML =
+    '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;background:#0b1220;color:#fff;position:sticky;top:0;z-index:1">'+
+      '<div style="font-weight:800">PDF</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button id="pdfShareBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#2563eb;color:#fff">Condividi</button>'+
+        '<button id="pdfDlBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#e5e7eb;color:#111827">Scarica</button>'+
+        '<button id="pdfCloseBtn" style="border:none;border-radius:999px;padding:8px 12px;font-weight:800;background:#dc2626;color:#fff">Chiudi</button>'+
+      '</div>'+
+    '</div>'+
+    '<iframe style="width:100%;height:calc(100% - 54px);border:0;background:#fff" src="'+url+'"></iframe>';
+  document.body.appendChild(ov);
+
+  function cleanup(){
+    try{ URL.revokeObjectURL(url); }catch(e){}
+    try{ ov.remove(); }catch(e2){ ov.parentNode && ov.parentNode.removeChild(ov); }
+  }
+  ov.querySelector("#pdfCloseBtn").onclick = cleanup;
+
+  ov.querySelector("#pdfDlBtn").onclick = function(){
+    try{
+      var a=document.createElement("a");
+      a.href=url; a.download=filename;
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ window.open(url, "_blank"); }
+  };
+
+  ov.querySelector("#pdfShareBtn").onclick = function(){
+    var file=null;
+    try{ file=new File([blob], filename, {type:"application/pdf"}); }catch(e){ file=null; }
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file]}).catch(function(){ alert("Condivisione annullata. Usa Scarica."); });
+    } else {
+      alert("Condivisione diretta non supportata qui. Premi Scarica e poi invia su WhatsApp.");
+    }
+  };
+}
+
+function generaPdfWhatsapp(){
+  if(!clients.length){ alert("Nessun cliente"); return; }
+  try{
+    var bytes=_buildRapportiPdfBytes(clients);
+    _showPdfOverlay(bytes, "rapporti-clienti.pdf");
+  }catch(e){
+    alert("Errore PDF: "+(e && e.message ? e.message : e));
+  }
+}
+
+
+/* ===== FULLSCREEN FASE 3 ===== */
+function toggleCardsFullscreen(){
+  if(fase3.classList.contains("cards-fullscreen")){
+    fase3.classList.remove("cards-fullscreen");
+    $("fsBtn").textContent = "🖥️ Schermo intero";
+  } else {
+    fase3.classList.add("cards-fullscreen");
+    $("fsBtn").textContent = "❌ Esci";
+  }
+}
+
+/* INIT */
+caricaDati();
+caricaInbox();
+caricaMode();
+render();
+applyMode();
+readSmsFromUrl();
+updateInboxUI();
+</script>
+
+<script>
+  // PWA: service worker (cache base, migliora aggiornamenti su iPhone)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("service-worker.js").catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>

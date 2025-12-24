@@ -1,0 +1,10 @@
+{
+  "name": "Rapporti",
+  "version": "1.1.0",
+  "build": 2,
+  "id": "it.tecnoassistenza.rapporti",
+  "fullscreen": false,
+  "orientation": "default",
+  "plugins": [],
+  "allowMixedContent": false
+}
