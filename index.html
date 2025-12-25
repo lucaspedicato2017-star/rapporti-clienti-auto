@@ -526,7 +526,7 @@ function handleIncomingSmsFromUrl(){
     if(!smsText) return;
 
     // evita doppioni se l’URL resta in cache
-    var key = smsText.slice(0,80);
+    var key = smsText; // usa tutto il testo, non solo i primi 80 caratteri
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
     if(last === key){
       window.history.replaceState({}, document.title, window.location.pathname);
