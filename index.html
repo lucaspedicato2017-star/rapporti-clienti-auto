@@ -1057,7 +1057,7 @@ handleIncomingSmsFromUrl();
 
 <script>
   // PWA: service worker (aumenta SW_VER per forzare update)
-  const SW_VER = 9;
+  const SW_VER = 10;
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
