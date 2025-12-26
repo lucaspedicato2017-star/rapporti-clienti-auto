@@ -127,7 +127,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .cards-fullscreen .group-title{ grid-column: 1 / -1; }
 
-/* INBOX */
+/* INBOX + DUP */
 .inbox-item{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -261,7 +261,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   <div class="card" id="fase3">
     <h3>3. Clienti</h3>
 
-    <!-- ✅ Notifiche SMS duplicati (cliente già presente) -->
+    <!-- Notifiche SMS duplicati -->
     <div id="dupWrap" class="hidden" style="background:#fff7ed;border:1px dashed #fdba74;border-radius:14px;padding:10px;margin:10px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div style="font-weight:900">⚠️ SMS già presenti (cliente in lista)</div>
@@ -348,13 +348,13 @@ var fase2Armed = false;
 var inbox = [];
 var selectedInboxIndex = -1;
 
-var dupNotifs = [];          // ✅ notifiche per SMS già presenti
-var dupKeyMap = {};          // ✅ set di chiavi cliente con notifica attiva
+var dupNotifs = [];  // notifiche per SMS già presenti
+var dupKeyMap = {};  // set chiavi clienti con notifica attiva
 
 var manualMode = false;
 
 /* ===== VERSIONE CODICE (AGGIORNA QUI QUANDO MODIFICHI) ===== */
-var APP_VERSION = "2025-12-26.02";
+var APP_VERSION = "2025-12-26.03";
 var APP_BUILD   = "2025-12-26 00:00";
 var SW_VER      = 11;
 
@@ -379,39 +379,29 @@ function showToast(msg){
 }
 
 /* ===== SALVATAGGIO ===== */
-function salvaDati(){
-  try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){}
-}
+function salvaDati(){ try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){} }
 function caricaDati(){
   try{
     var dati = localStorage.getItem("rapportiClienti");
     if(dati) clients = JSON.parse(dati) || [];
   }catch(e){ clients=[]; }
 }
-function salvaInbox(){
-  try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
-}
+function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} }
 function caricaInbox(){
   try{
     var d = localStorage.getItem("rapportiInbox");
     if(d) inbox = JSON.parse(d) || [];
   }catch(e){ inbox=[]; }
 }
-function salvaDup(){
-  try{ localStorage.setItem("rapportiDupNotifs", JSON.stringify(dupNotifs)); }catch(e){}
-}
+function salvaDup(){ try{ localStorage.setItem("rapportiDupNotifs", JSON.stringify(dupNotifs)); }catch(e){} }
 function caricaDup(){
   try{
     var d = localStorage.getItem("rapportiDupNotifs");
     if(d) dupNotifs = JSON.parse(d) || [];
   }catch(e){ dupNotifs=[]; }
 }
-function salvaModo(){
-  try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
-}
-function caricaModo(){
-  try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; }
-}
+function salvaModo(){ try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){} }
+function caricaModo(){ try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; } }
 
 /* ===== LABEL STATO ===== */
 function statoLabel(s){
@@ -452,23 +442,15 @@ function parseSMS(t){
 }
 
 /* ===== CHIAVE CLIENTE + HIGHLIGHT ===== */
-function normKey(s){
-  return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," ");
-}
-function cleanPhone(p){
-  return String(p||"").replace(/[^0-9+]/g,"");
-}
+function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," "); }
+function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
 function clientKeyFromFields(n,v,c,tel){
   var ph = cleanPhone(tel);
   if(ph) return "tel:" + ph;
   return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
 }
-function clientKeyFromClientObj(c){
-  return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono);
-}
-function clientKeyFromParsed(d){
-  return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono);
-}
+function clientKeyFromClientObj(c){ return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
+function clientKeyFromParsed(d){ return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
 function safeIdFromKey(key){
   var s = String(key||"");
   try{
@@ -503,9 +485,7 @@ function rebuildDupKeyMap(){
     if(k) dupKeyMap[k] = true;
   }
 }
-function isDupKey(key){
-  return !!dupKeyMap[key];
-}
+function isDupKey(key){ return !!dupKeyMap[key]; }
 function dupHasRaw(text){
   text = safeTrim(text);
   for(var i=0;i<dupNotifs.length;i++){
@@ -516,13 +496,12 @@ function dupHasRaw(text){
 function addDupNotif(raw, key){
   raw = safeTrim(raw);
   if(!raw || !key) return;
-
   if(dupHasRaw(raw)) return;
 
   dupNotifs.unshift({ raw: raw, key: key, ts: Date.now() });
   salvaDup();
   rebuildDupKeyMap();
-  render();          // ✅ aggiorna evidenziazione card
+  render();
   renderDupNotifs();
 }
 function renderDupNotifs(){
@@ -580,7 +559,7 @@ function renderDupNotifs(){
             salvaDup();
             rebuildDupKeyMap();
             closeModal();
-            render();          // ✅ se era l’ultima notifica per quel cliente, sparisce l’evidenza
+            render();
             renderDupNotifs();
           };
         });
@@ -594,7 +573,6 @@ function renderDupNotifs(){
     })(i);
   }
 }
-
 if(clearDupBtn){
   clearDupBtn.onclick = function(){
     showModal(function(m){
@@ -629,19 +607,12 @@ function armFase2(){
   checkFase2Ready();
   try{ fase2.scrollIntoView(true); }catch(e){}
 }
-function disarmFase2(){
-  fase2Armed = false;
-  setFase2State("normal");
-}
+function disarmFase2(){ fase2Armed = false; setFase2State("normal"); }
 function checkFase2Ready(){
   if(!fase2Armed) return;
-
   var problemOk = !!problema.value;
-  if(problema.value === "ALTRO"){
-    problemOk = safeTrim(problemaAltro.value).length > 0;
-  }
+  if(problema.value === "ALTRO") problemOk = safeTrim(problemaAltro.value).length > 0;
   var statoOk = !!stato.value;
-
   if(problemOk && statoOk) setFase2State("ok");
   else setFase2State("attesa");
 }
@@ -697,7 +668,6 @@ function addSmsToInbox(text){
   salvaInbox();
   renderInbox();
 }
-
 function renderInbox(){
   if(!inboxWrap) return;
 
@@ -715,7 +685,6 @@ function renderInbox(){
   for(var i=0;i<inbox.length;i++){
     (function(ii){
       var it = inbox[ii];
-
       var div = document.createElement("div");
       div.className = "inbox-item";
 
@@ -762,12 +731,10 @@ function renderInbox(){
       actions.appendChild(openBtn);
       actions.appendChild(delBtn);
       div.appendChild(actions);
-
       inboxList.appendChild(div);
     })(i);
   }
 }
-
 if(clearInboxBtn){
   clearInboxBtn.onclick = function(){
     showModal(function(m){
@@ -806,34 +773,63 @@ function loadFromSmsText(testo){
   armFase2();
 }
 
-/* ===== IMPORT DA URL (?sms=...) ===== */
+/* ===== IMPORT DA URL: ?sms=... oppure #sms=... (iOS/webapp://) ===== */
+function getIncomingSms(){
+  var smsText = "";
+
+  try{
+    // 1) query classica: ?sms=...
+    var p = new URLSearchParams(window.location.search);
+    smsText = p.get("sms") || "";
+
+    // 2) fallback iOS: #sms=...
+    if(!smsText){
+      var h = (window.location.hash || "").replace(/^#/, "");
+      if(h.indexOf("sms=") !== -1){
+        var hs = h.startsWith("sms=") ? h : (h.split("?").pop() || h);
+        var hp = new URLSearchParams(hs);
+        smsText = hp.get("sms") || "";
+        if(!smsText && h.startsWith("sms=")){
+          smsText = h.substring(4);
+        }
+      }
+    }
+  }catch(e){
+    smsText = "";
+  }
+
+  if(smsText && smsText.indexOf("%") !== -1){
+    try{ smsText = decodeURIComponent(smsText); }catch(e){}
+  }
+
+  return smsText;
+}
+
 function handleIncomingSmsFromUrl(){
   try{
-    var p = new URLSearchParams(window.location.search);
-    var smsText = p.get("sms");
+    var smsText = getIncomingSms();
     if(!smsText) return;
 
     // evita doppioni se l’URL resta in cache
-    var keyRaw = smsText;
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
-    if(last === keyRaw){
+    if(last === smsText){
+      // pulisci url/hash
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
-    localStorage.setItem("lastIncomingSmsKey", keyRaw);
+    localStorage.setItem("lastIncomingSmsKey", smsText);
 
     var parsed = parseSMS(smsText);
     var cKey = clientKeyFromParsed(parsed);
     var existingIdx = findClientIndexByKey(cKey);
 
-    // ✅ SE CLIENTE GIA' ESISTE: crea notifica persistente in FASE 3 + evidenzia finché non elimini notifica
+    // se cliente già esiste: notifica persistente + highlight sticky
     if(existingIdx >= 0){
       addDupNotif(smsText, cKey);
-      showToast("⚠️ Cliente già presente: creata notifica in FASE 3");
+      showToast("⚠️ Cliente già presente: notifica in FASE 3");
       render();
       renderDupNotifs();
       highlightClientByKey(cKey, true);
-
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -845,6 +841,7 @@ function handleIncomingSmsFromUrl(){
     salvaModo();
     applyMode();
 
+    // pulisci url/hash
     window.history.replaceState({}, document.title, window.location.pathname);
   }catch(e){}
 }
@@ -992,7 +989,6 @@ function row(t){
   r.textContent=t;
   return r;
 }
-
 function buildCard(c, i){
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
@@ -1000,10 +996,7 @@ function buildCard(c, i){
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
 
-  // ✅ se c’è una notifica duplicato per questo cliente, evidenzia e resta così finché non la elimini
-  if(isDupKey(cKey)){
-    d.classList.add("gc-highlight");
-  }
+  if(isDupKey(cKey)) d.classList.add("gc-highlight");
 
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
@@ -1069,7 +1062,6 @@ function buildCard(c, i){
 
   return d;
 }
-
 function render(){
   cards.innerHTML="";
 
@@ -1226,7 +1218,6 @@ function openDelete(i){
     };
   });
 }
-
 function cancellaTutto(){
   showModal(function(m){
     m.innerHTML=
