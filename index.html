@@ -56,7 +56,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
 
-/* Evidenziazione card (non cambia colore stato) */
+/* Evidenziazione card: resta finché non togli la notifica */
 .gc-highlight{
   outline:4px solid rgba(37,99,235,.75);
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
@@ -261,6 +261,21 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   <div class="card" id="fase3">
     <h3>3. Clienti</h3>
 
+    <!-- ✅ Notifiche SMS duplicati (cliente già presente) -->
+    <div id="dupWrap" class="hidden" style="background:#fff7ed;border:1px dashed #fdba74;border-radius:14px;padding:10px;margin:10px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-weight:900">⚠️ SMS già presenti (cliente in lista)</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="dupCount" class="small" style="color:#6b7280"></span>
+          <button id="clearDupBtn" class="btn-danger">🗑️ Svuota</button>
+        </div>
+      </div>
+      <div id="dupList"></div>
+      <div class="small" style="margin-top:8px;color:#6b7280">
+        La card resta evidenziata finché non elimini la notifica.
+      </div>
+    </div>
+
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <button class="btn-primary" onclick="generaPdfWhatsapp()">📤 PDF WhatsApp</button>
       <button class="btn-secondary" id="fsBtn" onclick="toggleCardsFullscreen()">🖥️ Schermo intero</button>
@@ -319,6 +334,11 @@ var inboxList = $("inboxList");
 var inboxCount = $("inboxCount");
 var clearInboxBtn = $("clearInboxBtn");
 
+var dupWrap = $("dupWrap");
+var dupList = $("dupList");
+var dupCount = $("dupCount");
+var clearDupBtn = $("clearDupBtn");
+
 var toastEl = $("toast");
 var lastUpdateEl = $("lastUpdate");
 
@@ -328,12 +348,15 @@ var fase2Armed = false;
 var inbox = [];
 var selectedInboxIndex = -1;
 
+var dupNotifs = [];          // ✅ notifiche per SMS già presenti
+var dupKeyMap = {};          // ✅ set di chiavi cliente con notifica attiva
+
 var manualMode = false;
 
 /* ===== VERSIONE CODICE (AGGIORNA QUI QUANDO MODIFICHI) ===== */
-var APP_VERSION = "2025-12-26.01";      // <-- cambia quando fai modifiche al codice
-var APP_BUILD   = "2025-12-26 00:00";   // <-- opzionale: data/ora build (testo)
-var SW_VER      = 11;                  // <-- aumenta per forzare update PWA/SW
+var APP_VERSION = "2025-12-26.02";
+var APP_BUILD   = "2025-12-26 00:00";
+var SW_VER      = 11;
 
 function renderVersionBadge(){
   if(!lastUpdateEl) return;
@@ -373,6 +396,15 @@ function caricaInbox(){
     var d = localStorage.getItem("rapportiInbox");
     if(d) inbox = JSON.parse(d) || [];
   }catch(e){ inbox=[]; }
+}
+function salvaDup(){
+  try{ localStorage.setItem("rapportiDupNotifs", JSON.stringify(dupNotifs)); }catch(e){}
+}
+function caricaDup(){
+  try{
+    var d = localStorage.getItem("rapportiDupNotifs");
+    if(d) dupNotifs = JSON.parse(d) || [];
+  }catch(e){ dupNotifs=[]; }
 }
 function salvaModo(){
   try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
@@ -438,9 +470,7 @@ function clientKeyFromParsed(d){
   return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono);
 }
 function safeIdFromKey(key){
-  // id stabile e sicuro
   var s = String(key||"");
-  // base64 url-safe
   try{
     var b = btoa(unescape(encodeURIComponent(s))).replace(/=+/g,"").replace(/\+/g,"-").replace(/\//g,"_");
     return "card_" + b;
@@ -454,13 +484,137 @@ function findClientIndexByKey(key){
   }
   return -1;
 }
-function highlightClientByKey(key){
+function highlightClientByKey(key, sticky){
   var id = safeIdFromKey(key);
   var el = document.getElementById(id);
   if(!el) return;
   el.classList.add("gc-highlight");
   try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
-  setTimeout(function(){ el.classList.remove("gc-highlight"); }, 2500);
+  if(!sticky){
+    setTimeout(function(){ el.classList.remove("gc-highlight"); }, 2500);
+  }
+}
+
+/* ===== DUP NOTIFS (SMS già presenti) ===== */
+function rebuildDupKeyMap(){
+  dupKeyMap = {};
+  for(var i=0;i<dupNotifs.length;i++){
+    var k = dupNotifs[i].key || "";
+    if(k) dupKeyMap[k] = true;
+  }
+}
+function isDupKey(key){
+  return !!dupKeyMap[key];
+}
+function dupHasRaw(text){
+  text = safeTrim(text);
+  for(var i=0;i<dupNotifs.length;i++){
+    if(safeTrim(dupNotifs[i].raw) === text) return true;
+  }
+  return false;
+}
+function addDupNotif(raw, key){
+  raw = safeTrim(raw);
+  if(!raw || !key) return;
+
+  if(dupHasRaw(raw)) return;
+
+  dupNotifs.unshift({ raw: raw, key: key, ts: Date.now() });
+  salvaDup();
+  rebuildDupKeyMap();
+  render();          // ✅ aggiorna evidenziazione card
+  renderDupNotifs();
+}
+function renderDupNotifs(){
+  if(!dupWrap) return;
+
+  if(!dupNotifs.length){
+    dupWrap.classList.add("hidden");
+    if(dupList) dupList.innerHTML = "";
+    if(dupCount) dupCount.textContent = "";
+    return;
+  }
+
+  dupWrap.classList.remove("hidden");
+  dupCount.textContent = dupNotifs.length + " notifica/e";
+  dupList.innerHTML = "";
+
+  for(var i=0;i<dupNotifs.length;i++){
+    (function(ii){
+      var it = dupNotifs[ii];
+      var div = document.createElement("div");
+      div.className = "inbox-item";
+
+      var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
+
+      div.innerHTML =
+        '<div class="inbox-title">SMS duplicato • ' + preview + '</div>' +
+        '<div class="inbox-sub">Cliente già presente: la card resta evidenziata finché elimini la notifica</div>';
+
+      var actions = document.createElement("div");
+      actions.className = "inbox-actions";
+
+      var goBtn = document.createElement("button");
+      goBtn.className = "btn-primary";
+      goBtn.textContent = "Vai al cliente";
+      goBtn.onclick = function(){
+        render();
+        highlightClientByKey(it.key, true);
+      };
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "btn-danger";
+      delBtn.textContent = "Elimina notifica";
+      delBtn.onclick = function(){
+        showModal(function(m){
+          m.innerHTML =
+            '<h3>Eliminare questa notifica?</h3>'+
+            '<div class="small" style="color:#6b7280;margin-bottom:10px">'+preview+'</div>'+
+            '<div class="btn-row">'+
+              '<button class="btn-secondary" id="noDelDup">NO</button>'+
+              '<button class="btn-danger" id="siDelDup">SI</button>'+
+            '</div>';
+          m.querySelector("#noDelDup").onclick = closeModal;
+          m.querySelector("#siDelDup").onclick = function(){
+            dupNotifs.splice(ii,1);
+            salvaDup();
+            rebuildDupKeyMap();
+            closeModal();
+            render();          // ✅ se era l’ultima notifica per quel cliente, sparisce l’evidenza
+            renderDupNotifs();
+          };
+        });
+      };
+
+      actions.appendChild(goBtn);
+      actions.appendChild(delBtn);
+      div.appendChild(actions);
+
+      dupList.appendChild(div);
+    })(i);
+  }
+}
+
+if(clearDupBtn){
+  clearDupBtn.onclick = function(){
+    showModal(function(m){
+      m.innerHTML =
+        '<h3>Svuotare tutte le notifiche?</h3>'+
+        '<div class="btn-row">'+
+          '<button class="btn-secondary" id="noClrDup">NO</button>'+
+          '<button class="btn-danger" id="siClrDup">SI</button>'+
+        '</div>';
+      m.querySelector("#noClrDup").onclick = closeModal;
+      m.querySelector("#siClrDup").onclick = function(){
+        dupNotifs = [];
+        salvaDup();
+        rebuildDupKeyMap();
+        closeModal();
+        render();
+        renderDupNotifs();
+      };
+    });
+  };
 }
 
 /* ===== FEEDBACK FASE 2 ===== */
@@ -537,8 +691,6 @@ function inboxHasRaw(text){
 function addSmsToInbox(text){
   text = safeTrim(text);
   if(!text) return;
-
-  // evita doppioni in inbox
   if(inboxHasRaw(text)) return;
 
   inbox.unshift({ raw: text, ts: Date.now() });
@@ -588,7 +740,6 @@ function renderInbox(){
       delBtn.className = "btn-danger";
       delBtn.textContent = "Elimina";
       delBtn.onclick = function(){
-        // conferma eliminazione singola
         showModal(function(m){
           m.innerHTML =
             '<h3>Eliminare questo SMS in attesa?</h3>'+
@@ -649,7 +800,6 @@ function loadFromSmsText(testo){
   telefono.value = d.telefono;
   modello.value = d.modello;
 
-  // NON scrive l'SMS nelle note
   note.value = "";
 
   setLedOk(true);
@@ -664,7 +814,7 @@ function handleIncomingSmsFromUrl(){
     if(!smsText) return;
 
     // evita doppioni se l’URL resta in cache
-    var keyRaw = smsText; // usa tutto il testo
+    var keyRaw = smsText;
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
     if(last === keyRaw){
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -672,28 +822,29 @@ function handleIncomingSmsFromUrl(){
     }
     localStorage.setItem("lastIncomingSmsKey", keyRaw);
 
-    // SE CLIENTE GIA' ESISTE: NON mettere in attesa, avvisa + evidenzia card
     var parsed = parseSMS(smsText);
     var cKey = clientKeyFromParsed(parsed);
     var existingIdx = findClientIndexByKey(cKey);
-    if(existingIdx >= 0){
-      showToast("⚠️ Cliente già presente: evidenziato in lista");
-      render(); // assicura che la card esista in DOM
-      highlightClientByKey(cKey);
 
-      // pulisci URL
+    // ✅ SE CLIENTE GIA' ESISTE: crea notifica persistente in FASE 3 + evidenzia finché non elimini notifica
+    if(existingIdx >= 0){
+      addDupNotif(smsText, cKey);
+      showToast("⚠️ Cliente già presente: creata notifica in FASE 3");
+      render();
+      renderDupNotifs();
+      highlightClientByKey(cKey, true);
+
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
 
-    // aggiungi in inbox
+    // altrimenti: inbox normale
     addSmsToInbox(smsText);
 
     manualMode = false;
     salvaModo();
     applyMode();
 
-    // pulisci URL
     window.history.replaceState({}, document.title, window.location.pathname);
   }catch(e){}
 }
@@ -788,12 +939,11 @@ addBtn.onclick=function(){
     problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
   }
 
-  // evita doppione in fase 3 (stesso telefono oppure stesso nome+indirizzo)
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey) >= 0){
     showToast("⚠️ Cliente già presente: non aggiunto");
     render();
-    highlightClientByKey(newKey);
+    highlightClientByKey(newKey, true);
     return;
   }
 
@@ -808,7 +958,6 @@ addBtn.onclick=function(){
     note:note.value
   });
 
-  // se veniva dall’inbox, lo rimuove
   if(selectedInboxIndex >= 0){
     inbox.splice(selectedInboxIndex, 1);
     selectedInboxIndex = -1;
@@ -848,9 +997,13 @@ function buildCard(c, i){
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
 
-  // id stabile per highlight
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
+
+  // ✅ se c’è una notifica duplicato per questo cliente, evidenzia e resta così finché non la elimini
+  if(isDupKey(cKey)){
+    d.classList.add("gc-highlight");
+  }
 
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
@@ -889,7 +1042,7 @@ function buildCard(c, i){
     var t=document.createElement("a");
     t.className="gc-big gc-link";
     t.textContent="📞 "+clean;
-    t.href="tel:%2331%23"+clean;   // #31# davanti
+    t.href="tel:%2331%23"+clean;
     d.appendChild(t);
   }
 
@@ -1015,7 +1168,6 @@ function openEdit(i){
     modal.querySelector("#annullaEdit").onclick = closeModal;
 
     modal.querySelector("#salvaEdit").onclick = function(){
-      // se cambi chiave, evita duplicati
       var newKey = clientKeyFromFields(
         modal.querySelector("#e_nome").value,
         modal.querySelector("#e_via").value,
@@ -1027,7 +1179,7 @@ function openEdit(i){
           showToast("⚠️ Esiste già un cliente con gli stessi dati");
           closeModal();
           render();
-          highlightClientByKey(newKey);
+          highlightClientByKey(newKey, true);
           return;
         }
       }
@@ -1211,6 +1363,8 @@ function toggleCardsFullscreen(){
 /* ===== INIT ===== */
 caricaDati();
 caricaInbox();
+caricaDup();
+rebuildDupKeyMap();
 caricaModo();
 
 // default: AUTOMATICO se mai salvato
@@ -1221,6 +1375,7 @@ if(localStorage.getItem("rapportiManualMode") === null){
 
 render();
 renderInbox();
+renderDupNotifs();
 applyMode();
 handleIncomingSmsFromUrl();
 renderVersionBadge();
