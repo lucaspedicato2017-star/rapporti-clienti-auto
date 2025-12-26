@@ -1,40 +1,72 @@
-const CACHE_NAME = "rapporti-clienti-v1";
-const ASSETS = [
+/* service-worker.js */
+const CACHE_VERSION = "v20"; // <<< deve combaciare con SW_VER 20
+const CACHE_NAME = "rapporti-clienti-" + CACHE_VERSION;
+
+const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
-  "./icon.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./manifest.json"
 ];
 
-// Install: pre-cache basic shell
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
   );
 });
 
-// Activate: clean old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => (k === CACHE_NAME ? null : caches.delete(k)))))
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+      await self.clients.claim();
+    })()
   );
 });
 
-// Fetch: cache-first for same-origin GET
+// HTML = NETWORK FIRST (così non rimani mai “bloccato” su una versione vecchia)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
   const url = new URL(req.url);
+
   if (url.origin !== self.location.origin) return;
 
+  const isHTML =
+    req.mode === "navigate" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("/index.html") ||
+    (req.headers.get("accept") || "").includes("text/html");
+
+  if (isHTML) {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(req, { cache: "no-store" });
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(req, fresh.clone());
+          return fresh;
+        } catch (e) {
+          const cached = (await caches.match(req)) || (await caches.match("./index.html"));
+          return cached || new Response("Offline", { status: 503 });
+        }
+      })()
+    );
+    return;
+  }
+
+  // resto = CACHE FIRST
   event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((resp) => {
-      const copy = resp.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-      return resp;
-    }).catch(() => cached))
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => {});
+        return res;
+      });
+    })
+  );
+});
+
   );
 });
