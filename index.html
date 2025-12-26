@@ -157,7 +157,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   display:none;
 }
 
-/* Badge ultimo aggiornamento */
+/* Badge versione codice */
 .last-update{
   position:fixed;
   top:calc(8px + env(safe-area-inset-top));
@@ -176,7 +176,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 </head>
 
 <body>
-<div id="lastUpdate" class="last-update">Aggiornato: —</div>
+<div id="lastUpdate" class="last-update">Versione: —</div>
 <div id="toast" class="toast"></div>
 
 <div class="app">
@@ -330,6 +330,19 @@ var selectedInboxIndex = -1;
 
 var manualMode = false;
 
+/* ===== VERSIONE CODICE (AGGIORNA QUI QUANDO MODIFICHI) ===== */
+var APP_VERSION = "2025-12-26.01";      // <-- cambia quando fai modifiche al codice
+var APP_BUILD   = "2025-12-26 00:00";   // <-- opzionale: data/ora build (testo)
+var SW_VER      = 11;                  // <-- aumenta per forzare update PWA/SW
+
+function renderVersionBadge(){
+  if(!lastUpdateEl) return;
+  var s = "Versione: " + APP_VERSION;
+  if(APP_BUILD) s += " • Build: " + APP_BUILD;
+  s += " • SW:" + SW_VER;
+  lastUpdateEl.textContent = s;
+}
+
 /* ===== TOAST ===== */
 var toastTimer = null;
 function showToast(msg){
@@ -342,29 +355,9 @@ function showToast(msg){
   }, 2200);
 }
 
-/* ===== ULTIMO AGGIORNAMENTO ===== */
-function formatDateTime(ts){
-  var d = new Date(ts);
-  return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "/" + String(d.getFullYear()).slice(-2) +
-         " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
-}
-function setLastUpdate(ts){
-  ts = ts || Date.now();
-  try{ localStorage.setItem("rapportiLastUpdate", String(ts)); }catch(e){}
-  if(lastUpdateEl) lastUpdateEl.textContent = "Aggiornato: " + formatDateTime(ts);
-}
-function loadLastUpdate(){
-  var ts = 0;
-  try{ ts = parseInt(localStorage.getItem("rapportiLastUpdate") || "0", 10); }catch(e){ ts = 0; }
-  if(lastUpdateEl){
-    lastUpdateEl.textContent = ts ? ("Aggiornato: " + formatDateTime(ts)) : "Aggiornato: —";
-  }
-}
-
 /* ===== SALVATAGGIO ===== */
 function salvaDati(){
   try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){}
-  setLastUpdate();
 }
 function caricaDati(){
   try{
@@ -374,7 +367,6 @@ function caricaDati(){
 }
 function salvaInbox(){
   try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
-  setLastUpdate();
 }
 function caricaInbox(){
   try{
@@ -546,7 +538,7 @@ function addSmsToInbox(text){
   text = safeTrim(text);
   if(!text) return;
 
-  // evita doppioni in inbox (come già ti piace)
+  // evita doppioni in inbox
   if(inboxHasRaw(text)) return;
 
   inbox.unshift({ raw: text, ts: Date.now() });
@@ -596,7 +588,7 @@ function renderInbox(){
       delBtn.className = "btn-danger";
       delBtn.textContent = "Elimina";
       delBtn.onclick = function(){
-        // ✅ conferma eliminazione singola
+        // conferma eliminazione singola
         showModal(function(m){
           m.innerHTML =
             '<h3>Eliminare questo SMS in attesa?</h3>'+
@@ -657,7 +649,7 @@ function loadFromSmsText(testo){
   telefono.value = d.telefono;
   modello.value = d.modello;
 
-  // ✅ NON scrive l'SMS nelle note
+  // NON scrive l'SMS nelle note
   note.value = "";
 
   setLedOk(true);
@@ -680,7 +672,7 @@ function handleIncomingSmsFromUrl(){
     }
     localStorage.setItem("lastIncomingSmsKey", keyRaw);
 
-    // ✅ SE CLIENTE GIA' ESISTE: NON mettere in attesa, avvisa + evidenzia card
+    // SE CLIENTE GIA' ESISTE: NON mettere in attesa, avvisa + evidenzia card
     var parsed = parseSMS(smsText);
     var cKey = clientKeyFromParsed(parsed);
     var existingIdx = findClientIndexByKey(cKey);
@@ -691,7 +683,6 @@ function handleIncomingSmsFromUrl(){
 
       // pulisci URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      setLastUpdate();
       return;
     }
 
@@ -797,7 +788,7 @@ addBtn.onclick=function(){
     problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
   }
 
-  // ✅ evita doppione in fase 3 (stesso telefono oppure stesso nome+indirizzo)
+  // evita doppione in fase 3 (stesso telefono oppure stesso nome+indirizzo)
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey) >= 0){
     showToast("⚠️ Cliente già presente: non aggiunto");
@@ -898,7 +889,7 @@ function buildCard(c, i){
     var t=document.createElement("a");
     t.className="gc-big gc-link";
     t.textContent="📞 "+clean;
-    t.href="tel:%2331%23"+clean;   // ✅ #31# davanti
+    t.href="tel:%2331%23"+clean;   // #31# davanti
     d.appendChild(t);
   }
 
@@ -1221,7 +1212,6 @@ function toggleCardsFullscreen(){
 caricaDati();
 caricaInbox();
 caricaModo();
-loadLastUpdate();
 
 // default: AUTOMATICO se mai salvato
 if(localStorage.getItem("rapportiManualMode") === null){
@@ -1233,11 +1223,11 @@ render();
 renderInbox();
 applyMode();
 handleIncomingSmsFromUrl();
+renderVersionBadge();
 </script>
 
 <script>
   // PWA: service worker (aumenta SW_VER per forzare update)
-  const SW_VER = 11;
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
