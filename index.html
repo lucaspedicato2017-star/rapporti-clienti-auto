@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Rapporti Clienti – Reperibilità</title>
 
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Reperibilità">
+<meta name="theme-color" content="#2563eb" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Reperibilità" />
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json" />
 
 <style>
 body{font-family:system-ui;background:#f3f4f6;margin:0}
@@ -56,7 +56,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
 
-/* Evidenziazione card: resta finché non togli la notifica */
+/* Evidenziazione card (resta finché non togli la notifica) */
 .gc-highlight{
   outline:4px solid rgba(37,99,235,.75);
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
@@ -127,7 +127,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .cards-fullscreen .group-title{ grid-column: 1 / -1; }
 
-/* INBOX + DUP */
+/* INBOX */
 .inbox-item{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -306,6 +306,14 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+/* =======================
+   CONFIG VERSIONE CODICE
+   ======================= */
+var APP_VERSION = "2025-12-26.10";
+var APP_BUILD   = "2025-12-26 02:10";
+/* 🔥 aumenta SEMPRE quando cambi il codice (forza update SW) */
+var SW_VER      = 20;
+
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
 function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
@@ -370,12 +378,7 @@ var dupKeyMap = {};
 
 var manualMode = false;
 
-/* ===== VERSIONE CODICE ===== */
-var APP_VERSION = "2025-12-26.06";
-var APP_BUILD   = "2025-12-26 01:20";
-/* 🔥 aumenta sempre quando modifichi (forza update SW) */
-var SW_VER      = 14;
-
+/* ===== BADGE VERSIONE ===== */
 function renderVersionBadge(){
   if(!lastUpdateEl) return;
   lastUpdateEl.textContent = "Versione: " + APP_VERSION + " • Build: " + APP_BUILD + " • SW:" + SW_VER;
@@ -399,16 +402,19 @@ function caricaDati(){
   try{ var dati = localStorage.getItem("rapportiClienti"); if(dati) clients = JSON.parse(dati) || []; }
   catch(e){ clients=[]; }
 }
+
 function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} }
 function caricaInbox(){
   try{ var d = localStorage.getItem("rapportiInbox"); if(d) inbox = JSON.parse(d) || []; }
   catch(e){ inbox=[]; }
 }
+
 function salvaDup(){ try{ localStorage.setItem("rapportiDupNotifs", JSON.stringify(dupNotifs)); }catch(e){} }
 function caricaDup(){
   try{ var d = localStorage.getItem("rapportiDupNotifs"); if(d) dupNotifs = JSON.parse(d) || []; }
   catch(e){ dupNotifs=[]; }
 }
+
 function salvaModo(){ try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){} }
 function caricaModo(){ try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; } }
 
@@ -460,6 +466,7 @@ function clientKeyFromFields(n,v,c,tel){
 }
 function clientKeyFromClientObj(c){ return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
 function clientKeyFromParsed(d){ return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
+
 function safeIdFromKey(key){
   var s = String(key||"");
   try{
@@ -694,6 +701,7 @@ function renderInbox(){
   for(var i=0;i<inbox.length;i++){
     (function(ii){
       var it = inbox[ii];
+
       var div = document.createElement("div");
       div.className = "inbox-item";
 
@@ -740,6 +748,7 @@ function renderInbox(){
       actions.appendChild(openBtn);
       actions.appendChild(delBtn);
       div.appendChild(actions);
+
       inboxList.appendChild(div);
     })(i);
   }
@@ -777,16 +786,16 @@ function loadFromSmsText(testo){
   modello.value = d.modello;
 
   note.value = "";
-
   setLedOk(true);
   armFase2();
 }
 
-/* ===== URL PARAMS ===== */
+/* =======================
+   INGRESSO: URL / HASH / CLIPBOARD
+   ======================= */
+
 function getHashParams(){
   var h = (window.location.hash || "").replace(/^#/, "");
-  if(!h) return new URLSearchParams("");
-  // supporta: "sms=..." oppure "clip=1&r=..."
   try{ return new URLSearchParams(h); }catch(e){ return new URLSearchParams(""); }
 }
 
@@ -802,7 +811,6 @@ function getIncomingSmsFromUrl(){
       var hp = getHashParams();
       smsText = hp.get("sms") || "";
       if(!smsText){
-        // super fallback: "#sms=....&r=...."
         var h = (window.location.hash || "");
         if(h.indexOf("#sms=")===0){
           smsText = h.substring(5);
@@ -820,10 +828,7 @@ function getIncomingSmsFromUrl(){
 }
 
 function wantsClipboard(){
-  try{
-    var hp = getHashParams();
-    return hp.get("clip") === "1";
-  }catch(e){ return false; }
+  try{ return getHashParams().get("clip")==="1"; }catch(e){ return false; }
 }
 
 function clearIncomingUrl(){
@@ -832,11 +837,12 @@ function clearIncomingUrl(){
 
 /* ===== CLIPBOARD IMPORT ===== */
 var CLIP_PREFIX = "RAPPORTI_SMS:";
+
 function showClipBanner(on, msg){
   if(!clipWrap) return;
   if(on){
     clipWrap.classList.remove("hidden");
-    if(clipHint) clipHint.textContent = msg || "Pronto: tocca Importa per prendere l’SMS dagli appunti.";
+    if(clipHint) clipHint.textContent = msg || "Tocca Importa per prendere l’SMS dagli appunti.";
   }else{
     clipWrap.classList.add("hidden");
     if(clipHint) clipHint.textContent = "";
@@ -848,15 +854,13 @@ function normalizeClipboardPayload(txt){
   if(!txt) return "";
   if(txt.indexOf(CLIP_PREFIX) !== 0) return "";
   txt = txt.substring(CLIP_PREFIX.length);
-  txt = safeTrim(txt);
-  return txt;
+  return safeTrim(txt);
 }
 
 async function readClipboardText(){
   if(!navigator.clipboard || !navigator.clipboard.readText) return "";
   try{
-    var t = await navigator.clipboard.readText();
-    return String(t||"");
+    return String(await navigator.clipboard.readText() || "");
   }catch(e){
     return "";
   }
@@ -901,8 +905,6 @@ function handleIncomingSmsText(raw){
 }
 
 async function tryClipboardImport(auto){
-  // auto=true: chiamata senza tap (spesso iOS blocca)
-  // auto=false: chiamata da click (dovrebbe andare)
   var t = await readClipboardText();
   var payload = normalizeClipboardPayload(t);
   if(!payload){
@@ -912,57 +914,58 @@ async function tryClipboardImport(auto){
   return handleIncomingSmsText(payload);
 }
 
-/* click Importa */
 if(clipImportBtn){
   clipImportBtn.onclick = async function(){
-    // tentativo lettura appunti
     var ok = await tryClipboardImport(false);
     if(ok){
       showClipBanner(false);
       clearIncomingUrl();
-    }else{
-      // fallback manuale: incolla tu
-      showModal(function(m){
-        m.innerHTML =
-          '<h3>Incolla SMS</h3>'+
-          '<div class="small" style="color:#6b7280;margin-bottom:8px">Se iOS blocca la lettura appunti, incolla qui e premi Importa.</div>'+
-          '<textarea id="m_paste" style="height:140px" placeholder="Incolla qui..."></textarea>'+
-          '<div class="btn-row">'+
-            '<button class="btn-secondary" id="m_cancel">Annulla</button>'+
-            '<button class="btn-primary" id="m_ok">Importa</button>'+
-          '</div>';
-        m.querySelector("#m_cancel").onclick = closeModal;
-        m.querySelector("#m_ok").onclick = function(){
-          var raw = safeTrim(m.querySelector("#m_paste").value);
-          if(!raw){ alert("Incolla prima l'SMS."); return; }
-          closeModal();
-          handleIncomingSmsText(raw);
-          showClipBanner(false);
-          clearIncomingUrl();
-        };
-      });
+      return;
     }
+
+    // fallback manuale incolla
+    showModal(function(m){
+      m.innerHTML =
+        '<h3>Incolla SMS</h3>'+
+        '<div class="small" style="color:#6b7280;margin-bottom:8px">Se iOS blocca gli appunti, incolla qui e premi Importa.</div>'+
+        '<textarea id="m_paste" style="height:140px" placeholder="Incolla qui..."></textarea>'+
+        '<div class="btn-row">'+
+          '<button class="btn-secondary" id="m_cancel">Annulla</button>'+
+          '<button class="btn-primary" id="m_ok">Importa</button>'+
+        '</div>';
+      m.querySelector("#m_cancel").onclick = closeModal;
+      m.querySelector("#m_ok").onclick = function(){
+        var raw = safeTrim(m.querySelector("#m_paste").value);
+        if(!raw){ alert("Incolla prima l'SMS."); return; }
+        closeModal();
+        handleIncomingSmsText(raw);
+        showClipBanner(false);
+        clearIncomingUrl();
+      };
+    });
   };
 }
 if(clipHideBtn){
-  clipHideBtn.onclick = function(){ showClipBanner(false); clearIncomingUrl(); };
+  clipHideBtn.onclick = function(){
+    showClipBanner(false);
+    clearIncomingUrl();
+  };
 }
 
-/* ===== PROCESS INCOMING ===== */
 async function processIncoming(){
-  // 1) prova da URL (se mai dovesse passare)
+  // 1) prova SMS da URL (se mai dovesse passare)
   var fromUrl = getIncomingSmsFromUrl();
   if(fromUrl){
-    var okUrl = handleIncomingSmsText(fromUrl);
-    clearIncomingUrl();
+    handleIncomingSmsText(fromUrl);
     showClipBanner(false);
-    return okUrl;
+    clearIncomingUrl();
+    return true;
   }
 
-  // 2) se shortcut mette #clip=1, mostra banner e prova auto (può fallire su iOS)
+  // 2) fallback affidabile: clipboard (Shortcut mette #clip=1)
   if(wantsClipboard()){
     showClipBanner(true, "Arrivato SMS via scorciatoia: tocca Importa (oppure prova auto).");
-    var okAuto = await tryClipboardImport(true);
+    var okAuto = await tryClipboardImport(true); // può fallire senza gesto utente
     if(okAuto){
       showClipBanner(false);
       clearIncomingUrl();
@@ -971,11 +974,10 @@ async function processIncoming(){
     return false;
   }
 
-  // niente
   return false;
 }
 
-/* ===== iOS/PWA: rielabora quando torna visibile ===== */
+/* ===== iOS/PWA listeners ===== */
 function setupIncomingListeners(){
   try{
     window.addEventListener("hashchange", function(){ processIncoming(); });
@@ -1031,7 +1033,6 @@ toggleCliente.onclick=function(){
   if(clienteBox.classList.contains("hidden")) clienteBox.classList.remove("hidden");
   else clienteBox.classList.add("hidden");
 };
-
 newClientBtn.onclick=function(){
   clienteBox.classList.remove("hidden");
   resetCampiGestione();
@@ -1060,18 +1061,14 @@ clearFieldsBtn.onclick=function(){
 
 addBtn.onclick=function(){
   var problemOk = !!problema.value;
-  if(problema.value === "ALTRO"){
-    problemOk = safeTrim(problemaAltro.value).length > 0;
-  }
+  if(problema.value === "ALTRO") problemOk = safeTrim(problemaAltro.value).length > 0;
   if(!problemOk || !stato.value){
     alert("Seleziona PROBLEMA e TIPO GESTIONE. Se scegli ALTRO, scrivi il problema.");
     return;
   }
 
   var problemaFinale = problema.value;
-  if(problema.value === "ALTRO"){
-    problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
-  }
+  if(problema.value === "ALTRO") problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
 
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey) >= 0){
@@ -1126,6 +1123,7 @@ function row(t){
   r.textContent=t;
   return r;
 }
+
 function buildCard(c, i){
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
@@ -1199,6 +1197,7 @@ function buildCard(c, i){
 
   return d;
 }
+
 function render(){
   cards.innerHTML="";
 
@@ -1295,6 +1294,7 @@ function openEdit(i){
         modal.querySelector("#e_citta").value,
         modal.querySelector("#e_telefono").value
       );
+
       for(var x=0;x<clients.length;x++){
         if(x!==i && clientKeyFromClientObj(clients[x]) === newKey){
           showToast("⚠️ Esiste già un cliente con gli stessi dati");
@@ -1347,6 +1347,7 @@ function openDelete(i){
     };
   });
 }
+
 function cancellaTutto(){
   showModal(function(m){
     m.innerHTML=
@@ -1367,7 +1368,10 @@ function cancellaTutto(){
 
 /* ===== PDF ===== */
 function generaPdfWhatsapp(){
-  if(!clients.length){ alert("Nessun cliente"); return; }
+  if(!clients.length){
+    alert("Nessun cliente");
+    return;
+  }
   if(!window.jspdf || !window.jspdf.jsPDF){
     alert("PDF non disponibile: jsPDF non caricato. Apri in Safari/Chrome con internet.");
     return;
@@ -1431,8 +1435,8 @@ function generaPdfWhatsapp(){
     didParseCell: function (data) {
       if (data.section === "body") {
         var rowIndex = data.row.index;
-        var c = clients[rowIndex];
-        var s = c ? c.stato : "";
+        var cc = clients[rowIndex];
+        var s = cc ? cc.stato : "";
         data.cell.styles.fillColor = statoColor(s);
         data.cell.styles.textColor = [0,0,0];
       }
@@ -1444,7 +1448,9 @@ function generaPdfWhatsapp(){
   try { file = new File([blob], "rapporti-clienti.pdf", { type: "application/pdf" }); } catch(e){ file=null; }
 
   if(file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
-    navigator.share({ files: [file] }).catch(function(){ openPdfFallback(pdf, blob); });
+    navigator.share({ files: [file] }).catch(function(){
+      openPdfFallback(pdf, blob);
+    });
   } else {
     openPdfFallback(pdf, blob);
   }
@@ -1482,6 +1488,7 @@ caricaDup();
 rebuildDupKeyMap();
 caricaModo();
 
+// default: AUTOMATICO se mai salvato
 if(localStorage.getItem("rapportiManualMode") === null){
   manualMode = false;
   salvaModo();
@@ -1493,7 +1500,7 @@ renderDupNotifs();
 applyMode();
 
 setupIncomingListeners();
-processIncoming();   // 🔥 qui gestisce URL o clipboard banner
+processIncoming();
 
 renderVersionBadge();
 </script>
