@@ -354,9 +354,11 @@ var dupKeyMap = {};  // set chiavi clienti con notifica attiva
 var manualMode = false;
 
 /* ===== VERSIONE CODICE (AGGIORNA QUI QUANDO MODIFICHI) ===== */
-var APP_VERSION = "2025-12-26.03";
+var APP_VERSION = "2025-12-26.04";
 var APP_BUILD   = "2025-12-26 00:00";
-var SW_VER      = 11;
+
+/* ✅ Forza update SW quando cambi codice */
+var SW_VER      = 14;
 
 function renderVersionBadge(){
   if(!lastUpdateEl) return;
@@ -784,13 +786,15 @@ function getIncomingSms(){
 
     // 2) fallback iOS: #sms=...
     if(!smsText){
-      var h = (window.location.hash || "").replace(/^#/, "");
-      if(h.indexOf("sms=") !== -1){
-        var hs = h.startsWith("sms=") ? h : (h.split("?").pop() || h);
-        var hp = new URLSearchParams(hs);
+      var h = (window.location.hash || "").replace(/^#/, ""); // es: "sms=XXX&r=YYY"
+      if(h){
+        var hp = new URLSearchParams(h);
         smsText = hp.get("sms") || "";
-        if(!smsText && h.startsWith("sms=")){
+
+        if(!smsText && h.indexOf("sms=") === 0){
           smsText = h.substring(4);
+          var amp = smsText.indexOf("&");
+          if(amp !== -1) smsText = smsText.substring(0, amp);
         }
       }
     }
@@ -801,7 +805,6 @@ function getIncomingSms(){
   if(smsText && smsText.indexOf("%") !== -1){
     try{ smsText = decodeURIComponent(smsText); }catch(e){}
   }
-
   return smsText;
 }
 
@@ -813,7 +816,6 @@ function handleIncomingSmsFromUrl(){
     // evita doppioni se l’URL resta in cache
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
     if(last === smsText){
-      // pulisci url/hash
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -823,7 +825,6 @@ function handleIncomingSmsFromUrl(){
     var cKey = clientKeyFromParsed(parsed);
     var existingIdx = findClientIndexByKey(cKey);
 
-    // se cliente già esiste: notifica persistente + highlight sticky
     if(existingIdx >= 0){
       addDupNotif(smsText, cKey);
       showToast("⚠️ Cliente già presente: notifica in FASE 3");
@@ -834,15 +835,24 @@ function handleIncomingSmsFromUrl(){
       return;
     }
 
-    // altrimenti: inbox normale
     addSmsToInbox(smsText);
 
     manualMode = false;
     salvaModo();
     applyMode();
 
-    // pulisci url/hash
     window.history.replaceState({}, document.title, window.location.pathname);
+  }catch(e){}
+}
+
+/* ===== iOS/PWA: rielabora SMS quando l’app torna visibile o cambia hash ===== */
+function setupIncomingListeners(){
+  try{
+    window.addEventListener("hashchange", function(){ handleIncomingSmsFromUrl(); });
+    window.addEventListener("pageshow", function(){ handleIncomingSmsFromUrl(); });
+    document.addEventListener("visibilitychange", function(){
+      if(!document.hidden) handleIncomingSmsFromUrl();
+    });
   }catch(e){}
 }
 
@@ -1368,7 +1378,11 @@ render();
 renderInbox();
 renderDupNotifs();
 applyMode();
+
+/* ✅ importante su iPhone/PWA */
+setupIncomingListeners();
 handleIncomingSmsFromUrl();
+
 renderVersionBadge();
 </script>
 
