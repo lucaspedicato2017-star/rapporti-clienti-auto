@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Rapporti Clienti – Reperibilità</title>
 
-<!-- “Stile app” su iPhone -->
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -29,7 +28,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .btn-danger{background:#dc2626;color:#fff}
 .hidden{display:none}
 
-/* LED più visibile */
+/* LED */
 .led{width:14px;height:14px;border-radius:50%;background:#9ca3af;display:inline-block;margin-left:8px;vertical-align:middle}
 .led.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25), 0 0 14px rgba(34,197,94,.6)}
 
@@ -57,6 +56,18 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
 
+/* Evidenziazione card (non cambia colore stato) */
+.gc-highlight{
+  outline:4px solid rgba(37,99,235,.75);
+  box-shadow:0 0 0 6px rgba(37,99,235,.12);
+  animation: pulseHL 1.1s ease-in-out 0s 2;
+}
+@keyframes pulseHL{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.01)}
+  100%{transform:scale(1)}
+}
+
 /* MODALE */
 .modal-backdrop{
   position:fixed;left:0;top:0;right:0;bottom:0;
@@ -76,7 +87,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .modal .btn-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .small{font-size:12px}
 
-/* ===== FEEDBACK FASE 2 ===== */
+/* FEEDBACK FASE 2 */
 .fase2-attesa{
   background:#fff7ed;
   outline:3px solid rgba(251,146,60,.65);
@@ -88,7 +99,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   box-shadow:0 8px 20px rgba(34,197,94,.18);
 }
 
-/* ===== FULLSCREEN FASE 3 ===== */
+/* FULLSCREEN FASE 3 */
 .cards-fullscreen{
   position:fixed;
   left:0; top:0; right:0; bottom:0;
@@ -105,7 +116,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   gap:12px;
 }
 
-/* ===== GRUPPI PER COMUNE (FASE 3) ===== */
+/* GRUPPI PER COMUNE */
 .group-title{
   font-size:14px;
   font-weight:900;
@@ -116,7 +127,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .cards-fullscreen .group-title{ grid-column: 1 / -1; }
 
-/* ===== INBOX SMS (FASE 2) ===== */
+/* INBOX */
 .inbox-item{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -127,10 +138,47 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .inbox-title{font-weight:900}
 .inbox-sub{font-size:12px;color:#6b7280;margin-top:4px}
 .inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* Toast */
+.toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:10001;
+  background:rgba(17,24,39,.92);
+  color:#fff;
+  padding:10px 12px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:800;
+  max-width:min(560px, calc(100% - 24px));
+  text-align:center;
+  display:none;
+}
+
+/* Badge ultimo aggiornamento */
+.last-update{
+  position:fixed;
+  top:calc(8px + env(safe-area-inset-top));
+  right:10px;
+  z-index:10000;
+  font-size:11px;
+  font-weight:900;
+  color:#6b7280;
+  background:rgba(255,255,255,.85);
+  border:1px solid #e5e7eb;
+  padding:4px 8px;
+  border-radius:999px;
+  backdrop-filter: blur(6px);
+}
 </style>
 </head>
 
 <body>
+<div id="lastUpdate" class="last-update">Aggiornato: —</div>
+<div id="toast" class="toast"></div>
+
 <div class="app">
 
   <!-- FASE 1 (manuale) -->
@@ -226,7 +274,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 
 <div id="modalRoot" class="hidden"></div>
 
-<!-- Librerie PDF (CDN) -->
+<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
@@ -266,35 +314,67 @@ var addBtn = $("addBtn");
 var cards = $("cards");
 var modalRoot = $("modalRoot");
 
-// Inbox SMS (fase 2)
 var inboxWrap = $("inboxWrap");
 var inboxList = $("inboxList");
 var inboxCount = $("inboxCount");
 var clearInboxBtn = $("clearInboxBtn");
 
+var toastEl = $("toast");
+var lastUpdateEl = $("lastUpdate");
+
 var clients = [];
 var fase2Armed = false;
 
-// Inbox: SMS in attesa
 var inbox = [];
 var selectedInboxIndex = -1;
 
-// Modalità: false = AUTOMATICA (fase1 + nuovo cliente nascosti)
 var manualMode = false;
+
+/* ===== TOAST ===== */
+var toastTimer = null;
+function showToast(msg){
+  if(!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.style.display = "block";
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){
+    toastEl.style.display = "none";
+  }, 2200);
+}
+
+/* ===== ULTIMO AGGIORNAMENTO ===== */
+function formatDateTime(ts){
+  var d = new Date(ts);
+  return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "/" + String(d.getFullYear()).slice(-2) +
+         " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+function setLastUpdate(ts){
+  ts = ts || Date.now();
+  try{ localStorage.setItem("rapportiLastUpdate", String(ts)); }catch(e){}
+  if(lastUpdateEl) lastUpdateEl.textContent = "Aggiornato: " + formatDateTime(ts);
+}
+function loadLastUpdate(){
+  var ts = 0;
+  try{ ts = parseInt(localStorage.getItem("rapportiLastUpdate") || "0", 10); }catch(e){ ts = 0; }
+  if(lastUpdateEl){
+    lastUpdateEl.textContent = ts ? ("Aggiornato: " + formatDateTime(ts)) : "Aggiornato: —";
+  }
+}
 
 /* ===== SALVATAGGIO ===== */
 function salvaDati(){
   try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){}
+  setLastUpdate();
 }
 function caricaDati(){
   try{
     var dati = localStorage.getItem("rapportiClienti");
-    if(dati) clients = JSON.parse(dati);
+    if(dati) clients = JSON.parse(dati) || [];
   }catch(e){ clients=[]; }
 }
-
 function salvaInbox(){
   try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){}
+  setLastUpdate();
 }
 function caricaInbox(){
   try{
@@ -302,7 +382,6 @@ function caricaInbox(){
     if(d) inbox = JSON.parse(d) || [];
   }catch(e){ inbox=[]; }
 }
-
 function salvaModo(){
   try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){}
 }
@@ -310,7 +389,7 @@ function caricaModo(){
   try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; }
 }
 
-/* ===== STATO LABEL ===== */
+/* ===== LABEL STATO ===== */
 function statoLabel(s){
   var map = {
     telefonica:"GESTITA AL TELEFONO",
@@ -329,7 +408,7 @@ function parseSMS(t){
   t = t || "";
   var low=t.toLowerCase();
 
-  var tel=t.match(/tel\.?\s*([0-9 ]+)/i);
+  var tel=t.match(/tel\.?\s*([0-9 +]+)/i);
   if(tel) r.telefono=tel[1].replace(/\s+/g,"");
 
   var m=t.match(/modello\s*(.*?)\s*id\b/i);
@@ -346,6 +425,50 @@ function parseSMS(t){
     }
   }
   return r;
+}
+
+/* ===== CHIAVE CLIENTE + HIGHLIGHT ===== */
+function normKey(s){
+  return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," ");
+}
+function cleanPhone(p){
+  return String(p||"").replace(/[^0-9+]/g,"");
+}
+function clientKeyFromFields(n,v,c,tel){
+  var ph = cleanPhone(tel);
+  if(ph) return "tel:" + ph;
+  return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
+}
+function clientKeyFromClientObj(c){
+  return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono);
+}
+function clientKeyFromParsed(d){
+  return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono);
+}
+function safeIdFromKey(key){
+  // id stabile e sicuro
+  var s = String(key||"");
+  // base64 url-safe
+  try{
+    var b = btoa(unescape(encodeURIComponent(s))).replace(/=+/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+    return "card_" + b;
+  }catch(e){
+    return "card_" + s.replace(/[^a-z0-9]+/gi,"_").slice(0,80);
+  }
+}
+function findClientIndexByKey(key){
+  for(var i=0;i<clients.length;i++){
+    if(clientKeyFromClientObj(clients[i]) === key) return i;
+  }
+  return -1;
+}
+function highlightClientByKey(key){
+  var id = safeIdFromKey(key);
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add("gc-highlight");
+  try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
+  setTimeout(function(){ el.classList.remove("gc-highlight"); }, 2500);
 }
 
 /* ===== FEEDBACK FASE 2 ===== */
@@ -390,22 +513,19 @@ function setLedOk(on){
   }
 }
 
-/* ===== MODALITÀ MANUALE/AUTOMATICA ===== */
+/* ===== MODALITÀ ===== */
 function applyMode(){
   if(manualMode){
-    // manuale ON: mostra fase 1 e nuovo cliente
     fase1.classList.remove("hidden");
     newClientBtn.classList.remove("hidden");
     manualModeBtn.textContent = "⚡ Modalità automatica";
   }else{
-    // automatico ON: nascondi fase 1 e nuovo cliente
     fase1.classList.add("hidden");
     newClientBtn.classList.add("hidden");
     manualModeBtn.textContent = "✍️ Modalità manuale";
   }
   renderInbox();
 }
-
 if(manualModeBtn){
   manualModeBtn.onclick = function(){
     manualMode = !manualMode;
@@ -414,10 +534,21 @@ if(manualModeBtn){
   };
 }
 
-/* ===== INBOX SMS (FASE 2) ===== */
+/* ===== INBOX ===== */
+function inboxHasRaw(text){
+  text = safeTrim(text);
+  for(var i=0;i<inbox.length;i++){
+    if(safeTrim(inbox[i].raw) === text) return true;
+  }
+  return false;
+}
 function addSmsToInbox(text){
   text = safeTrim(text);
   if(!text) return;
+
+  // evita doppioni in inbox (come già ti piace)
+  if(inboxHasRaw(text)) return;
+
   inbox.unshift({ raw: text, ts: Date.now() });
   salvaInbox();
   renderInbox();
@@ -465,10 +596,24 @@ function renderInbox(){
       delBtn.className = "btn-danger";
       delBtn.textContent = "Elimina";
       delBtn.onclick = function(){
-        inbox.splice(ii,1);
-        salvaInbox();
-        if(selectedInboxIndex === ii) selectedInboxIndex = -1;
-        renderInbox();
+        // ✅ conferma eliminazione singola
+        showModal(function(m){
+          m.innerHTML =
+            '<h3>Eliminare questo SMS in attesa?</h3>'+
+            '<div class="small" style="color:#6b7280;margin-bottom:10px">'+preview+'</div>'+
+            '<div class="btn-row">'+
+              '<button class="btn-secondary" id="noDelIn">NO</button>'+
+              '<button class="btn-danger" id="siDelIn">SI</button>'+
+            '</div>';
+          m.querySelector("#noDelIn").onclick = closeModal;
+          m.querySelector("#siDelIn").onclick = function(){
+            inbox.splice(ii,1);
+            if(selectedInboxIndex === ii) selectedInboxIndex = -1;
+            salvaInbox();
+            renderInbox();
+            closeModal();
+          };
+        });
       };
 
       actions.appendChild(openBtn);
@@ -512,13 +657,14 @@ function loadFromSmsText(testo){
   telefono.value = d.telefono;
   modello.value = d.modello;
 
-  // utile: lascia il testo SMS nelle note (puoi cancellarlo se vuoi)
-  note.value = testo;
+  // ✅ NON scrive l'SMS nelle note
+  note.value = "";
 
   setLedOk(true);
   armFase2();
 }
 
+/* ===== IMPORT DA URL (?sms=...) ===== */
 function handleIncomingSmsFromUrl(){
   try{
     var p = new URLSearchParams(window.location.search);
@@ -526,17 +672,32 @@ function handleIncomingSmsFromUrl(){
     if(!smsText) return;
 
     // evita doppioni se l’URL resta in cache
-    var key = smsText; // usa tutto il testo, non solo i primi 80 caratteri
+    var keyRaw = smsText; // usa tutto il testo
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
-    if(last === key){
+    if(last === keyRaw){
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
-    localStorage.setItem("lastIncomingSmsKey", key);
+    localStorage.setItem("lastIncomingSmsKey", keyRaw);
 
+    // ✅ SE CLIENTE GIA' ESISTE: NON mettere in attesa, avvisa + evidenzia card
+    var parsed = parseSMS(smsText);
+    var cKey = clientKeyFromParsed(parsed);
+    var existingIdx = findClientIndexByKey(cKey);
+    if(existingIdx >= 0){
+      showToast("⚠️ Cliente già presente: evidenziato in lista");
+      render(); // assicura che la card esista in DOM
+      highlightClientByKey(cKey);
+
+      // pulisci URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setLastUpdate();
+      return;
+    }
+
+    // aggiungi in inbox
     addSmsToInbox(smsText);
 
-    // torna in automatico
     manualMode = false;
     salvaModo();
     applyMode();
@@ -618,7 +779,6 @@ stato.onchange=function(){ checkFase2Ready(); };
 
 clearFieldsBtn.onclick=function(){
   resetUICompleta();
-  // se sei in automatico, resta così; se sei in manuale, non tocchiamo
   applyMode();
 };
 
@@ -635,6 +795,15 @@ addBtn.onclick=function(){
   var problemaFinale = problema.value;
   if(problema.value === "ALTRO"){
     problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
+  }
+
+  // ✅ evita doppione in fase 3 (stesso telefono oppure stesso nome+indirizzo)
+  var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
+  if(findClientIndexByKey(newKey) >= 0){
+    showToast("⚠️ Cliente già presente: non aggiunto");
+    render();
+    highlightClientByKey(newKey);
+    return;
   }
 
   clients.push({
@@ -676,7 +845,7 @@ function showModal(build){
 }
 function closeModal(){ modalRoot.classList.add("hidden"); modalRoot.innerHTML=""; }
 
-/* ===== RENDER HELPERS ===== */
+/* ===== RENDER ===== */
 function row(t){
   var r=document.createElement("div");
   r.className="gc-row";
@@ -687,6 +856,10 @@ function row(t){
 function buildCard(c, i){
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
+
+  // id stabile per highlight
+  var cKey = clientKeyFromClientObj(c);
+  d.id = safeIdFromKey(cKey);
 
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
@@ -721,7 +894,7 @@ function buildCard(c, i){
   }
 
   if(c.telefono){
-    var clean = String(c.telefono).replace(/\s+/g,"");
+    var clean = cleanPhone(c.telefono);
     var t=document.createElement("a");
     t.className="gc-big gc-link";
     t.textContent="📞 "+clean;
@@ -753,7 +926,6 @@ function buildCard(c, i){
   return d;
 }
 
-/* ===== RENDER (raggruppa per comune) ===== */
 function render(){
   cards.innerHTML="";
 
@@ -791,9 +963,7 @@ function render(){
 function openEdit(i){
   var c = clients[i];
 
-  function esc(v){
-    return String(v||"").replace(/"/g,"&quot;");
-  }
+  function esc(v){ return String(v||"").replace(/"/g,"&quot;"); }
 
   var probSel = "";
   var probAlt = "";
@@ -854,6 +1024,23 @@ function openEdit(i){
     modal.querySelector("#annullaEdit").onclick = closeModal;
 
     modal.querySelector("#salvaEdit").onclick = function(){
+      // se cambi chiave, evita duplicati
+      var newKey = clientKeyFromFields(
+        modal.querySelector("#e_nome").value,
+        modal.querySelector("#e_via").value,
+        modal.querySelector("#e_citta").value,
+        modal.querySelector("#e_telefono").value
+      );
+      for(var x=0;x<clients.length;x++){
+        if(x!==i && clientKeyFromClientObj(clients[x]) === newKey){
+          showToast("⚠️ Esiste già un cliente con gli stessi dati");
+          closeModal();
+          render();
+          highlightClientByKey(newKey);
+          return;
+        }
+      }
+
       c.nome = modal.querySelector("#e_nome").value;
       c.via = modal.querySelector("#e_via").value;
       c.citta = modal.querySelector("#e_citta").value;
@@ -921,15 +1108,12 @@ function generaPdfWhatsapp(){
     alert("Nessun cliente");
     return;
   }
-
   if(!window.jspdf || !window.jspdf.jsPDF){
     alert("PDF non disponibile: jsPDF non caricato. Apri in Safari/Chrome con internet.");
     return;
   }
-
   var jsPDF = window.jspdf.jsPDF;
   var pdf = new jsPDF("l", "mm", "a4");
-
   if(typeof pdf.autoTable !== "function"){
     alert("PDF non disponibile: AutoTable non caricato.");
     return;
@@ -959,7 +1143,6 @@ function generaPdfWhatsapp(){
   pdf.text("Data: " + dataLabel, 14, 20);
 
   var head = [[ "NOME","INDIRIZZO","TELEFONO","MODELLO","PROBLEMA","GESTIONE","NOTE" ]];
-
   var body = [];
   for(var i=0;i<clients.length;i++){
     var c = clients[i];
@@ -1008,7 +1191,6 @@ function generaPdfWhatsapp(){
     openPdfFallback(pdf, blob);
   }
 }
-
 function openPdfFallback(pdf, blob){
   try{
     var url = URL.createObjectURL(blob);
@@ -1016,7 +1198,6 @@ function openPdfFallback(pdf, blob){
     if(!w) window.location.href = url;
     return;
   }catch(e){}
-
   try{
     var dataUri = pdf.output("datauristring");
     window.location.href = dataUri;
@@ -1025,7 +1206,7 @@ function openPdfFallback(pdf, blob){
   }
 }
 
-/* ===== FULLSCREEN FASE 3 ===== */
+/* ===== FULLSCREEN ===== */
 function toggleCardsFullscreen(){
   if(fase3.classList.contains("cards-fullscreen")){
     fase3.classList.remove("cards-fullscreen");
@@ -1036,12 +1217,13 @@ function toggleCardsFullscreen(){
   }
 }
 
-/* INIT */
+/* ===== INIT ===== */
 caricaDati();
 caricaInbox();
 caricaModo();
+loadLastUpdate();
 
-// default: AUTOMATICO (se non hai mai salvato manuale)
+// default: AUTOMATICO se mai salvato
 if(localStorage.getItem("rapportiManualMode") === null){
   manualMode = false;
   salvaModo();
@@ -1050,14 +1232,12 @@ if(localStorage.getItem("rapportiManualMode") === null){
 render();
 renderInbox();
 applyMode();
-
-// se l’app viene aperta con ?sms=TESTO... aggiunge in inbox
 handleIncomingSmsFromUrl();
 </script>
 
 <script>
   // PWA: service worker (aumenta SW_VER per forzare update)
-  const SW_VER = 10;
+  const SW_VER = 11;
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
