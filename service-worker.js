@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v30"; // deve combaciare con SW_VER=30 in index.html
+const CACHE_VERSION = "v35"; // deve combaciare con SW_VER=31 in index.html
 const CACHE_NAME = "rapporti-clienti-" + CACHE_VERSION;
 
 const CORE_ASSETS = [
@@ -22,7 +22,7 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
-// HTML = network-first (così vedi subito la versione nuova)
+// HTML = network-first
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
