@@ -56,7 +56,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
 
-/* evidenziazione breve (usata quando serve) */
+/* evidenziazione breve */
 .gc-highlight{
   outline:4px solid rgba(37,99,235,.75);
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
@@ -74,7 +74,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
 }
 
-/* card "completa" (tutti campi ok) -> un filo più grande */
+/* card "completa" (tutti campi ok) */
 .gc-complete{padding:14px}
 .gc-complete .gc-title{font-size:19px}
 .gc-complete .gc-big{font-size:17px}
@@ -315,9 +315,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 /* =========================
    VERSIONE (aggiorna tu)
    ========================= */
-var APP_VERSION = "2025-12-28.v43";
-var BUILD_LABEL = "2025-12-28 22:45";
-var SW_VER = 43;
+var APP_VERSION = "2025-12-28.v44";
+var BUILD_LABEL = "2025-12-28 23:10";
+var SW_VER = 44;
 
 /* =========================
    HELPERS
@@ -455,16 +455,7 @@ function statoLabel(s){
 }
 
 /* =========================
-   PARSE SMS (SOLIDO)
-   Regole:
-   - Nome: prima di VIA/PIAZZA/...
-   - Via: dalla strada fino al civico (ultimo civico)
-   - Comune: dal civico fino a Tel
-   - Tel: dopo Tel
-   - Modello: dopo Modello fino a "- ID"
-   - ID Apparecchio: dopo "ID Apparecchio"
-   - Matricola: dopo "Matricola"
-   - BUTTA via TECNO-...
+   PARSE SMS (AUTO-ROBUSTO)
    ========================= */
 function stripTecno(s){
   return String(s||"")
@@ -481,59 +472,109 @@ function parseSMS(t){
   t = t.replace(/[–—]/g,"-").replace(/\s*-\s*/g," - ");
   t = stripTecno(t);
 
-  // TEL
-  var tel = t.match(/\bTel\.?\s*[:\-]?\s*([+]?[\d\s]+)/i);
-  if(tel) r.telefono = tel[1].replace(/\s+/g,"").trim();
+  function findPos(re){ var m = t.match(re); return m ? (m.index||0) : -1; }
+
+  var telPos = findPos(/\bTel\.?\b/i);
+  var modPos = findPos(/\bModello\b/i);
+  var idPos  = findPos(/\bID\s*Apparecchio\b/i);
+  var matPos = findPos(/\bMatricola\b/i);
+
+  // TELEFONO
+  if(telPos >= 0){
+    var tail = t.slice(telPos);
+    var mTel = tail.match(/\bTel\.?\s*[:\-]?\s*([+]?[\d\s]+)/i);
+    if(mTel) r.telefono = mTel[1].replace(/\s+/g,"").trim();
+  }else{
+    var mMob = t.match(/\b(3\d{8,10})\b/);
+    if(mMob) r.telefono = mMob[1];
+  }
 
   // ID APPARECCHIO
-  var idA = t.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9]+)/i);
-  if(idA) r.idApparecchio = safeTrim(idA[1]);
+  if(idPos >= 0){
+    var tailId = t.slice(idPos);
+    var mId = tailId.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9]+)/i);
+    if(mId) r.idApparecchio = safeTrim(mId[1]);
+  }
 
   // MATRICOLA
-  var mat = t.match(/\bMatricola\b\s*[:\-]?\s*([0-9A-Za-z\-\/]+)/i);
-  if(mat) r.matricola = safeTrim(mat[1]);
+  if(matPos >= 0){
+    var tailMat = t.slice(matPos);
+    var mMat = tailMat.match(/\bMatricola\b\s*[:\-]?\s*([0-9A-Za-z\-\/]+)/i);
+    if(mMat) r.matricola = safeTrim(mMat[1]);
+  }
 
   // MODELLO
-  var mod = t.match(/\bModello\b\s*[:\-]?\s*(.+?)(?=\s*(?:-\s*ID\b|-\s*Matricola\b|\bID\s*Apparecchio\b|\bMatricola\b|$))/i);
-  if(mod) r.modello = safeTrim(mod[1]);
+  if(modPos >= 0){
+    var end = t.length;
+    var candidates = [];
+    if(idPos > modPos) candidates.push(idPos);
+    if(matPos > modPos) candidates.push(matPos);
 
-  // INDIRIZZO: da VIA/PIAZZA... fino a Tel/Modello/ID/Matricola/fine
-  var addrRe = /\b(via|viale|piazza|p\.za|corso|c\.so|strada|s\.da|largo|vicolo)\b\s+(.+?)(?=\s+\b(?:Tel\.?|Modello|ID|Matricola)\b|$)/i;
-  var m = t.match(addrRe);
+    var dashIdPos = findPos(/-\s*ID\b/i);
+    if(dashIdPos > modPos) candidates.push(dashIdPos);
 
-  if(m){
-    var addrFull = safeTrim(m[0]).replace(/\s+-\s*$/,"").trim();
+    if(candidates.length) end = Math.min.apply(null, candidates);
 
-    // NOME
-    var idx = t.toLowerCase().indexOf(addrFull.toLowerCase());
-    if(idx > 0) r.nome = safeTrim(t.substring(0, idx).replace(/\s+-\s*$/,"").trim());
+    var modelChunk = t.slice(modPos, end);
+    var mMod = modelChunk.match(/\bModello\b\s*[:\-]?\s*(.+)$/i);
+    if(mMod) r.modello = safeTrim(mMod[1].replace(/\s*-\s*$/,"").trim());
+  }
+
+  // NOME + INDIRIZZO: solo prima di Tel (o Modello se manca Tel)
+  var pre = t;
+  if(telPos > 0) pre = t.slice(0, telPos).trim();
+  else if(modPos > 0) pre = t.slice(0, modPos).trim();
+
+  var streetRe = /\b(via|viale|piazza|p\.za|corso|c\.so|strada|s\.da|largo|vicolo)\b/i;
+  var mStreet = pre.match(streetRe);
+
+  if(mStreet){
+    var streetWord = mStreet[0];
+    var streetIdx = pre.toLowerCase().indexOf(streetWord.toLowerCase());
+
+    r.nome = safeTrim(pre.slice(0, streetIdx).replace(/\s+-\s*$/,"").trim());
+    var addrFull = safeTrim(pre.slice(streetIdx).replace(/\s+-\s*$/,"").trim());
 
     var tokens = addrFull.split(" ").filter(Boolean);
 
-    function isCivico(tok){
-      return /^\d+(?:[A-Za-z])?(?:\/\d+)?$/.test(tok) || /^\d+[A-Za-z]\/\d+$/.test(tok);
+    // normalizza "7/b" -> "7b"
+    for(var z=0; z<tokens.length; z++){
+      tokens[z] = tokens[z].replace(/^(\d+)\s*\/\s*([A-Za-z])$/,"$1$2");
     }
 
-    var civIdx = -1;
-    for(var i=tokens.length-1; i>=1; i--){
-      if(isCivico(tokens[i])) { civIdx = i; break; }
-
-      // caso "15 B"
-      if(i>=2 && /^[A-Za-z]$/.test(tokens[i]) && /^\d+$/.test(tokens[i-1])){
-        tokens[i-1] = tokens[i-1] + tokens[i];
-        tokens.splice(i,1);
-        civIdx = i-1;
+    // unisci "15 B" -> "15B"
+    for(var k=tokens.length-1; k>=1; k--){
+      if(/^[A-Za-z]$/.test(tokens[k]) && /^\d+$/.test(tokens[k-1])){
+        tokens[k-1] = tokens[k-1] + tokens[k];
+        tokens.splice(k,1);
         break;
       }
     }
 
+    function isCivico(tok){
+      return /^\d+[A-Za-z]?(?:\/\d+)?$/.test(tok);
+    }
+
+    // civico = ULTIMO civico valido (così VIA 25 APRILE 473 => 473)
+    var civIdx = -1;
+    for(var i=tokens.length-1; i>=1; i--){
+      if(isCivico(tokens[i])) { civIdx = i; break; }
+    }
+
     if(civIdx >= 0){
-      r.via = safeTrim(tokens.slice(0, civIdx+1).join(" ")).replace(/[,\-]+$/,"").trim();
+      r.via   = safeTrim(tokens.slice(0, civIdx+1).join(" ")).replace(/[,\-]+$/,"").trim();
       r.citta = safeTrim(tokens.slice(civIdx+1).join(" ")).replace(/[,\-]+$/,"").trim();
-    } else {
-      r.via = safeTrim(addrFull).replace(/[,\-]+$/,"").trim();
+    }else{
+      r.via = addrFull;
       r.citta = "";
     }
+
+    // sicurezza: comune non deve contenere parole tecniche
+    if(/\b(id|matricola|apparecchio|modello|tel)\b/i.test(r.citta)){
+      r.citta = "";
+    }
+  }else{
+    r.nome = safeTrim(pre);
   }
 
   return r;
@@ -574,11 +615,8 @@ function findClientIndexByKey(key){
    ========================= */
 function updateAutoBoxVisibility(){
   if(!autoBox) return;
-  if((presentNotifs.length || inbox.length)){
-    autoBox.classList.remove("hidden");
-  }else{
-    autoBox.classList.add("hidden");
-  }
+  if((presentNotifs.length || inbox.length)) autoBox.classList.remove("hidden");
+  else autoBox.classList.add("hidden");
 }
 
 /* =========================
@@ -619,11 +657,9 @@ function disarmFase2(){
 }
 function checkFase2Ready(){
   if(!fase2Armed) return;
-
   var problemOk = !!problema.value;
   if(problema.value === "ALTRO") problemOk = safeTrim(problemaAltro.value).length > 0;
   var statoOk = !!stato.value;
-
   if(problemOk && statoOk) setFase2State("ok");
   else setFase2State("attesa");
 }
@@ -656,7 +692,6 @@ function applyMode(){
     newClientBtn.classList.add("hidden");
     manualModeBtn.textContent = "✍️ Modalità manuale";
   }
-  // autoBox NON dipende dalla modalità
   renderInbox();
   renderPresent();
   updateAutoBoxVisibility();
@@ -689,7 +724,6 @@ function addSmsToInbox(text){
   renderInbox();
   updateAutoBoxVisibility();
 }
-
 function renderInbox(){
   if(!inboxWrap) return;
 
@@ -712,7 +746,6 @@ function renderInbox(){
       div.className = "inbox-item";
 
       var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
-
       div.innerHTML =
         '<div class="inbox-title">SMS • ' + escapeHtml(preview) + '</div>' +
         '<div class="inbox-sub">Tocca Apri per gestirlo</div>';
@@ -761,7 +794,6 @@ function renderInbox(){
 
   updateAutoBoxVisibility();
 }
-
 if(clearInboxBtn){
   clearInboxBtn.onclick = function(){
     showModal(function(m){
@@ -817,7 +849,6 @@ function removePresentAt(i){
   render(); // aggiorna highlight sticky
   updateAutoBoxVisibility();
 }
-
 function renderPresent(){
   if(!presentWrap) return;
 
@@ -870,7 +901,6 @@ function renderPresent(){
 
   updateAutoBoxVisibility();
 }
-
 if(clearPresentBtn){
   clearPresentBtn.onclick = function(){
     showModal(function(m){
@@ -938,7 +968,6 @@ function handleIncomingSmsFromUrl(){
     var existingIdx = findClientIndexByKey(cKey);
 
     if(existingIdx >= 0){
-      // ✅ come prima: evidenzia + messaggio "scheda presente" (persistente finché non elimini)
       addPresentNotif(cKey, smsText);
       showToast("⚠️ SCHEDA PRESENTE: elimina avviso o mostra cliente");
       render();             // mette highlight sticky
@@ -1110,7 +1139,6 @@ function isCompleteClient(c){
             safeTrim(c.telefono) && safeTrim(c.modello) &&
             safeTrim(c.idApparecchio) && safeTrim(c.matricola));
 }
-
 function buildCard(c, i){
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
@@ -1120,9 +1148,7 @@ function buildCard(c, i){
   d.id = safeIdFromKey(cKey);
 
   // highlight persistente se c'è avviso scheda presente
-  if(hasPresentKey(cKey) >= 0){
-    d.classList.add("gc-highlight-sticky");
-  }
+  if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
 
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
@@ -1161,14 +1187,13 @@ function buildCard(c, i){
     var t=document.createElement("a");
     t.className="gc-big gc-link";
     t.textContent="📞 "+clean;
-    t.href="tel:%2331%23"+clean;   // #31#
+    t.href="tel:%2331%23"+clean;
     d.appendChild(t);
   }
 
   if(c.modello) d.appendChild(row("🔥 Modello: "+c.modello));
   if(c.idApparecchio) d.appendChild(row("🆔 ID App.: "+c.idApparecchio));
   if(c.matricola) d.appendChild(row("🔢 Matricola: "+c.matricola));
-
   if(c.problema) d.appendChild(row("❗ Problema: "+c.problema));
   if(c.note) d.appendChild(row("📝 Note: "+c.note));
 
@@ -1191,7 +1216,6 @@ function buildCard(c, i){
 
   return d;
 }
-
 function render(){
   cards.innerHTML="";
 
@@ -1291,7 +1315,6 @@ function openEdit(i){
     modal.querySelector("#annullaEdit").onclick = closeModal;
 
     modal.querySelector("#salvaEdit").onclick = function(){
-      // se cambi chiave, evita duplicati
       var newKey = clientKeyFromFields(
         modal.querySelector("#e_nome").value,
         modal.querySelector("#e_via").value,
@@ -1348,7 +1371,6 @@ function openDelete(i){
     m.querySelector("#noDel").onclick = closeModal;
     m.querySelector("#siDel").onclick = function(){
       var cKey = clientKeyFromClientObj(clients[i]);
-      // se c'erano avvisi per questa scheda, rimuovili
       var pIdx = hasPresentKey(cKey);
       if(pIdx >= 0){
         presentNotifs.splice(pIdx,1);
