@@ -264,10 +264,10 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* ===== VERSIONE CODICE ===== */
-var APP_VERSION = "2025-12-27.nobanner";
-var APP_BUILD   = "2025-12-27 02:10";
-var SW_VER      = 36; // deve combaciare con service-worker.js (CACHE_VERSION v32)
+/* ===== VERSIONE ===== */
+var APP_VERSION = "2025-12-27.fix36";
+var APP_BUILD   = "2025-12-27 03:10";
+var SW_VER      = 37; // deve combaciare con service-worker.js (CACHE_VERSION v36)
 
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
@@ -335,10 +335,11 @@ function renderVersionBadge(){
 /* ===== TOAST ===== */
 var toastTimer = null;
 function showToast(msg){
+  if(!toastEl) return;
   toastEl.textContent = msg;
   toastEl.style.display = "block";
   if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ toastEl.style.display = "none"; }, 2200);
+  toastTimer = setTimeout(function(){ toastEl.style.display = "none"; }, 2400);
 }
 
 /* ===== SALVATAGGIO ===== */
@@ -712,35 +713,37 @@ clearDupBtn.onclick = function(){
   });
 };
 
-/* ===== INCOMING DA URL (solo sms=) ===== */
-function getParamFromLocation(name){
-  // query string
-  try{
-    var qs = new URLSearchParams(window.location.search || "");
-    var v = qs.get(name);
-    if(v) return v;
-  }catch(e){}
-
-  // hash (#a=1&b=2)
-  try{
-    var h = (window.location.hash || "").replace(/^#/, "");
-    if(!h) return "";
-    if(h.indexOf(name + "=") === 0){
-      var tail = h.substring((name + "=").length);
-      var amp = tail.indexOf("&");
-      return amp === -1 ? tail : tail.substring(0, amp);
-    }
-    var hp = new URLSearchParams(h);
-    return hp.get(name) || "";
-  }catch(e2){}
-  return "";
+/* ===== INCOMING da URL (ROBUSTO iPhone) ===== */
+function getParamFromPairs(str, name){
+  if(!str) return "";
+  // str: "a=1&sms=....&r=...."
+  var esc = name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  var re = new RegExp("(^|&)" + esc + "=([^&]*)");
+  var m = str.match(re);
+  return m ? m[2] : "";
 }
 
-function extractSmsFromLocation(){
-  var smsText = getParamFromLocation("sms") || "";
-  if(!smsText) return "";
-  try{ smsText = decodeURIComponent(smsText); }catch(e){}
-  return safeTrim(smsText);
+function decodeParam(v){
+  v = String(v || "");
+  if(!v) return "";
+  try{
+    return decodeURIComponent(v);
+  }catch(e){
+    // se c'è un % rotto, torniamo almeno qualcosa
+    return v;
+  }
+}
+
+function getIncomingParam(name){
+  var search = (window.location.search || "").replace(/^\?/, "");
+  var hash   = (window.location.hash   || "").replace(/^#/,  "");
+  var raw = getParamFromPairs(search, name) || getParamFromPairs(hash, name) || "";
+  return safeTrim(decodeParam(raw));
+}
+
+function isSafeR(r){
+  // accetta solo token “pulito” senza spazi (tipo timestamp)
+  return /^[0-9A-Za-z_-]{4,64}$/.test(r || "");
 }
 
 function clearIncomingInUrl(){
@@ -751,22 +754,17 @@ function clearIncomingInUrl(){
   }
 }
 
-function alreadyProcessed(raw){
-  try{ return (localStorage.getItem("lastIncomingSmsRaw")||"") === raw; }catch(e){ return false; }
+function alreadyProcessedKey(key){
+  try{ return (localStorage.getItem("lastIncomingKey")||"") === key; }
+  catch(e){ return false; }
 }
-function markProcessed(raw){
-  try{ localStorage.setItem("lastIncomingSmsRaw", raw); }catch(e){}
+function markProcessedKey(key){
+  try{ localStorage.setItem("lastIncomingKey", key); }catch(e){}
 }
 
 function handleRawIncoming(raw){
   raw = safeTrim(raw);
   if(!raw) return;
-
-  if(alreadyProcessed(raw)){
-    clearIncomingInUrl();
-    return;
-  }
-  markProcessed(raw);
 
   var parsed = parseSMS(raw);
   var cKey = clientKeyFromParsed(parsed);
@@ -790,8 +788,19 @@ function handleRawIncoming(raw){
 }
 
 function processIncoming(){
-  var raw = extractSmsFromLocation();
-  if(raw) handleRawIncoming(raw);
+  var raw = getIncomingParam("sms");
+  if(!raw) return;
+
+  var r = getIncomingParam("r");
+  var key = isSafeR(r) ? ("r:" + r) : ("sms:" + raw);
+
+  if(alreadyProcessedKey(key)){
+    clearIncomingInUrl();
+    return;
+  }
+  markProcessedKey(key);
+
+  handleRawIncoming(raw);
 }
 
 /* ===== RESET UI ===== */
@@ -914,6 +923,7 @@ function buildCard(c, i){
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
 
+  // evidenzia se c'è dup attivo
   if(isDupKey(cKey)) d.classList.add("gc-highlight");
 
   var stEl=document.createElement("span");
@@ -1143,13 +1153,14 @@ caricaInbox();
 caricaDup();
 rebuildDupKeyMap();
 caricaModo();
+
 render();
 renderInbox();
 renderDupNotifs();
 applyMode();
 renderVersionBadge();
 
-/* ===== Hook eventi: utile anche in PWA ===== */
+/* ===== hook eventi: utile in Safari e PWA ===== */
 function hookIncoming(){ processIncoming(); }
 window.addEventListener("load", hookIncoming);
 window.addEventListener("pageshow", hookIncoming);
