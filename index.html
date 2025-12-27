@@ -287,9 +287,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:800;cursor:
 
 <script>
 /* ===== VERSIONE ===== */
-var APP_VERSION = "2025-12-27.v39";
-var APP_BUILD   = "2025-12-27 05:10";
-var SW_VER      = 39; // deve combaciare con service-worker.js (CACHE_VERSION v39)
+var APP_VERSION = "2025-12-27.v40";
+var APP_BUILD   = "2025-12-27 06:05";
+var SW_VER      = 40; // deve combaciare con service-worker.js (CACHE_VERSION v40)
 
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
@@ -341,7 +341,7 @@ var dupCount = $("dupCount");
 var clearDupBtn = $("clearDupBtn");
 
 var clients = [];
-var inbox = [];
+var inbox = [];       // {id, raw, ts}
 var selectedInboxIndex = -1;
 
 var dupNotifs = [];
@@ -371,11 +371,50 @@ function caricaDati(){
   try{ var d=localStorage.getItem("rapportiClienti"); if(d) clients=JSON.parse(d)||[]; }
   catch(e){ clients=[]; }
 }
+
+function simpleHash(str){
+  str = String(str||"");
+  var h = 2166136261;
+  for(var i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return ("00000000"+h.toString(16)).slice(-8);
+}
+
+function ensureInboxShape(){
+  var fixed = [];
+  for(var i=0;i<inbox.length;i++){
+    var it = inbox[i];
+
+    // legacy: string
+    if(typeof it === "string"){
+      var raw = it;
+      fixed.push({ id:"legacy_"+simpleHash(raw)+"_"+Date.now()+"_"+i, raw:raw, ts:Date.now() });
+      continue;
+    }
+
+    // legacy: {raw, ts} senza id
+    if(it && typeof it === "object"){
+      if(!it.raw) it.raw = "";
+      if(!it.ts) it.ts = Date.now();
+      if(!it.id) it.id = "legacy_"+simpleHash(it.raw)+"_"+String(it.ts)+"_"+i;
+      fixed.push(it);
+    }
+  }
+  inbox = fixed;
+}
+
 function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} }
 function caricaInbox(){
-  try{ var d=localStorage.getItem("rapportiInbox"); if(d) inbox=JSON.parse(d)||[]; }
-  catch(e){ inbox=[]; }
+  try{
+    var d=localStorage.getItem("rapportiInbox");
+    if(d) inbox=JSON.parse(d)||[];
+    else inbox=[];
+  }catch(e){ inbox=[]; }
+  ensureInboxShape();
 }
+
 function salvaModo(){ try{ localStorage.setItem("rapportiManualMode", manualMode ? "1":"0"); }catch(e){} }
 function caricaModo(){ try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; } }
 
@@ -402,38 +441,131 @@ function statoLabel(s){
   return map[s] || "DA DECIDERE";
 }
 
-/* ===== PARSE SMS (anche se incompleto) ===== */
+/* ===== PARSE SMS (molto più robusto) ===== */
+function normalizeText(t){
+  return safeTrim(String(t||"")).replace(/\s+/g," ");
+}
+
+function extractPhone(t){
+  var phone = "";
+  // preferisci tel/telefono/cell
+  var m = t.match(/\b(?:tel\.?|telefono|cell\.?|cellulare)\b\s*[:\-]?\s*([+]?[\d][\d\s]{6,}[\d])\b/i);
+  if(m){
+    phone = m[1].replace(/\s+/g,"");
+    t = (t.slice(0,m.index) + " " + t.slice(m.index + m[0].length)).replace(/\s+/g," ").trim();
+    return { phone: phone, text: t };
+  }
+
+  // fallback: prendi la sequenza di cifre più lunga
+  var re = /([+]?[\d][\d\s]{7,}[\d])/g;
+  var best = "";
+  var bestRaw = "";
+  var match;
+  while((match = re.exec(t)) !== null){
+    var cand = match[1].replace(/\s+/g,"");
+    if(cand.length > best.length){
+      best = cand;
+      bestRaw = match[1];
+    }
+  }
+  if(best){
+    phone = best;
+    t = t.replace(bestRaw," ").replace(/\s+/g," ").trim();
+  }
+  return { phone: phone, text: t };
+}
+
+function extractModel(t){
+  var model = "";
+  var m = t.match(/\bmodello\b\s*[:\-]?\s*([^,;]+?)(?=\s+\b(?:id|tel|telefono|cell|cellulare)\b|$)/i);
+  if(m){
+    model = safeTrim(m[1]);
+    t = (t.slice(0,m.index) + " " + t.slice(m.index + m[0].length)).replace(/\s+/g," ").trim();
+    return { model:model, text:t };
+  }
+  return { model:"", text:t };
+}
+
+function findAddressIndex(t){
+  var low = t.toLowerCase();
+  // parole chiave indirizzo
+  var kws = [
+    " via ", " viale ", " piazza ", " piazzale ", " corso ", " largo ", " strada ", " vicolo ",
+    " v.le ", " v.le", " c.so ", " c.so", " p.za ", " p.za", " p.zza ", " p.zza"
+  ];
+  var best = -1;
+  for(var i=0;i<kws.length;i++){
+    var idx = low.indexOf(kws[i]);
+    if(idx !== -1){
+      // l'indice deve puntare alla parola, non allo spazio
+      if(best === -1 || idx < best) best = idx;
+    }
+  }
+  return best;
+}
+
+function splitAddress(addr){
+  addr = normalizeText(addr);
+
+  // togli CAP
+  addr = addr.replace(/\b\d{5}\b/g," ").replace(/\s+/g," ").trim();
+
+  // se c'è una virgola o un trattino, spesso separa comune
+  // es: "Via Roma 10 - Soliera" oppure "Via Roma 10, Soliera"
+  var sepIdx = Math.max(addr.lastIndexOf(" - "), addr.lastIndexOf(","));
+  if(sepIdx > 6){
+    var left = safeTrim(addr.substring(0, sepIdx));
+    var right = safeTrim(addr.substring(sepIdx+1));
+    // se sep era " - " -> +3, se era "," -> +1 ma safeTrim fa il resto
+    if(addr.lastIndexOf(" - ") === sepIdx) right = safeTrim(addr.substring(sepIdx+3));
+    return { via:left, citta:right };
+  }
+
+  // civico
+  var num = addr.match(/\b(\d+[A-Za-z]?)\b/);
+  if(num){
+    var pos = addr.indexOf(num[1]);
+    var viaPart = safeTrim(addr.substring(0, pos + num[1].length));
+    var rest = safeTrim(addr.substring(pos + num[1].length));
+    rest = rest.replace(/^[-,]/,"").trim();
+    return { via:viaPart, citta:rest };
+  }
+
+  // fallback: tutto in via
+  return { via:addr, citta:"" };
+}
+
 function parseSMS(t){
   var r={nome:"",via:"",citta:"",telefono:"",modello:""};
-  t=t||"";
-  var low=t.toLowerCase();
+  t = normalizeText(t);
+  if(!t) return r;
 
-  var tel=t.match(/tel\.?\s*([0-9 +]+)/i);
-  if(tel) r.telefono=tel[1].replace(/\s+/g,"");
+  // telefono
+  var ph = extractPhone(t);
+  r.telefono = ph.phone || "";
+  t = ph.text;
 
-  var m=t.match(/modello\s*(.*?)\s*id\b/i);
-  if(m) r.modello=safeTrim(m[1]);
+  // modello
+  var mo = extractModel(t);
+  r.modello = mo.model || "";
+  t = mo.text;
 
-  // Nome + indirizzo se trova " via "
-  var idx=low.indexOf(" via ");
-  if(idx!==-1){
-    r.nome=safeTrim(t.substring(0,idx));
-    var rest=t.substring(idx+1);
-
-    // prova a prendere fino al civico
-    var civ=rest.match(/(\d+)/);
-    if(civ){
-      r.via=safeTrim(rest.substring(0,civ.index+civ[1].length));
-      r.citta=safeTrim(rest.substring(civ.index+civ[1].length).replace(/tel.*/i,""));
-    }else{
-      // se non c'è civico, salva comunque la via "grezza"
-      r.via=safeTrim(rest.replace(/tel.*/i,""));
-    }
+  // nome + indirizzo
+  var idx = findAddressIndex(t);
+  if(idx !== -1){
+    r.nome = safeTrim(t.substring(0, idx));
+    var addr = safeTrim(t.substring(idx+1)); // +1 per togliere lo spazio prima della keyword
+    var a = splitAddress(addr);
+    r.via = a.via || "";
+    r.citta = a.citta || "";
   }else{
-    // se non c'è " via " prova almeno a prendere un nome iniziale (prima di "tel" o "modello")
-    var cut = t.search(/\b(tel\.?|modello)\b/i);
-    if(cut>0) r.nome = safeTrim(t.substring(0,cut));
+    // se non trovo via, uso tutto come nome (meglio che buttare nei campi sbagliati)
+    r.nome = t;
   }
+
+  // pulizia finale (evita roba tipo "ID ..." nel comune)
+  r.citta = r.citta.replace(/\bID\b.*$/i,"").trim();
+  r.via   = r.via.replace(/\bID\b.*$/i,"").trim();
 
   return r;
 }
@@ -442,15 +574,13 @@ function parseSMS(t){
 function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," "); }
 function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
 
-/* ✅ chiave SOLO se affidabile:
-   - telefono presente
-   - oppure nome+via+comune tutti presenti
-   altrimenti "" (quindi niente controllo duplicati cliente)
+/* chiave solo se affidabile:
+   - tel presente
+   - oppure nome+via+comune presenti
 */
 function strongKeyFromFields(n,v,c,tel){
   var ph = cleanPhone(tel);
   if(ph) return "tel:" + ph;
-
   if(safeTrim(n) && safeTrim(v) && safeTrim(c)){
     return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
   }
@@ -537,25 +667,46 @@ manualModeBtn.onclick = function(){
   applyMode();
 };
 
-/* ===== INBOX (più SMS) ===== */
-function inboxHasRaw(text){
-  text=safeTrim(text);
+/* ===== INBOX (multi, dedupe per ID) ===== */
+function normRid(rid){
+  rid = safeTrim(rid);
+  rid = rid.replace(/[^a-zA-Z0-9_-]/g,""); // toglie spazi/simboli
+  return rid;
+}
+
+function inboxHasId(id){
   for(var i=0;i<inbox.length;i++){
-    if(safeTrim(inbox[i].raw)===text) return true;
+    if(inbox[i].id === id) return true;
   }
   return false;
 }
-function addSmsToInbox(text){
-  text=safeTrim(text);
-  if(!text) return;
-  if(inboxHasRaw(text)) return;
-  inbox.unshift({ raw:text, ts:Date.now() });
+
+function addSmsToInbox(raw, ridMaybe){
+  raw = safeTrim(raw);
+  if(!raw) return;
+
+  var rid = normRid(ridMaybe);
+  // se manca rid, generane uno ma prova a evitare doppioni immediati
+  if(!rid){
+    var last = "";
+    try{ last = sessionStorage.getItem("lastAutoRaw") || ""; }catch(e){}
+    if(last === raw) return; // evita doppio trigger immediato
+    try{ sessionStorage.setItem("lastAutoRaw", raw); }catch(e){}
+    rid = "t" + Date.now() + "_" + Math.floor(Math.random()*1000000);
+  }
+
+  var id = "r_" + rid;
+  if(inboxHasId(id)) return;
+
+  inbox.unshift({ id:id, raw:raw, ts:Date.now() });
   salvaInbox();
   renderInbox();
 }
 
 function renderInbox(){
   if(!inboxWrap) return;
+
+  ensureInboxShape();
 
   if(!inbox.length){
     inboxWrap.classList.add("hidden");
@@ -646,10 +797,9 @@ clearInboxBtn.onclick=function(){
 
 function loadFromSmsText(testo){
   var d=parseSMS(testo);
-
   clienteBox.classList.remove("hidden");
 
-  // ✅ compila solo quel che trova (gli altri restano vuoti)
+  // compila SOLO quel che trova
   nome.value = d.nome || "";
   via.value = d.via || "";
   citta.value = d.citta || "";
@@ -789,11 +939,11 @@ function clearIncomingInUrl(){
   catch(e){ try{ window.location.hash=""; }catch(e2){} }
 }
 
-function handleRawIncoming(raw){
-  raw=safeTrim(raw);
+function handleIncoming(raw, rid){
+  raw = safeTrim(raw);
   if(!raw) return;
 
-  // ✅ se ho una chiave robusta e il cliente esiste -> duplicato
+  // duplicato cliente SOLO se chiave robusta
   var parsed=parseSMS(raw);
   var cKey=clientKeyFromParsed(parsed);
   var existingIdx = cKey ? findClientIndexByKey(cKey) : -1;
@@ -807,8 +957,8 @@ function handleRawIncoming(raw){
     return;
   }
 
-  // ✅ altrimenti SEMPRE in attesa (anche se dati mancanti)
-  addSmsToInbox(raw);
+  // ✅ SEMPRE in attesa, anche se mancano dati
+  addSmsToInbox(raw, rid);
   manualMode=false;
   salvaModo();
   applyMode();
@@ -819,7 +969,8 @@ function handleRawIncoming(raw){
 function processIncoming(){
   var raw=getIncomingParam("sms");
   if(!raw) return;
-  handleRawIncoming(raw);
+  var rid=getIncomingParam("r");
+  handleIncoming(raw, rid);
 }
 
 /* ===== RESET UI ===== */
@@ -887,7 +1038,7 @@ addBtn.onclick=function(){
   var problemaFinale=problema.value;
   if(problema.value==="ALTRO") problemaFinale="ALTRO: "+safeTrim(problemaAltro.value);
 
-  // ✅ blocco duplicati solo se chiave robusta
+  // blocco duplicati SOLO se chiave robusta
   var newKey = strongKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(newKey && findClientIndexByKey(newKey)>=0){
     showToast("⚠️ Cliente già presente: non aggiunto");
@@ -1179,7 +1330,7 @@ function cancellaTutto(){
   });
 }
 
-/* ===== PDF ===== */
+/* ===== PDF (come prima) ===== */
 function generaPdfWhatsapp(){
   if(!clients.length){ alert("Nessun cliente"); return; }
   if(!window.jspdf || !window.jspdf.jsPDF){ alert("PDF non disponibile: apri con internet."); return; }
