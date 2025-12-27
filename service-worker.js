@@ -1,59 +1,135 @@
-const CACHE_VERSION = "v41"; // deve combaciare con SW_VER=41 in index.html
-const CACHE_NAME = "rapporti-clienti-" + CACHE_VERSION;
+/* service-worker.js
+   PWA cache robusta per GitHub Pages + iPhone (Home screen)
+   - Legge la versione da ?v=... (SW_VER) usata nella register()
+   - HTML: network-first (aggiornamenti subito)
+   - Asset: cache-first + refresh in background
+*/
 
+const CACHE_PREFIX = "rapporti-clienti-auto";
+
+// legge ?v=44 da service-worker.js?v=44
+const SW_URL = (self.location && self.location.href) ? self.location.href : "";
+const SW_VER = (() => {
+  try {
+    const u = new URL(SW_URL);
+    return u.searchParams.get("v") || "0";
+  } catch (e) {
+    const m = SW_URL.match(/[?&]v=([^&]+)/);
+    return (m && m[1]) ? m[1] : "0";
+  }
+})();
+
+const CACHE_NAME = `${CACHE_PREFIX}-v${SW_VER}`;
+
+// Precache: devono esistere davvero nella cartella
 const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
+function isHtmlRequest(request) {
+  if (request.mode === "navigate") return true;
+  const accept = request.headers.get("accept") || "";
+  return accept.includes("text/html");
+}
+
+function sameOrigin(url) {
+  try { return new URL(url).origin === self.location.origin; }
+  catch (e) { return false; }
+}
+
+async function putInCache(cache, request, response) {
+  try {
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+    }
+  } catch (e) {}
+}
+
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+
+    // Precache "safe": non blocca se un file manca
+    await Promise.allSettled(
+      CORE_ASSETS.map(async (path) => {
+        try {
+          const req = new Request(path, { cache: "reload" });
+          const res = await fetch(req);
+          await putInCache(cache, req, res);
+        } catch (e) {}
+      })
+    );
+
+    // attiva subito la nuova versione
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    await Promise.all(
+      keys.map((key) => {
+        if (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      })
+    );
     await self.clients.claim();
   })());
 });
 
-// HTML = network-first
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
 
-  const isHTML =
-    req.mode === "navigate" ||
-    url.pathname.endsWith("/") ||
-    url.pathname.endsWith("/index.html") ||
-    (req.headers.get("accept") || "").includes("text/html");
+  // gestiamo solo GET e solo stessa origin (no cdnjs)
+  if (req.method !== "GET") return;
+  if (!sameOrigin(req.url)) return;
 
-  if (isHTML) {
+  // HTML: NETWORK FIRST
+  if (isHtmlRequest(req)) {
     event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
       try {
+        // no-store per prendere davvero HTML aggiornato
         const fresh = await fetch(req, { cache: "no-store" });
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(req, fresh.clone());
+        await putInCache(cache, req, fresh);
         return fresh;
       } catch (e) {
-        const cached = (await caches.match(req)) || (await caches.match("./index.html"));
-        return cached || new Response("Offline", { status: 503 });
+        // fallback: cache o index
+        const cached = await caches.match(req);
+        return cached || (await caches.match("./index.html")) || new Response("Offline", {
+          status: 503,
+          headers: { "Content-Type": "text/plain; charset=utf-8" }
+        });
       }
     })());
     return;
   }
 
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => {});
-      return res;
-    }))
-  );
-});
+  // ASSET: CACHE FIRST + refresh background
+  event.respondWith((async () => {
+    const cached = await caches.match(req);
+    if (cached) {
+      event.waitUntil((async () => {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          const fresh = await fetch(req);
+          await putInCache(cache, req, fresh);
+        } catch (e) {}
+      })());
+      return cached;
+    }
+
+    // niente cache -> rete -> salva
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const fresh = await fetch(req);
+      await putInCache(cache, req, fresh);
+      return fresh;
+    } catch (e) {
+      return new Response("Offline", {
