@@ -7,7 +7,7 @@
 
 const CACHE_PREFIX = "rapporti-clienti-auto";
 
-// legge ?v=44 da service-worker.js?v=44
+// Legge ?v=44 da service-worker.js?v=44
 const SW_URL = (self.location && self.location.href) ? self.location.href : "";
 const SW_VER = (() => {
   try {
@@ -21,7 +21,7 @@ const SW_VER = (() => {
 
 const CACHE_NAME = `${CACHE_PREFIX}-v${SW_VER}`;
 
-// Precache: devono esistere davvero nella cartella
+// Precache: DEVONO esistere davvero nella stessa cartella
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -64,13 +64,14 @@ self.addEventListener("install", (event) => {
       })
     );
 
-    // attiva subito la nuova versione
+    // Attiva subito la nuova versione
     await self.skipWaiting();
   })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
+    // Elimina cache vecchie
     const keys = await caches.keys();
     await Promise.all(
       keys.map((key) => {
@@ -79,6 +80,8 @@ self.addEventListener("activate", (event) => {
         }
       })
     );
+
+    // Prende controllo subito delle pagine
     await self.clients.claim();
   })());
 });
@@ -86,16 +89,16 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
-  // gestiamo solo GET e solo stessa origin (no cdnjs)
+  // Solo GET e solo stessa origin (no cdnjs ecc.)
   if (req.method !== "GET") return;
   if (!sameOrigin(req.url)) return;
 
-  // HTML: NETWORK FIRST
+  // HTML: NETWORK FIRST (per aggiornarsi subito)
   if (isHtmlRequest(req)) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
       try {
-        // no-store per prendere davvero HTML aggiornato
+        // no-store per prendere l'HTML aggiornato
         const fresh = await fetch(req, { cache: "no-store" });
         await putInCache(cache, req, fresh);
         return fresh;
@@ -111,10 +114,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ASSET: CACHE FIRST + refresh background
+  // ASSET: CACHE FIRST + refresh in background
   event.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) {
+      // aggiorna in background
       event.waitUntil((async () => {
         try {
           const cache = await caches.open(CACHE_NAME);
@@ -125,7 +129,7 @@ self.addEventListener("fetch", (event) => {
       return cached;
     }
 
-    // niente cache -> rete -> salva
+    // Se non c'è cache -> rete -> salva
     try {
       const cache = await caches.open(CACHE_NAME);
       const fresh = await fetch(req);
@@ -133,3 +137,16 @@ self.addEventListener("fetch", (event) => {
       return fresh;
     } catch (e) {
       return new Response("Offline", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=utf-8" }
+      });
+    }
+  })());
+});
+
+// Opzionale: permette alla pagina di forzare l’attivazione
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
