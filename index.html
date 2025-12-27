@@ -133,7 +133,8 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   top:calc(8px + env(safe-area-inset-top));
   right:10px;
   z-index:10000;
-  font-size:11px;font-weight:900;
+  font-size:11px;
+  font-weight:900;
   color:#6b7280;
   background:rgba(255,255,255,.85);
   border:1px solid #e5e7eb;
@@ -141,40 +142,12 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   border-radius:999px;
   backdrop-filter: blur(6px);
 }
-
-/* Banner appunti (solo se serve) */
-.clip-banner{
-  position:fixed;
-  left:12px; right:12px;
-  bottom:calc(58px + env(safe-area-inset-bottom));
-  z-index:10002;
-  background:rgba(255,255,255,.96);
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:10px;
-  box-shadow:0 10px 26px rgba(0,0,0,.12);
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:space-between;
-}
-.clip-banner .txt{font-weight:900;font-size:13px;color:#111827}
-.clip-banner .btns{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 
 <body>
 <div id="verBadge" class="version-badge">Versione: —</div>
 <div id="toast" class="toast"></div>
-
-<!-- appare solo se iOS blocca lettura appunti senza tap -->
-<div id="clipBanner" class="clip-banner hidden">
-  <div class="txt">📋 Tocca “Importa” per leggere l’SMS dagli appunti</div>
-  <div class="btns">
-    <button id="clipImportBtn" class="btn-primary">Importa</button>
-    <button id="clipCancelBtn" class="btn-secondary">Annulla</button>
-  </div>
-</div>
 
 <div class="app">
 
@@ -292,9 +265,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 
 <script>
 /* ===== VERSIONE CODICE ===== */
-var APP_VERSION = "2025-12-27.clipfix";
-var APP_BUILD   = "2025-12-27 01:20";
-var SW_VER      = 35; // deve combaciare con service-worker.js (CACHE_VERSION v31)
+var APP_VERSION = "2025-12-27.nobanner";
+var APP_BUILD   = "2025-12-27 02:10";
+var SW_VER      = 36; // deve combaciare con service-worker.js (CACHE_VERSION v32)
 
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
@@ -302,10 +275,6 @@ function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 
 var verBadge = $("verBadge");
 var toastEl = $("toast");
-
-var clipBanner = $("clipBanner");
-var clipImportBtn = $("clipImportBtn");
-var clipCancelBtn = $("clipCancelBtn");
 
 var sms = $("sms");
 var initBtn = $("initBtn");
@@ -743,7 +712,7 @@ clearDupBtn.onclick = function(){
   });
 };
 
-/* ===== PARAMETRI URL (supporto sms= e clip=1) ===== */
+/* ===== INCOMING DA URL (solo sms=) ===== */
 function getParamFromLocation(name){
   // query string
   try{
@@ -789,59 +758,6 @@ function markProcessed(raw){
   try{ localStorage.setItem("lastIncomingSmsRaw", raw); }catch(e){}
 }
 
-/* ===== LETTURA APPUNTI (clip=1) ===== */
-function normalizeClipboardSms(txt){
-  txt = safeTrim(txt);
-  if(!txt) return "";
-  // accetta RAPPORTO_SMS: oppure RAPPORTI_SMS:
-  txt = txt.replace(/^(RAPPORTO|RAPPORTI)_SMS\s*:\s*/i, "");
-  return safeTrim(txt);
-}
-
-async function readClipboardText(){
-  if(!navigator.clipboard || !navigator.clipboard.readText) return "";
-  try{
-    var t = await navigator.clipboard.readText();
-    return safeTrim(t);
-  }catch(e){
-    return "";
-  }
-}
-
-function showClipBanner(show){
-  if(!clipBanner) return;
-  if(show) clipBanner.classList.remove("hidden");
-  else clipBanner.classList.add("hidden");
-}
-
-async function importFromClipboardWithPossibleTap(){
-  // prova automatico
-  var t = await readClipboardText();
-  var raw = normalizeClipboardSms(t);
-  if(raw) return raw;
-
-  // se non riesce, mostra banner (un tap = user gesture)
-  showClipBanner(true);
-  return "";
-}
-
-clipImportBtn.onclick = async function(){
-  showClipBanner(false);
-  var t = await readClipboardText();
-  var raw = normalizeClipboardSms(t);
-  if(!raw){
-    showToast("⚠️ Nessun SMS valido negli appunti");
-    return;
-  }
-  handleRawIncoming(raw);
-};
-
-clipCancelBtn.onclick = function(){
-  showClipBanner(false);
-  clearIncomingInUrl();
-};
-
-/* ===== LOGICA UNICA PER INCOMING ===== */
 function handleRawIncoming(raw){
   raw = safeTrim(raw);
   if(!raw) return;
@@ -873,25 +789,9 @@ function handleRawIncoming(raw){
   clearIncomingInUrl();
 }
 
-async function processIncoming(){
-  showClipBanner(false);
-
-  // 1) sms= via URL
+function processIncoming(){
   var raw = extractSmsFromLocation();
-  if(raw){
-    handleRawIncoming(raw);
-    return;
-  }
-
-  // 2) clip=1 via appunti
-  var clip = safeTrim(getParamFromLocation("clip"));
-  if(clip === "1"){
-    // prova a leggere in automatico; se iOS blocca, appare banner per 1 tap
-    var autoRaw = await importFromClipboardWithPossibleTap();
-    if(autoRaw){
-      handleRawIncoming(autoRaw);
-    }
-  }
+  if(raw) handleRawIncoming(raw);
 }
 
 /* ===== RESET UI ===== */
@@ -1249,10 +1149,8 @@ renderDupNotifs();
 applyMode();
 renderVersionBadge();
 
-/* ===== Hook eventi: fondamentale in PWA ===== */
-function hookIncoming(){
-  processIncoming();
-}
+/* ===== Hook eventi: utile anche in PWA ===== */
+function hookIncoming(){ processIncoming(); }
 window.addEventListener("load", hookIncoming);
 window.addEventListener("pageshow", hookIncoming);
 window.addEventListener("hashchange", hookIncoming);
