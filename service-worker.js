@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v35"; // deve combaciare con SW_VER=31 in index.html
+const CACHE_VERSION = "v36"; // deve combaciare con SW_VER=32 in index.html
 const CACHE_NAME = "rapporti-clienti-" + CACHE_VERSION;
 
 const CORE_ASSETS = [
