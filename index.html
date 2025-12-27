@@ -176,7 +176,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:800;cursor:
     </div>
   </div>
 
-  <!-- ✅ FASE ATTESA FUORI DALLA FASE 2 -->
+  <!-- ATTESA (fuori dalla fase 2) -->
   <div class="card" id="faseAttesa">
     <h3>SMS in attesa</h3>
 
@@ -192,7 +192,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:800;cursor:
       <div id="inboxList"></div>
 
       <div class="small" style="margin-top:8px;color:#6b7280">
-        Premi <b>Apri</b> su un SMS: si apre la <b>FASE 2</b> con i dati pronti.
+        Premi <b>Apri</b> su un SMS: si apre la <b>FASE 2</b> con i dati (solo quelli presenti).
       </div>
     </div>
 
@@ -287,9 +287,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:800;cursor:
 
 <script>
 /* ===== VERSIONE ===== */
-var APP_VERSION = "2025-12-27.v38";
-var APP_BUILD   = "2025-12-27 04:10";
-var SW_VER      = 38; // deve combaciare con service-worker.js (CACHE_VERSION v38)
+var APP_VERSION = "2025-12-27.v39";
+var APP_BUILD   = "2025-12-27 05:10";
+var SW_VER      = 39; // deve combaciare con service-worker.js (CACHE_VERSION v39)
 
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
@@ -402,7 +402,7 @@ function statoLabel(s){
   return map[s] || "DA DECIDERE";
 }
 
-/* ===== PARSE SMS ===== */
+/* ===== PARSE SMS (anche se incompleto) ===== */
 function parseSMS(t){
   var r={nome:"",via:"",citta:"",telefono:"",modello:""};
   t=t||"";
@@ -414,29 +414,50 @@ function parseSMS(t){
   var m=t.match(/modello\s*(.*?)\s*id\b/i);
   if(m) r.modello=safeTrim(m[1]);
 
+  // Nome + indirizzo se trova " via "
   var idx=low.indexOf(" via ");
   if(idx!==-1){
     r.nome=safeTrim(t.substring(0,idx));
     var rest=t.substring(idx+1);
+
+    // prova a prendere fino al civico
     var civ=rest.match(/(\d+)/);
     if(civ){
       r.via=safeTrim(rest.substring(0,civ.index+civ[1].length));
       r.citta=safeTrim(rest.substring(civ.index+civ[1].length).replace(/tel.*/i,""));
+    }else{
+      // se non c'è civico, salva comunque la via "grezza"
+      r.via=safeTrim(rest.replace(/tel.*/i,""));
     }
+  }else{
+    // se non c'è " via " prova almeno a prendere un nome iniziale (prima di "tel" o "modello")
+    var cut = t.search(/\b(tel\.?|modello)\b/i);
+    if(cut>0) r.nome = safeTrim(t.substring(0,cut));
   }
+
   return r;
 }
 
-/* ===== CHIAVE CLIENTE ===== */
+/* ===== CHIAVI (robuste) ===== */
 function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," "); }
 function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
-function clientKeyFromFields(n,v,c,tel){
+
+/* ✅ chiave SOLO se affidabile:
+   - telefono presente
+   - oppure nome+via+comune tutti presenti
+   altrimenti "" (quindi niente controllo duplicati cliente)
+*/
+function strongKeyFromFields(n,v,c,tel){
   var ph = cleanPhone(tel);
   if(ph) return "tel:" + ph;
-  return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
+
+  if(safeTrim(n) && safeTrim(v) && safeTrim(c)){
+    return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
+  }
+  return "";
 }
-function clientKeyFromClientObj(c){ return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
-function clientKeyFromParsed(d){ return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
+function clientKeyFromClientObj(c){ return strongKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
+function clientKeyFromParsed(d){ return strongKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
 
 function safeIdFromKey(key){
   var s = String(key||"");
@@ -448,12 +469,14 @@ function safeIdFromKey(key){
   }
 }
 function findClientIndexByKey(key){
+  if(!key) return -1;
   for(var i=0;i<clients.length;i++){
     if(clientKeyFromClientObj(clients[i]) === key) return i;
   }
   return -1;
 }
 function highlightClientByKey(key){
+  if(!key) return;
   var id = safeIdFromKey(key);
   var el = document.getElementById(id);
   if(!el) return;
@@ -514,7 +537,7 @@ manualModeBtn.onclick = function(){
   applyMode();
 };
 
-/* ===== INBOX (fuori FASE 2) ===== */
+/* ===== INBOX (più SMS) ===== */
 function inboxHasRaw(text){
   text=safeTrim(text);
   for(var i=0;i<inbox.length;i++){
@@ -554,7 +577,7 @@ function renderInbox(){
       var div=document.createElement("div");
       div.className="inbox-item";
 
-      var preview=(it.raw||"").replace(/\s+/g," ").slice(0,160);
+      var preview=(it.raw||"").replace(/\s+/g," ").slice(0,180);
       div.innerHTML =
         '<div class="inbox-title">SMS • ' + preview + '</div>' +
         '<div class="inbox-sub">Apri → compila la gestione in Fase 2</div>';
@@ -568,7 +591,6 @@ function renderInbox(){
       openBtn.onclick=function(){
         selectedInboxIndex = ii;
         loadFromSmsText(it.raw);
-        // sposta in FASE 2 solo quando premi Apri
         try{ fase2.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
       };
 
@@ -626,11 +648,13 @@ function loadFromSmsText(testo){
   var d=parseSMS(testo);
 
   clienteBox.classList.remove("hidden");
-  nome.value=d.nome;
-  via.value=d.via;
-  citta.value=d.citta;
-  telefono.value=d.telefono;
-  modello.value=d.modello;
+
+  // ✅ compila solo quel che trova (gli altri restano vuoti)
+  nome.value = d.nome || "";
+  via.value = d.via || "";
+  citta.value = d.citta || "";
+  telefono.value = d.telefono || "";
+  modello.value = d.modello || "";
 
   note.value="";
   setLedOk(true);
@@ -670,7 +694,7 @@ function renderDupNotifs(){
   for(var i=0;i<dupNotifs.length;i++){
     (function(ii){
       var it=dupNotifs[ii];
-      var preview=(it.raw||"").replace(/\s+/g," ").slice(0,160);
+      var preview=(it.raw||"").replace(/\s+/g," ").slice(0,180);
 
       var div=document.createElement("div");
       div.className="inbox-item";
@@ -741,7 +765,7 @@ clearDupBtn.onclick=function(){
   });
 };
 
-/* ===== INCOMING DA URL (multi-SMS OK) ===== */
+/* ===== INCOMING DA URL ===== */
 function getParamFromPairs(str, name){
   if(!str) return "";
   var esc = name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
@@ -760,40 +784,6 @@ function getIncomingParam(name){
   var raw = getParamFromPairs(search,name) || getParamFromPairs(hash,name) || "";
   return safeTrim(decodeParam(raw));
 }
-function isSafeR(r){ return /^[0-9A-Za-z_-]{4,64}$/.test(r||""); }
-
-function simpleHash(s){
-  s=String(s||"");
-  var h=0;
-  for(var i=0;i<s.length;i++){
-    h = ((h<<5)-h) + s.charCodeAt(i);
-    h |= 0;
-  }
-  return String(Math.abs(h));
-}
-
-function getProcessedList(){
-  try{
-    var a = JSON.parse(localStorage.getItem("rapportiProcessed")||"[]")||[];
-    if(!Array.isArray(a)) return [];
-    return a;
-  }catch(e){ return []; }
-}
-function setProcessedList(a){
-  try{ localStorage.setItem("rapportiProcessed", JSON.stringify(a)); }catch(e){}
-}
-function alreadyProcessedKey(key){
-  var a=getProcessedList();
-  for(var i=0;i<a.length;i++) if(a[i]===key) return true;
-  return false;
-}
-function rememberProcessedKey(key){
-  var a=getProcessedList();
-  a.push(key);
-  if(a.length>200) a = a.slice(a.length-200);
-  setProcessedList(a);
-}
-
 function clearIncomingInUrl(){
   try{ window.history.replaceState({}, document.title, window.location.pathname); }
   catch(e){ try{ window.location.hash=""; }catch(e2){} }
@@ -803,9 +793,10 @@ function handleRawIncoming(raw){
   raw=safeTrim(raw);
   if(!raw) return;
 
+  // ✅ se ho una chiave robusta e il cliente esiste -> duplicato
   var parsed=parseSMS(raw);
   var cKey=clientKeyFromParsed(parsed);
-  var existingIdx=findClientIndexByKey(cKey);
+  var existingIdx = cKey ? findClientIndexByKey(cKey) : -1;
 
   if(existingIdx>=0){
     addDupNotif(raw,cKey);
@@ -816,6 +807,7 @@ function handleRawIncoming(raw){
     return;
   }
 
+  // ✅ altrimenti SEMPRE in attesa (anche se dati mancanti)
   addSmsToInbox(raw);
   manualMode=false;
   salvaModo();
@@ -827,15 +819,6 @@ function handleRawIncoming(raw){
 function processIncoming(){
   var raw=getIncomingParam("sms");
   if(!raw) return;
-
-  var r=getIncomingParam("r");
-  var key = isSafeR(r) ? ("r:"+r) : ("sms:"+simpleHash(raw));
-
-  if(alreadyProcessedKey(key)){
-    clearIncomingInUrl();
-    return;
-  }
-  rememberProcessedKey(key);
   handleRawIncoming(raw);
 }
 
@@ -904,8 +887,9 @@ addBtn.onclick=function(){
   var problemaFinale=problema.value;
   if(problema.value==="ALTRO") problemaFinale="ALTRO: "+safeTrim(problemaAltro.value);
 
-  var newKey=clientKeyFromFields(nome.value,via.value,citta.value,telefono.value);
-  if(findClientIndexByKey(newKey)>=0){
+  // ✅ blocco duplicati solo se chiave robusta
+  var newKey = strongKeyFromFields(nome.value, via.value, citta.value, telefono.value);
+  if(newKey && findClientIndexByKey(newKey)>=0){
     showToast("⚠️ Cliente già presente: non aggiunto");
     render();
     highlightClientByKey(newKey);
@@ -957,8 +941,9 @@ function buildCard(c,i){
   d.className="gc-card gc-"+(c.stato||"none");
 
   var cKey=clientKeyFromClientObj(c);
-  d.id=safeIdFromKey(cKey);
-  if(isDupKey(cKey)) d.classList.add("gc-highlight");
+  d.id = cKey ? safeIdFromKey(cKey) : ("card_idx_"+i);
+
+  if(cKey && isDupKey(cKey)) d.classList.add("gc-highlight");
 
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
@@ -1055,7 +1040,6 @@ function render(){
 /* ===== MODIFICA ===== */
 function openEdit(i){
   var c=clients[i];
-
   function esc(v){ return String(v||"").replace(/"/g,"&quot;"); }
 
   var probSel="", probAlt="";
@@ -1116,19 +1100,22 @@ function openEdit(i){
     modal.querySelector("#annullaEdit").onclick=closeModal;
 
     modal.querySelector("#salvaEdit").onclick=function(){
-      var newKey = clientKeyFromFields(
+      var newKey = strongKeyFromFields(
         modal.querySelector("#e_nome").value,
         modal.querySelector("#e_via").value,
         modal.querySelector("#e_citta").value,
         modal.querySelector("#e_telefono").value
       );
-      for(var x=0;x<clients.length;x++){
-        if(x!==i && clientKeyFromClientObj(clients[x])===newKey){
-          showToast("⚠️ Esiste già un cliente con gli stessi dati");
-          closeModal();
-          render();
-          highlightClientByKey(newKey);
-          return;
+
+      if(newKey){
+        for(var x=0;x<clients.length;x++){
+          if(x!==i && clientKeyFromClientObj(clients[x])===newKey){
+            showToast("⚠️ Esiste già un cliente con gli stessi dati");
+            closeModal();
+            render();
+            highlightClientByKey(newKey);
+            return;
+          }
         }
       }
 
@@ -1311,7 +1298,6 @@ document.addEventListener("visibilitychange", function(){
 </script>
 
 <script>
-  // PWA: service worker
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
