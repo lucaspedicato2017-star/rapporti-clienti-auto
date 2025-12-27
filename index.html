@@ -141,12 +141,40 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   border-radius:999px;
   backdrop-filter: blur(6px);
 }
+
+/* Banner appunti (solo se serve) */
+.clip-banner{
+  position:fixed;
+  left:12px; right:12px;
+  bottom:calc(58px + env(safe-area-inset-bottom));
+  z-index:10002;
+  background:rgba(255,255,255,.96);
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:10px;
+  box-shadow:0 10px 26px rgba(0,0,0,.12);
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+.clip-banner .txt{font-weight:900;font-size:13px;color:#111827}
+.clip-banner .btns{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 
 <body>
 <div id="verBadge" class="version-badge">Versione: —</div>
 <div id="toast" class="toast"></div>
+
+<!-- appare solo se iOS blocca lettura appunti senza tap -->
+<div id="clipBanner" class="clip-banner hidden">
+  <div class="txt">📋 Tocca “Importa” per leggere l’SMS dagli appunti</div>
+  <div class="btns">
+    <button id="clipImportBtn" class="btn-primary">Importa</button>
+    <button id="clipCancelBtn" class="btn-secondary">Annulla</button>
+  </div>
+</div>
 
 <div class="app">
 
@@ -263,10 +291,10 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* ===== VERSIONE CODICE (manuale) ===== */
-var APP_VERSION = "2025-12-26.auto";
-var APP_BUILD   = "2025-12-26 23:40";
-var SW_VER      = 33; // deve combaciare con service-worker.js (CACHE_VERSION v30)
+/* ===== VERSIONE CODICE ===== */
+var APP_VERSION = "2025-12-27.clipfix";
+var APP_BUILD   = "2025-12-27 01:20";
+var SW_VER      = 35; // deve combaciare con service-worker.js (CACHE_VERSION v31)
 
 function $(id){ return document.getElementById(id); }
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
@@ -274,6 +302,10 @@ function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 
 var verBadge = $("verBadge");
 var toastEl = $("toast");
+
+var clipBanner = $("clipBanner");
+var clipImportBtn = $("clipImportBtn");
+var clipCancelBtn = $("clipCancelBtn");
 
 var sms = $("sms");
 var initBtn = $("initBtn");
@@ -436,16 +468,8 @@ function highlightClientByKey(key){
   var id = safeIdFromKey(key);
   var el = document.getElementById(id);
   if(!el) return;
-
   el.classList.add("gc-highlight");
   try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
-
-  // ✅ Se NON è un duplicato “attivo”, togli l’highlight dopo un po’
-  if(!isDupKey(key)){
-    setTimeout(function(){
-      try{ el.classList.remove("gc-highlight"); }catch(e2){}
-    }, 2500);
-  }
 }
 
 /* ===== FEEDBACK FASE 2 ===== */
@@ -615,7 +639,7 @@ function loadFromSmsText(testo){
   armFase2();
 }
 
-/* ===== DUP NOTIFICHE (cliente già presente) ===== */
+/* ===== DUP NOTIFICHE ===== */
 function dupHasRaw(text){
   text = safeTrim(text);
   for(var i=0;i<dupNotifs.length;i++){
@@ -719,79 +743,38 @@ clearDupBtn.onclick = function(){
   });
 };
 
-/* ===== URL/CLIP INCOMING (AUTO) =====
-   Supporta:
-   - ?sms=...&r=...
-   - #sms=...&r=...
-   - #...&sms=... (params nell’hash)
-   - #clip=1&r=...  (SMS negli appunti, da Scorciatoia)
-*/
-function extractSmsFromLocation(){
-  var smsText = "";
-
+/* ===== PARAMETRI URL (supporto sms= e clip=1) ===== */
+function getParamFromLocation(name){
   // query string
   try{
-    var qs = new URLSearchParams(window.location.search);
-    smsText = qs.get("sms") || "";
+    var qs = new URLSearchParams(window.location.search || "");
+    var v = qs.get(name);
+    if(v) return v;
   }catch(e){}
 
-  // hash
-  if(!smsText){
-    try{
-      var h = window.location.hash || "";
-      if(h.indexOf("#sms=") === 0){
-        smsText = h.substring(5);
-        var amp = smsText.indexOf("&");
-        if(amp !== -1) smsText = smsText.substring(0, amp);
-      }else{
-        var hp = new URLSearchParams(h.replace(/^#/,""));
-        smsText = hp.get("sms") || "";
-      }
-    }catch(e2){}
-  }
+  // hash (#a=1&b=2)
+  try{
+    var h = (window.location.hash || "").replace(/^#/, "");
+    if(!h) return "";
+    if(h.indexOf(name + "=") === 0){
+      var tail = h.substring((name + "=").length);
+      var amp = tail.indexOf("&");
+      return amp === -1 ? tail : tail.substring(0, amp);
+    }
+    var hp = new URLSearchParams(h);
+    return hp.get(name) || "";
+  }catch(e2){}
+  return "";
+}
 
-  // decode se necessario
-  if(smsText && smsText.indexOf("%") !== -1){
-    try{ smsText = decodeURIComponent(smsText); }catch(e3){}
-  }
+function extractSmsFromLocation(){
+  var smsText = getParamFromLocation("sms") || "";
+  if(!smsText) return "";
+  try{ smsText = decodeURIComponent(smsText); }catch(e){}
   return safeTrim(smsText);
 }
 
-function extractHashParams(){
-  try{ return new URLSearchParams((window.location.hash||"").replace(/^#/,"")); }catch(e){ return new URLSearchParams(""); }
-}
-
-function hasClipFlag(){
-  // clip=1 può stare nell’hash o nella query
-  try{
-    var hp = extractHashParams();
-    if((hp.get("clip")||"") === "1") return true;
-  }catch(e){}
-  try{
-    var qs = new URLSearchParams(window.location.search);
-    if((qs.get("clip")||"") === "1") return true;
-  }catch(e2){}
-  return false;
-}
-
-function getClipRunId(){
-  // usiamo r=... per evitare doppi trigger (la tua scorciatoia lo mette sempre)
-  var r = "";
-  try{
-    var hp = extractHashParams();
-    r = hp.get("r") || "";
-  }catch(e){}
-  if(!r){
-    try{
-      var qs = new URLSearchParams(window.location.search);
-      r = qs.get("r") || "";
-    }catch(e2){}
-  }
-  return safeTrim(r || "");
-}
-
 function clearIncomingInUrl(){
-  // pulisci search+hash per evitare doppioni
   try{
     window.history.replaceState({}, document.title, window.location.pathname);
   }catch(e){
@@ -806,125 +789,109 @@ function markProcessed(raw){
   try{ localStorage.setItem("lastIncomingSmsRaw", raw); }catch(e){}
 }
 
-// --- CLIP: evita ripetizioni dello stesso “run”
-function clipRunAlreadyHandled(runId){
-  if(!runId) return false;
-  try{ return (localStorage.getItem("lastClipRunId")||"") === runId; }catch(e){ return false; }
-}
-function markClipRunHandled(runId){
-  if(!runId) return;
-  try{ localStorage.setItem("lastClipRunId", runId); }catch(e){}
+/* ===== LETTURA APPUNTI (clip=1) ===== */
+function normalizeClipboardSms(txt){
+  txt = safeTrim(txt);
+  if(!txt) return "";
+  // accetta RAPPORTO_SMS: oppure RAPPORTI_SMS:
+  txt = txt.replace(/^(RAPPORTO|RAPPORTI)_SMS\s*:\s*/i, "");
+  return safeTrim(txt);
 }
 
-// --- Normalizza testo in ingresso: rimuove prefisso RAPPORTO_SMS / RAPPORTI_SMS / ecc.
-function normalizeIncomingRaw(raw){
-  raw = safeTrim(raw||"");
-  if(!raw) return "";
+async function readClipboardText(){
+  if(!navigator.clipboard || !navigator.clipboard.readText) return "";
+  try{
+    var t = await navigator.clipboard.readText();
+    return safeTrim(t);
+  }catch(e){
+    return "";
+  }
+}
 
-  // accetta varianti: RAPPORTO_SMS: , RAPPORTI_SMS: , RAPPORTO SMS: , ecc.
-  raw = raw.replace(/^\s*RAPPORT[IO](_|\s)?SMS\s*:\s*/i, "");
+function showClipBanner(show){
+  if(!clipBanner) return;
+  if(show) clipBanner.classList.remove("hidden");
+  else clipBanner.classList.add("hidden");
+}
+
+async function importFromClipboardWithPossibleTap(){
+  // prova automatico
+  var t = await readClipboardText();
+  var raw = normalizeClipboardSms(t);
+  if(raw) return raw;
+
+  // se non riesce, mostra banner (un tap = user gesture)
+  showClipBanner(true);
+  return "";
+}
+
+clipImportBtn.onclick = async function(){
+  showClipBanner(false);
+  var t = await readClipboardText();
+  var raw = normalizeClipboardSms(t);
+  if(!raw){
+    showToast("⚠️ Nessun SMS valido negli appunti");
+    return;
+  }
+  handleRawIncoming(raw);
+};
+
+clipCancelBtn.onclick = function(){
+  showClipBanner(false);
+  clearIncomingInUrl();
+};
+
+/* ===== LOGICA UNICA PER INCOMING ===== */
+function handleRawIncoming(raw){
   raw = safeTrim(raw);
-
-  return raw;
-}
-
-function processIncomingRaw(raw){
-  raw = normalizeIncomingRaw(raw);
   if(!raw) return;
 
   if(alreadyProcessed(raw)){
+    clearIncomingInUrl();
     return;
   }
   markProcessed(raw);
 
-  // se cliente già presente -> dup notif + evidenzia
   var parsed = parseSMS(raw);
   var cKey = clientKeyFromParsed(parsed);
   var existingIdx = findClientIndexByKey(cKey);
+
   if(existingIdx >= 0){
     addDupNotif(raw, cKey);
     showToast("⚠️ Cliente già presente: notifica in FASE 3");
     render();
     highlightClientByKey(cKey);
+    clearIncomingInUrl();
     return;
   }
 
-  // altrimenti -> inbox
   addSmsToInbox(raw);
   manualMode = false;
   salvaModo();
   applyMode();
   showToast("✅ SMS messo in attesa");
+  clearIncomingInUrl();
 }
 
-/* ===== CLIPBOARD IMPORT (#clip=1) ===== */
-async function tryReadClipboardText(){
-  if(!navigator.clipboard || !navigator.clipboard.readText){
-    throw new Error("Clipboard API non disponibile");
-  }
-  var t = await navigator.clipboard.readText();
-  return safeTrim(t||"");
-}
+async function processIncoming(){
+  showClipBanner(false);
 
-function armTapToImportOnce(){
-  // niente bottoni fissi: 1 tap qualunque sullo schermo
-  showToast("📋 Tocca lo schermo per importare l'SMS dagli appunti");
-  var once = async function(){
-    document.removeEventListener("click", once);
-    try{
-      var clip = await tryReadClipboardText();
-      clip = normalizeIncomingRaw(clip);
-      if(!clip){
-        showToast("📋 Appunti vuoti");
-      }else{
-        processIncomingRaw(clip);
-      }
-      clearIncomingInUrl();
-    }catch(e){
-      showToast("❌ Import bloccato. Tocca di nuovo o usa modalità manuale.");
-    }
-  };
-  document.addEventListener("click", once);
-}
-
-async function handleClipImportIfRequested(){
-  if(!hasClipFlag()) return;
-
-  var runId = getClipRunId();
-  if(runId && clipRunAlreadyHandled(runId)){
-    clearIncomingInUrl();
-    return;
-  }
-  if(runId) markClipRunHandled(runId);
-
-  // prova automatica
-  try{
-    var clip = await tryReadClipboardText();
-    clip = normalizeIncomingRaw(clip);
-    if(!clip){
-      showToast("📋 Appunti vuoti");
-      clearIncomingInUrl();
-      return;
-    }
-    processIncomingRaw(clip);
-    clearIncomingInUrl();
-  }catch(e){
-    // iOS spesso richiede gesto utente
-    armTapToImportOnce();
-  }
-}
-
-function processIncomingSms(){
-  // 1) prima controlla sms=... (come prima)
-  var rawUrl = extractSmsFromLocation();
-  if(rawUrl){
-    processIncomingRaw(rawUrl);
-    clearIncomingInUrl();
+  // 1) sms= via URL
+  var raw = extractSmsFromLocation();
+  if(raw){
+    handleRawIncoming(raw);
     return;
   }
 
-  // 2) poi controlla #clip=1 (scorciatoia + appunti)
-  handleClipImportIfRequested();
+  // 2) clip=1 via appunti
+  var clip = safeTrim(getParamFromLocation("clip"));
+  if(clip === "1"){
+    // prova a leggere in automatico; se iOS blocca, appare banner per 1 tap
+    var autoRaw = await importFromClipboardWithPossibleTap();
+    if(autoRaw){
+      handleRawIncoming(autoRaw);
+    }
+  }
 }
 
 /* ===== RESET UI ===== */
@@ -942,7 +909,7 @@ function resetUICompleta(){
   selectedInboxIndex = -1;
 }
 
-/* ===== FASE 1 (manuale) ===== */
+/* ===== FASE 1 ===== */
 initBtn.onclick=function(){
   var testo = safeTrim(sms.value);
   if(!testo){ alert("Incolla prima l'SMS."); return; }
@@ -1047,7 +1014,6 @@ function buildCard(c, i){
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
 
-  // evidenzia se esiste una notifica duplicato attiva
   if(isDupKey(cKey)) d.classList.add("gc-highlight");
 
   var stEl=document.createElement("span");
@@ -1283,9 +1249,9 @@ renderDupNotifs();
 applyMode();
 renderVersionBadge();
 
-/* ===== FONDAMENTALE: processa SMS anche quando l’app non ricarica ===== */
+/* ===== Hook eventi: fondamentale in PWA ===== */
 function hookIncoming(){
-  processIncomingSms();
+  processIncoming();
 }
 window.addEventListener("load", hookIncoming);
 window.addEventListener("pageshow", hookIncoming);
