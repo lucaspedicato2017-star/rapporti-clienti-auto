@@ -315,9 +315,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 /* =========================
    VERSIONE (aggiorna tu)
    ========================= */
-var APP_VERSION = "2025-12-28.v44";
-var BUILD_LABEL = "2025-12-28 23:10";
-var SW_VER = 44;
+var APP_VERSION = "2025-12-28.v45";
+var BUILD_LABEL = "2025-12-28 23:45";
+var SW_VER = 45;
 
 /* =========================
    HELPERS
@@ -620,7 +620,7 @@ function updateAutoBoxVisibility(){
 }
 
 /* =========================
-   HIGHLIGHT
+   HIGHLIGHT / SCROLL
    ========================= */
 function highlightOnceByKey(key){
   var id = safeIdFromKey(key);
@@ -945,23 +945,48 @@ function loadFromSmsText(testo){
   armFase2();
 }
 
-/* =========================
-   IMPORT DA URL (?sms=...)
-   ========================= */
+/* ============================================================
+   INGRESSO SMS DA AUTOMAZIONE (FIX PWA iPhone):
+   - Legge sia ?sms=... che #sms=...
+   - Funziona anche se la PWA è già aperta (hashchange/visibility)
+   ============================================================ */
+function readIncomingSms(){
+  try{
+    // 1) query ?sms=
+    var p = new URLSearchParams(window.location.search);
+    var smsText = p.get("sms") || "";
+
+    // 2) hash #sms=
+    if(!smsText){
+      var h = (window.location.hash || "").replace(/^#/, "");
+      if(h){
+        var hp = new URLSearchParams(h);
+        smsText = hp.get("sms") || "";
+      }
+    }
+    return smsText;
+  }catch(e){
+    return "";
+  }
+}
+function clearIncomingSmsFromUrl(){
+  try{
+    // toglie sia query che hash, senza reload
+    history.replaceState({}, document.title, window.location.pathname);
+  }catch(e){}
+}
 function handleIncomingSmsFromUrl(){
   try{
-    var p = new URLSearchParams(window.location.search);
-    var smsText = p.get("sms");
+    var smsText = readIncomingSms();
     if(!smsText) return;
 
-    // evita ripetizioni se l’URL resta uguale
-    var keyRaw = smsText;
+    // evita ripetizioni
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
-    if(last === keyRaw){
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if(last === smsText){
+      clearIncomingSmsFromUrl();
       return;
     }
-    localStorage.setItem("lastIncomingSmsKey", keyRaw);
+    localStorage.setItem("lastIncomingSmsKey", smsText);
 
     var parsed = parseSMS(smsText);
     var cKey = clientKeyFromParsed(parsed);
@@ -970,21 +995,19 @@ function handleIncomingSmsFromUrl(){
     if(existingIdx >= 0){
       addPresentNotif(cKey, smsText);
       showToast("⚠️ SCHEDA PRESENTE: elimina avviso o mostra cliente");
-      render();             // mette highlight sticky
+      render();
       scrollToClientByKey(cKey);
-
-      window.history.replaceState({}, document.title, window.location.pathname);
+      clearIncomingSmsFromUrl();
       return;
     }
 
-    // nuovo -> inbox
     addSmsToInbox(smsText);
 
     manualMode = false;
     salvaModo();
     applyMode();
 
-    window.history.replaceState({}, document.title, window.location.pathname);
+    clearIncomingSmsFromUrl();
   }catch(e){}
 }
 
@@ -1555,7 +1578,17 @@ renderInbox();
 renderPresent();
 applyMode();
 updateAutoBoxVisibility();
+
+// 1) prova subito all’avvio
 handleIncomingSmsFromUrl();
+
+// 2) FIX PWA iPhone: riprova quando cambia hash o l’app torna attiva
+window.addEventListener("hashchange", handleIncomingSmsFromUrl);
+window.addEventListener("pageshow", handleIncomingSmsFromUrl);
+window.addEventListener("focus", handleIncomingSmsFromUrl);
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden) handleIncomingSmsFromUrl();
+});
 </script>
 
 <script>
