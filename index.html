@@ -137,7 +137,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 }
 .cards-fullscreen .group-title{ grid-column: 1 / -1; }
 
-/* ITEM LISTE (inbox + scheda presente) */
+/* ITEM LISTE */
 .inbox-item{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -204,7 +204,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
     </div>
   </div>
 
-  <!-- BOX AUTOMATICO (FUORI FASE 2): SMS in attesa + Scheda presente -->
+  <!-- BOX AUTOMATICO FUORI FASE 2 -->
   <div class="card hidden" id="autoBox">
     <h3>📥 Automatico</h3>
 
@@ -224,7 +224,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
       </div>
     </div>
 
-    <!-- Inbox SMS (automatico) -->
+    <!-- Inbox SMS -->
     <div id="inboxWrap" class="hidden" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:14px;padding:10px;margin:10px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div style="font-weight:900">📩 SMS in attesa</div>
@@ -315,9 +315,9 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 /* =========================
    VERSIONE (aggiorna tu)
    ========================= */
-var APP_VERSION = "2025-12-28.v45";
-var BUILD_LABEL = "2025-12-28 23:45";
-var SW_VER = 45;
+var APP_VERSION  = "2025-12-28.v51";
+var BUILD_LABEL  = "2025-12-28 02:10";
+var SW_VER       = 51;   // <-- incrementa sempre quando cambi codice
 
 /* =========================
    HELPERS
@@ -388,11 +388,9 @@ var verBadge = $("verBadge");
    ========================= */
 var clients = [];
 var fase2Armed = false;
-
-var inbox = [];           // sms nuovi
-var presentNotifs = [];   // sms di clienti già presenti: {key, raw, ts}
+var inbox = [];
+var presentNotifs = [];
 var selectedInboxIndex = -1;
-
 var manualMode = false;
 
 /* =========================
@@ -404,13 +402,11 @@ function showToast(msg){
   toastEl.textContent = msg;
   toastEl.style.display = "block";
   if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){
-    toastEl.style.display = "none";
-  }, 2200);
+  toastTimer = setTimeout(function(){ toastEl.style.display = "none"; }, 2200);
 }
 
 /* =========================
-   SALVATAGGIO
+   STORAGE
    ========================= */
 function salvaDati(){ try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){} }
 function caricaDati(){
@@ -419,7 +415,6 @@ function caricaDati(){
     if(dati) clients = JSON.parse(dati) || [];
   }catch(e){ clients=[]; }
 }
-
 function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} }
 function caricaInbox(){
   try{
@@ -427,7 +422,6 @@ function caricaInbox(){
     if(d) inbox = JSON.parse(d) || [];
   }catch(e){ inbox=[]; }
 }
-
 function salvaPresent(){ try{ localStorage.setItem("rapportiPresentNotifs", JSON.stringify(presentNotifs)); }catch(e){} }
 function caricaPresent(){
   try{
@@ -435,7 +429,6 @@ function caricaPresent(){
     if(d) presentNotifs = JSON.parse(d) || [];
   }catch(e){ presentNotifs=[]; }
 }
-
 function salvaModo(){ try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){} }
 function caricaModo(){ try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; } }
 
@@ -455,7 +448,7 @@ function statoLabel(s){
 }
 
 /* =========================
-   PARSE SMS (AUTO-ROBUSTO)
+   PARSE SMS
    ========================= */
 function stripTecno(s){
   return String(s||"")
@@ -467,19 +460,17 @@ function stripTecno(s){
 function parseSMS(t){
   var r={nome:"",via:"",citta:"",telefono:"",modello:"",idApparecchio:"",matricola:""};
 
-  t = (t||"");
-  t = t.replace(/\r?\n/g," ").replace(/\s+/g," ").trim();
+  t = (t||"").replace(/\r?\n/g," ").replace(/\s+/g," ").trim();
   t = t.replace(/[–—]/g,"-").replace(/\s*-\s*/g," - ");
   t = stripTecno(t);
 
-  function findPos(re){ var m = t.match(re); return m ? (m.index||0) : -1; }
+  function findPos(re){ var m=t.match(re); return m ? (m.index||0) : -1; }
 
   var telPos = findPos(/\bTel\.?\b/i);
   var modPos = findPos(/\bModello\b/i);
   var idPos  = findPos(/\bID\s*Apparecchio\b/i);
   var matPos = findPos(/\bMatricola\b/i);
 
-  // TELEFONO
   if(telPos >= 0){
     var tail = t.slice(telPos);
     var mTel = tail.match(/\bTel\.?\s*[:\-]?\s*([+]?[\d\s]+)/i);
@@ -489,30 +480,25 @@ function parseSMS(t){
     if(mMob) r.telefono = mMob[1];
   }
 
-  // ID APPARECCHIO
   if(idPos >= 0){
     var tailId = t.slice(idPos);
     var mId = tailId.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9]+)/i);
     if(mId) r.idApparecchio = safeTrim(mId[1]);
   }
 
-  // MATRICOLA
   if(matPos >= 0){
     var tailMat = t.slice(matPos);
     var mMat = tailMat.match(/\bMatricola\b\s*[:\-]?\s*([0-9A-Za-z\-\/]+)/i);
     if(mMat) r.matricola = safeTrim(mMat[1]);
   }
 
-  // MODELLO
   if(modPos >= 0){
     var end = t.length;
     var candidates = [];
     if(idPos > modPos) candidates.push(idPos);
     if(matPos > modPos) candidates.push(matPos);
-
     var dashIdPos = findPos(/-\s*ID\b/i);
     if(dashIdPos > modPos) candidates.push(dashIdPos);
-
     if(candidates.length) end = Math.min.apply(null, candidates);
 
     var modelChunk = t.slice(modPos, end);
@@ -520,7 +506,6 @@ function parseSMS(t){
     if(mMod) r.modello = safeTrim(mMod[1].replace(/\s*-\s*$/,"").trim());
   }
 
-  // NOME + INDIRIZZO: solo prima di Tel (o Modello se manca Tel)
   var pre = t;
   if(telPos > 0) pre = t.slice(0, telPos).trim();
   else if(modPos > 0) pre = t.slice(0, modPos).trim();
@@ -537,12 +522,9 @@ function parseSMS(t){
 
     var tokens = addrFull.split(" ").filter(Boolean);
 
-    // normalizza "7/b" -> "7b"
     for(var z=0; z<tokens.length; z++){
       tokens[z] = tokens[z].replace(/^(\d+)\s*\/\s*([A-Za-z])$/,"$1$2");
     }
-
-    // unisci "15 B" -> "15B"
     for(var k=tokens.length-1; k>=1; k--){
       if(/^[A-Za-z]$/.test(tokens[k]) && /^\d+$/.test(tokens[k-1])){
         tokens[k-1] = tokens[k-1] + tokens[k];
@@ -550,29 +532,22 @@ function parseSMS(t){
         break;
       }
     }
+    function isCivico(tok){ return /^\d+[A-Za-z]?(?:\/\d+)?$/.test(tok); }
 
-    function isCivico(tok){
-      return /^\d+[A-Za-z]?(?:\/\d+)?$/.test(tok);
-    }
-
-    // civico = ULTIMO civico valido (così VIA 25 APRILE 473 => 473)
     var civIdx = -1;
     for(var i=tokens.length-1; i>=1; i--){
       if(isCivico(tokens[i])) { civIdx = i; break; }
     }
 
     if(civIdx >= 0){
-      r.via   = safeTrim(tokens.slice(0, civIdx+1).join(" ")).replace(/[,\-]+$/,"").trim();
-      r.citta = safeTrim(tokens.slice(civIdx+1).join(" ")).replace(/[,\-]+$/,"").trim();
+      r.via   = safeTrim(tokens.slice(0, civIdx+1).join(" "));
+      r.citta = safeTrim(tokens.slice(civIdx+1).join(" "));
     }else{
       r.via = addrFull;
       r.citta = "";
     }
 
-    // sicurezza: comune non deve contenere parole tecniche
-    if(/\b(id|matricola|apparecchio|modello|tel)\b/i.test(r.citta)){
-      r.citta = "";
-    }
+    if(/\b(id|matricola|apparecchio|modello|tel)\b/i.test(r.citta)) r.citta = "";
   }else{
     r.nome = safeTrim(pre);
   }
@@ -581,19 +556,15 @@ function parseSMS(t){
 }
 
 /* =========================
-   CHIAVE CLIENTE + ID STABILE
+   KEY / ID
    ========================= */
 function clientKeyFromFields(n,v,c,tel){
   var ph = cleanPhone(tel);
   if(ph) return "tel:" + ph;
   return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
 }
-function clientKeyFromClientObj(c){
-  return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono);
-}
-function clientKeyFromParsed(d){
-  return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono);
-}
+function clientKeyFromClientObj(c){ return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
+function clientKeyFromParsed(d){ return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
 function safeIdFromKey(key){
   var s = String(key||"");
   try{
@@ -611,28 +582,22 @@ function findClientIndexByKey(key){
 }
 
 /* =========================
-   AUTOBOX VISIBILITY
+   UI helpers
    ========================= */
 function updateAutoBoxVisibility(){
   if(!autoBox) return;
   if((presentNotifs.length || inbox.length)) autoBox.classList.remove("hidden");
   else autoBox.classList.add("hidden");
 }
-
-/* =========================
-   HIGHLIGHT / SCROLL
-   ========================= */
 function highlightOnceByKey(key){
-  var id = safeIdFromKey(key);
-  var el = document.getElementById(id);
+  var el = document.getElementById(safeIdFromKey(key));
   if(!el) return;
   el.classList.add("gc-highlight");
   try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
   setTimeout(function(){ el.classList.remove("gc-highlight"); }, 2500);
 }
 function scrollToClientByKey(key){
-  var id = safeIdFromKey(key);
-  var el = document.getElementById(id);
+  var el = document.getElementById(safeIdFromKey(key));
   if(!el) return;
   try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
 }
@@ -645,23 +610,14 @@ function setFase2State(state){
   if(state==="attesa") fase2.classList.add("fase2-attesa");
   if(state==="ok") fase2.classList.add("fase2-ok");
 }
-function armFase2(){
-  fase2Armed = true;
-  setFase2State("attesa");
-  checkFase2Ready();
-  try{ fase2.scrollIntoView(true); }catch(e){}
-}
-function disarmFase2(){
-  fase2Armed = false;
-  setFase2State("normal");
-}
+function armFase2(){ fase2Armed = true; setFase2State("attesa"); checkFase2Ready(); try{ fase2.scrollIntoView(true); }catch(e){} }
+function disarmFase2(){ fase2Armed = false; setFase2State("normal"); }
 function checkFase2Ready(){
   if(!fase2Armed) return;
   var problemOk = !!problema.value;
   if(problema.value === "ALTRO") problemOk = safeTrim(problemaAltro.value).length > 0;
   var statoOk = !!stato.value;
-  if(problemOk && statoOk) setFase2State("ok");
-  else setFase2State("attesa");
+  setFase2State((problemOk && statoOk) ? "ok" : "attesa");
 }
 
 /* =========================
@@ -680,7 +636,7 @@ function setLedOk(on){
 }
 
 /* =========================
-   MODALITÀ (manuale/automatica)
+   MODE
    ========================= */
 function applyMode(){
   if(manualMode){
@@ -696,13 +652,7 @@ function applyMode(){
   renderPresent();
   updateAutoBoxVisibility();
 }
-if(manualModeBtn){
-  manualModeBtn.onclick = function(){
-    manualMode = !manualMode;
-    salvaModo();
-    applyMode();
-  };
-}
+manualModeBtn.onclick = function(){ manualMode = !manualMode; salvaModo(); applyMode(); };
 
 /* =========================
    INBOX
@@ -718,7 +668,6 @@ function addSmsToInbox(text){
   text = safeTrim(text);
   if(!text) return;
   if(inboxHasRaw(text)) return;
-
   inbox.unshift({ raw:text, ts:Date.now() });
   salvaInbox();
   renderInbox();
@@ -729,8 +678,8 @@ function renderInbox(){
 
   if(!inbox.length){
     inboxWrap.classList.add("hidden");
-    if(inboxList) inboxList.innerHTML = "";
-    if(inboxCount) inboxCount.textContent = "";
+    inboxList.innerHTML = "";
+    inboxCount.textContent = "";
     updateAutoBoxVisibility();
     return;
   }
@@ -742,10 +691,10 @@ function renderInbox(){
   for(var i=0;i<inbox.length;i++){
     (function(ii){
       var it = inbox[ii];
+      var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
+
       var div = document.createElement("div");
       div.className = "inbox-item";
-
-      var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
       div.innerHTML =
         '<div class="inbox-title">SMS • ' + escapeHtml(preview) + '</div>' +
         '<div class="inbox-sub">Tocca Apri per gestirlo</div>';
@@ -756,10 +705,7 @@ function renderInbox(){
       var openBtn = document.createElement("button");
       openBtn.className = "btn-primary";
       openBtn.textContent = "Apri";
-      openBtn.onclick = function(){
-        selectedInboxIndex = ii;
-        loadFromSmsText(it.raw);
-      };
+      openBtn.onclick = function(){ selectedInboxIndex = ii; loadFromSmsText(it.raw); };
 
       var delBtn = document.createElement("button");
       delBtn.className = "btn-danger";
@@ -791,33 +737,30 @@ function renderInbox(){
       inboxList.appendChild(div);
     })(i);
   }
-
   updateAutoBoxVisibility();
 }
-if(clearInboxBtn){
-  clearInboxBtn.onclick = function(){
-    showModal(function(m){
-      m.innerHTML =
-        '<h3>Svuotare tutti gli SMS in attesa?</h3>'+
-        '<div class="btn-row">'+
-          '<button class="btn-secondary" id="noClr">NO</button>'+
-          '<button class="btn-danger" id="siClr">SI</button>'+
-        '</div>';
-      m.querySelector("#noClr").onclick = closeModal;
-      m.querySelector("#siClr").onclick = function(){
-        inbox = [];
-        selectedInboxIndex = -1;
-        salvaInbox();
-        renderInbox();
-        updateAutoBoxVisibility();
-        closeModal();
-      };
-    });
-  };
-}
+clearInboxBtn.onclick = function(){
+  showModal(function(m){
+    m.innerHTML =
+      '<h3>Svuotare tutti gli SMS in attesa?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noClr">NO</button>'+
+        '<button class="btn-danger" id="siClr">SI</button>'+
+      '</div>';
+    m.querySelector("#noClr").onclick = closeModal;
+    m.querySelector("#siClr").onclick = function(){
+      inbox = [];
+      selectedInboxIndex = -1;
+      salvaInbox();
+      renderInbox();
+      updateAutoBoxVisibility();
+      closeModal();
+    };
+  });
+};
 
 /* =========================
-   SCHEDA PRESENTE (NOTIFICHE)
+   PRESENT (scheda presente)
    ========================= */
 function hasPresentKey(key){
   for(var i=0;i<presentNotifs.length;i++){
@@ -846,7 +789,7 @@ function removePresentAt(i){
   presentNotifs.splice(i,1);
   salvaPresent();
   renderPresent();
-  render(); // aggiorna highlight sticky
+  render();
   updateAutoBoxVisibility();
 }
 function renderPresent(){
@@ -854,8 +797,8 @@ function renderPresent(){
 
   if(!presentNotifs.length){
     presentWrap.classList.add("hidden");
-    if(presentList) presentList.innerHTML = "";
-    if(presentCount) presentCount.textContent = "";
+    presentList.innerHTML = "";
+    presentCount.textContent = "";
     updateAutoBoxVisibility();
     return;
   }
@@ -873,7 +816,7 @@ function renderPresent(){
       div.className = "inbox-item";
       div.innerHTML =
         '<div class="inbox-title">SCHEDA PRESENTE • ' + escapeHtml(preview || it.key) + '</div>' +
-        '<div class="inbox-sub">Elimina avviso oppure mostra cliente (la card resta evidenziata finché l’avviso esiste)</div>';
+        '<div class="inbox-sub">Elimina avviso oppure mostra cliente</div>';
 
       var actions = document.createElement("div");
       actions.className = "inbox-actions";
@@ -881,10 +824,7 @@ function renderPresent(){
       var showBtn = document.createElement("button");
       showBtn.className = "btn-primary";
       showBtn.textContent = "Mostra cliente";
-      showBtn.onclick = function(){
-        render();
-        scrollToClientByKey(it.key);
-      };
+      showBtn.onclick = function(){ render(); scrollToClientByKey(it.key); };
 
       var delBtn = document.createElement("button");
       delBtn.className = "btn-danger";
@@ -894,37 +834,33 @@ function renderPresent(){
       actions.appendChild(showBtn);
       actions.appendChild(delBtn);
       div.appendChild(actions);
-
       presentList.appendChild(div);
     })(i);
   }
-
   updateAutoBoxVisibility();
 }
-if(clearPresentBtn){
-  clearPresentBtn.onclick = function(){
-    showModal(function(m){
-      m.innerHTML =
-        '<h3>Svuotare tutti gli avvisi?</h3>'+
-        '<div class="btn-row">'+
-          '<button class="btn-secondary" id="noClrP">NO</button>'+
-          '<button class="btn-danger" id="siClrP">SI</button>'+
-        '</div>';
-      m.querySelector("#noClrP").onclick = closeModal;
-      m.querySelector("#siClrP").onclick = function(){
-        presentNotifs = [];
-        salvaPresent();
-        renderPresent();
-        render();
-        updateAutoBoxVisibility();
-        closeModal();
-      };
-    });
-  };
-}
+clearPresentBtn.onclick = function(){
+  showModal(function(m){
+    m.innerHTML =
+      '<h3>Svuotare tutti gli avvisi?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noClrP">NO</button>'+
+        '<button class="btn-danger" id="siClrP">SI</button>'+
+      '</div>';
+    m.querySelector("#noClrP").onclick = closeModal;
+    m.querySelector("#siClrP").onclick = function(){
+      presentNotifs = [];
+      salvaPresent();
+      renderPresent();
+      render();
+      updateAutoBoxVisibility();
+      closeModal();
+    };
+  });
+};
 
 /* =========================
-   LOAD da SMS (manuale o inbox)
+   LOAD da SMS
    ========================= */
 function loadFromSmsText(testo){
   var d = parseSMS(testo);
@@ -945,42 +881,47 @@ function loadFromSmsText(testo){
   armFase2();
 }
 
-/* ============================================================
-   INGRESSO SMS DA AUTOMAZIONE (FIX PWA iPhone):
-   - Legge sia ?sms=... che #sms=...
-   - Funziona anche se la PWA è già aperta (hashchange/visibility)
-   ============================================================ */
+/* =========================
+   INGRESSO SMS DA AUTOMAZIONE (PWA)
+   ========================= */
 function readIncomingSms(){
   try{
-    // 1) query ?sms=
+    // 1) query ?sms= oppure ?$sms=
     var p = new URLSearchParams(window.location.search);
-    var smsText = p.get("sms") || "";
+    var smsText = p.get("sms") || p.get("$sms") || "";
 
-    // 2) hash #sms=
+    // 2) hash #sms= oppure #$sms= oppure hash "sporchi"
     if(!smsText){
-      var h = (window.location.hash || "").replace(/^#/, "");
-      if(h){
-        var hp = new URLSearchParams(h);
-        smsText = hp.get("sms") || "";
+      var rawHash = (window.location.hash || "").replace(/^#/, "");
+
+      // 2a) parsing standard
+      try{
+        var hp = new URLSearchParams(rawHash);
+        smsText = hp.get("sms") || hp.get("$sms") || "";
+      }catch(e){ smsText = ""; }
+
+      // 2b) fallback regex
+      if(!smsText){
+        var m = rawHash.match(/(?:^|[&?])\$?sms=([^&]+)/i);
+        if(m && m[1]){
+          smsText = decodeURIComponent(String(m[1]).replace(/\+/g, "%20"));
+        }
       }
     }
-    return smsText;
+
+    return smsText || "";
   }catch(e){
     return "";
   }
 }
 function clearIncomingSmsFromUrl(){
-  try{
-    // toglie sia query che hash, senza reload
-    history.replaceState({}, document.title, window.location.pathname);
-  }catch(e){}
+  try{ history.replaceState({}, document.title, window.location.pathname); }catch(e){}
 }
 function handleIncomingSmsFromUrl(){
   try{
     var smsText = readIncomingSms();
     if(!smsText) return;
 
-    // evita ripetizioni
     var last = localStorage.getItem("lastIncomingSmsKey") || "";
     if(last === smsText){
       clearIncomingSmsFromUrl();
@@ -1002,6 +943,7 @@ function handleIncomingSmsFromUrl(){
     }
 
     addSmsToInbox(smsText);
+    showToast("📩 SMS ricevuto: aggiunto in attesa");
 
     manualMode = false;
     salvaModo();
@@ -1012,21 +954,13 @@ function handleIncomingSmsFromUrl(){
 }
 
 /* =========================
-   RESET UI
+   RESET + FASE 1/2
    ========================= */
 function resetCampiGestione(){
-  nome.value="";
-  via.value="";
-  citta.value="";
-  telefono.value="";
-  modello.value="";
-  idApp.value="";
-  matricola.value="";
-  problema.value="";
-  problemaAltro.value="";
-  problemaAltro.classList.add("hidden");
-  stato.value="";
-  note.value="";
+  nome.value=""; via.value=""; citta.value="";
+  telefono.value=""; modello.value=""; idApp.value=""; matricola.value="";
+  problema.value=""; problemaAltro.value=""; problemaAltro.classList.add("hidden");
+  stato.value=""; note.value="";
 }
 function resetUICompleta(){
   resetCampiGestione();
@@ -1037,27 +971,17 @@ function resetUICompleta(){
   selectedInboxIndex = -1;
 }
 
-/* =========================
-   FASE 1 (manuale)
-   ========================= */
 initBtn.onclick=function(){
   var testo = safeTrim(sms.value);
-  if(!testo){
-    alert("Incolla prima l'SMS.");
-    return;
-  }
+  if(!testo){ alert("Incolla prima l'SMS."); return; }
   loadFromSmsText(testo);
 };
 clearSmsBtn.onclick=function(){ resetUICompleta(); };
 
-/* =========================
-   FASE 2
-   ========================= */
 toggleCliente.onclick=function(){
   if(clienteBox.classList.contains("hidden")) clienteBox.classList.remove("hidden");
   else clienteBox.classList.add("hidden");
 };
-
 newClientBtn.onclick=function(){
   clienteBox.classList.remove("hidden");
   resetCampiGestione();
@@ -1079,15 +1003,11 @@ problema.onchange=function(){
 problemaAltro.oninput=function(){ checkFase2Ready(); };
 stato.onchange=function(){ checkFase2Ready(); };
 
-clearFieldsBtn.onclick=function(){
-  resetUICompleta();
-  applyMode();
-};
+clearFieldsBtn.onclick=function(){ resetUICompleta(); applyMode(); };
 
 addBtn.onclick=function(){
   var problemOk = !!problema.value;
   if(problema.value === "ALTRO") problemOk = safeTrim(problemaAltro.value).length > 0;
-
   if(!problemOk || !stato.value){
     alert("Seleziona PROBLEMA e TIPO GESTIONE. Se scegli ALTRO, scrivi il problema.");
     return;
@@ -1096,7 +1016,6 @@ addBtn.onclick=function(){
   var problemaFinale = problema.value;
   if(problema.value === "ALTRO") problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
 
-  // evita doppione
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey) >= 0){
     showToast("⚠️ Cliente già presente: non aggiunto");
@@ -1118,7 +1037,6 @@ addBtn.onclick=function(){
     note:note.value
   });
 
-  // se veniva dall’inbox -> rimuovi sms
   if(selectedInboxIndex >= 0){
     inbox.splice(selectedInboxIndex, 1);
     selectedInboxIndex = -1;
@@ -1149,7 +1067,7 @@ function showModal(build){
 function closeModal(){ modalRoot.classList.add("hidden"); modalRoot.innerHTML=""; }
 
 /* =========================
-   RENDER
+   RENDER CLIENTI
    ========================= */
 function row(t){
   var r=document.createElement("div");
@@ -1170,7 +1088,6 @@ function buildCard(c, i){
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
 
-  // highlight persistente se c'è avviso scheda presente
   if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
 
   var stEl=document.createElement("span");
@@ -1273,7 +1190,7 @@ function render(){
 }
 
 /* =========================
-   MODIFICA (fase 3)
+   MODIFICA / ELIMINA
    ========================= */
 function openEdit(i){
   var c = clients[i];
@@ -1380,9 +1297,6 @@ function openEdit(i){
   });
 }
 
-/* =========================
-   ELIMINA
-   ========================= */
 function openDelete(i){
   showModal(function(m){
     m.innerHTML=
@@ -1419,37 +1333,27 @@ function cancellaTutto(){
       '</div>';
     m.querySelector("#noAll").onclick = closeModal;
     m.querySelector("#siAll").onclick = function(){
-      clients=[];
-      presentNotifs=[];
-      inbox=[];
+      clients=[]; presentNotifs=[]; inbox=[];
       salvaDati(); salvaPresent(); salvaInbox();
       closeModal();
-      render();
-      renderInbox();
-      renderPresent();
+      render(); renderInbox(); renderPresent();
       updateAutoBoxVisibility();
     };
   });
 }
 
 /* =========================
-   PDF (con ID + Matricola)
+   PDF (come prima)
    ========================= */
 function generaPdfWhatsapp(){
-  if(!clients.length){
-    alert("Nessun cliente");
-    return;
-  }
+  if(!clients.length){ alert("Nessun cliente"); return; }
   if(!window.jspdf || !window.jspdf.jsPDF){
     alert("PDF non disponibile: jsPDF non caricato. Apri in Safari/Chrome con internet.");
     return;
   }
   var jsPDF = window.jspdf.jsPDF;
   var pdf = new jsPDF("l", "mm", "a4");
-  if(typeof pdf.autoTable !== "function"){
-    alert("PDF non disponibile: AutoTable non caricato.");
-    return;
-  }
+  if(typeof pdf.autoTable !== "function"){ alert("PDF non disponibile: AutoTable non caricato."); return; }
 
   var giorni = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
   var now = new Date();
@@ -1457,16 +1361,11 @@ function generaPdfWhatsapp(){
 
   function statoColor(s){
     var map = {
-      telefonica:   [220,252,231],
-      richiamare:   [255,237,213],
-      da_richiamare:[254,249,195],
-      uscita:       [219,234,254],
-      rifiutato:    [254,226,226],
-      ripartita:    [237,233,254],
-      "":           [229,231,235],
-      none:         [229,231,235]
+      telefonica:[220,252,231], richiamare:[255,237,213], da_richiamare:[254,249,195],
+      uscita:[219,234,254], rifiutato:[254,226,226], ripartita:[237,233,254],
+      "":[229,231,235], none:[229,231,235]
     };
-    return map[s || ""] || [229,231,235];
+    return map[s||""] || [229,231,235];
   }
 
   pdf.setFontSize(14);
@@ -1476,6 +1375,7 @@ function generaPdfWhatsapp(){
 
   var head = [[ "NOME","INDIRIZZO","TELEFONO","MODELLO","ID APP","MATRICOLA","PROBLEMA","GESTIONE","NOTE" ]];
   var body = [];
+
   for(var i=0;i<clients.length;i++){
     var c = clients[i];
     var indirizzo = "";
@@ -1483,15 +1383,9 @@ function generaPdfWhatsapp(){
     if(c.citta) indirizzo += (indirizzo ? " - " : "") + c.citta;
 
     body.push([
-      c.nome || "",
-      indirizzo,
-      c.telefono || "",
-      c.modello || "",
-      c.idApparecchio || "",
-      c.matricola || "",
-      c.problema || "",
-      statoLabel(c.stato),
-      c.note || ""
+      c.nome||"", indirizzo, c.telefono||"", c.modello||"",
+      c.idApparecchio||"", c.matricola||"",
+      c.problema||"", statoLabel(c.stato), c.note||""
     ]);
   }
 
@@ -1506,8 +1400,7 @@ function generaPdfWhatsapp(){
       if (data.section === "body") {
         var rowIndex = data.row.index;
         var c = clients[rowIndex];
-        var s = c ? c.stato : "";
-        data.cell.styles.fillColor = statoColor(s);
+        data.cell.styles.fillColor = statoColor(c ? c.stato : "");
         data.cell.styles.textColor = [0,0,0];
       }
     }
@@ -1517,24 +1410,25 @@ function generaPdfWhatsapp(){
   var file = null;
   try { file = new File([blob], "rapporti-clienti.pdf", { type: "application/pdf" }); } catch(e){ file=null; }
 
-  if(file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
-    navigator.share({ files: [file] }).catch(function(){ openPdfFallback(pdf, blob); });
-  } else {
-    openPdfFallback(pdf, blob);
+  function openPdfFallback(){
+    try{
+      var url = URL.createObjectURL(blob);
+      var w = window.open(url, "_blank");
+      if(!w) window.location.href = url;
+      return;
+    }catch(e){}
+    try{
+      var dataUri = pdf.output("datauristring");
+      window.location.href = dataUri;
+    }catch(e2){
+      try{ pdf.save("rapporti-clienti.pdf"); }catch(e3){ alert("Impossibile aprire il PDF su questo browser."); }
+    }
   }
-}
-function openPdfFallback(pdf, blob){
-  try{
-    var url = URL.createObjectURL(blob);
-    var w = window.open(url, "_blank");
-    if(!w) window.location.href = url;
-    return;
-  }catch(e){}
-  try{
-    var dataUri = pdf.output("datauristring");
-    window.location.href = dataUri;
-  }catch(e2){
-    try{ pdf.save("rapporti-clienti.pdf"); }catch(e3){ alert("Impossibile aprire il PDF su questo browser."); }
+
+  if(file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
+    navigator.share({ files: [file] }).catch(openPdfFallback);
+  } else {
+    openPdfFallback();
   }
 }
 
@@ -1552,10 +1446,9 @@ function toggleCardsFullscreen(){
 }
 
 /* =========================
-   VERSION BADGE
+   VERSION badge
    ========================= */
 function setVersionBadge(){
-  if(!verBadge) return;
   verBadge.textContent = "Versione: " + APP_VERSION + " • Build: " + BUILD_LABEL + " • SW:" + SW_VER;
 }
 
@@ -1579,10 +1472,10 @@ renderPresent();
 applyMode();
 updateAutoBoxVisibility();
 
-// 1) prova subito all’avvio
+// 1) subito all'avvio
 handleIncomingSmsFromUrl();
 
-// 2) FIX PWA iPhone: riprova quando cambia hash o l’app torna attiva
+// 2) PWA iPhone: riprova quando torna attiva
 window.addEventListener("hashchange", handleIncomingSmsFromUrl);
 window.addEventListener("pageshow", handleIncomingSmsFromUrl);
 window.addEventListener("focus", handleIncomingSmsFromUrl);
