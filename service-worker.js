@@ -41,28 +41,26 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
+// match che ignora la query (ok per assets)
+// NB: per HTML usiamo una chiave fissa index.html
 async function cacheMatch(req) {
   return caches.match(req, { ignoreSearch: true });
 }
 
-async function networkFirst(req) {
+async function networkFirstHTML(req) {
   const cache = await caches.open(CACHE_NAME);
   try {
+    // sempre rete, così prendi subito gli update
     const res = await fetch(req, { cache: "no-store" });
     if (res && res.ok) {
-      const url = new URL(req.url);
-      if (url.origin === self.location.origin) cache.put(req, res.clone());
+      // IMPORTANTISSIMO: cache SOLO index.html (senza ?sms=...&t=...)
+      await cache.put(new Request("./index.html"), res.clone());
     }
     return res;
   } catch (e) {
-    const cached = await cacheMatch(req);
-    if (cached) return cached;
-
-    const accept = (req.headers.get("accept") || "");
-    if (req.mode === "navigate" || accept.includes("text/html")) {
-      const indexCached = await cacheMatch("./index.html");
-      if (indexCached) return indexCached;
-    }
+    // offline: torna index cached
+    const cachedIndex = await cacheMatch("./index.html");
+    if (cachedIndex) return cachedIndex;
     throw e;
   }
 }
@@ -90,11 +88,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   const accept = req.headers.get("accept") || "";
 
+  // HTML / navigazione: network first, ma cache solo index.html (senza query)
   if (req.mode === "navigate" || accept.includes("text/html")) {
-    event.respondWith(networkFirst(req));
+    event.respondWith(networkFirstHTML(req));
     return;
   }
 
+  // asset same-origin: cache first
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(req));
   }
