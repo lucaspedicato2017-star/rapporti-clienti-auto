@@ -28,6 +28,11 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .btn-danger{background:#dc2626;color:#fff}
 .hidden{display:none}
 
+/* Input row (ID App + bottone A) */
+.input-row{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
+.input-row input{margin-bottom:0;flex:1}
+.btn-chip{background:#e5e7eb;color:#111827;border-radius:10px;padding:10px 14px;font-weight:900;min-width:54px}
+
 /* LED */
 .led{width:14px;height:14px;border-radius:50%;background:#9ca3af;display:inline-block;margin-left:8px;vertical-align:middle}
 .led.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25), 0 0 14px rgba(34,197,94,.6)}
@@ -92,7 +97,6 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .modal{
   width:100%; max-width:440px;
   background:#fff;border-radius:14px;padding:12px;
-  /* scroll interno, iPhone/Android */
   max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -101,7 +105,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 .modal h3{margin:0 0 10px}
 .modal .row{margin-bottom:8px}
 
-/* Bottoni sempre raggiungibili */
+/* Bottoni sticky */
 .modal .btn-row{
   display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
   position:sticky;
@@ -226,7 +230,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
     </div>
   </div>
 
-  <!-- BOX AUTOMATICO (FUORI FASE 2): SMS in attesa + Scheda presente -->
+  <!-- BOX AUTOMATICO -->
   <div class="card hidden" id="autoBox">
     <h3>📥 Automatico</h3>
 
@@ -246,7 +250,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
       </div>
     </div>
 
-    <!-- Inbox SMS (automatico) -->
+    <!-- Inbox SMS -->
     <div id="inboxWrap" class="hidden" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:14px;padding:10px;margin:10px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div style="font-weight:900">📩 SMS in attesa</div>
@@ -278,7 +282,13 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
       <input id="citta" placeholder="Comune">
       <input id="telefono" placeholder="Telefono" type="tel" inputmode="numeric" autocomplete="tel">
       <input id="modello" placeholder="Modello caldaia">
-      <input id="idApp" placeholder="ID Apparecchio">
+
+      <!-- ID Apparecchio: tastiera numerica + bottone A -->
+      <div class="input-row">
+        <input id="idApp" placeholder="ID Apparecchio" inputmode="numeric" autocomplete="off">
+        <button type="button" class="btn-chip" id="insA_idApp">A</button>
+      </div>
+
       <!-- Matricola: tastiera numerica -->
       <input id="matricola" placeholder="Matricola" inputmode="numeric" pattern="[0-9]*">
     </div>
@@ -336,7 +346,7 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 
 <script>
 /* =========================
-   VERSIONE (aggiorna tu)
+   VERSIONE
    ========================= */
 var APP_VERSION = "2025-12-30.v47";
 var BUILD_LABEL = "2025-12-30";
@@ -353,6 +363,24 @@ function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g
 function escapeHtml(s){
   s = String(s||"");
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* Inserisce testo al cursore (per bottone A) */
+function insertAtCursor(input, text){
+  if(!input) return;
+  try{
+    input.focus();
+    var start = input.selectionStart ?? input.value.length;
+    var end   = input.selectionEnd ?? input.value.length;
+    if (typeof input.setRangeText === "function") {
+      input.setRangeText(text, start, end, "end");
+    } else {
+      var v = input.value || "";
+      input.value = v.slice(0,start) + text + v.slice(end);
+    }
+  }catch(e){
+    input.value = (input.value || "") + text;
+  }
 }
 
 /* =========================
@@ -384,6 +412,8 @@ var modello = $("modello");
 var idApp = $("idApp");
 var matricola = $("matricola");
 
+var insA_idApp = $("insA_idApp");
+
 var problema = $("problema");
 var problemaAltro = $("problemaAltro");
 var stato = $("stato");
@@ -406,14 +436,19 @@ var clearPresentBtn = $("clearPresentBtn");
 var toastEl = $("toast");
 var verBadge = $("verBadge");
 
+/* Bottone A su ID (fase 2) */
+if(insA_idApp && idApp){
+  insA_idApp.onclick = function(){ insertAtCursor(idApp, "A"); };
+}
+
 /* =========================
    STATE
    ========================= */
 var clients = [];
 var fase2Armed = false;
 
-var inbox = [];           // sms nuovi: {raw, ts, count}
-var presentNotifs = [];   // sms di clienti già presenti: {key, raw, ts, count}
+var inbox = [];           // {raw, ts, count}
+var presentNotifs = [];   // {key, raw, ts, count}
 var selectedInboxIndex = -1;
 
 var manualMode = false;
@@ -451,7 +486,6 @@ function caricaInbox(){
   try{
     var d = localStorage.getItem("rapportiInbox");
     if(d) inbox = JSON.parse(d) || [];
-    // compat: se vecchi item senza count
     for(var i=0;i<inbox.length;i++){ if(!inbox[i].count) inbox[i].count = 1; }
   }catch(e){ inbox=[]; }
 }
@@ -461,7 +495,6 @@ function caricaPresent(){
   try{
     var d = localStorage.getItem("rapportiPresentNotifs");
     if(d) presentNotifs = JSON.parse(d) || [];
-    // compat: se vecchi item senza count
     for(var i=0;i<presentNotifs.length;i++){ if(!presentNotifs[i].count) presentNotifs[i].count = 1; }
   }catch(e){ presentNotifs=[]; }
 }
@@ -519,7 +552,7 @@ function parseSMS(t){
     if(mMob) r.telefono = mMob[1];
   }
 
-  // ID APPARECCHIO (accetta alfanumerico tipo A1375)
+  // ID APPARECCHIO (accetta alfanumerico)
   if(idPos >= 0){
     var tailId = t.slice(idPos);
     var mId = tailId.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9A-Za-z\/\-]+)/i);
@@ -569,12 +602,10 @@ function parseSMS(t){
 
     var tokens = addrFull.split(" ").filter(Boolean);
 
-    // normalizza "7/b" -> "7b"
     for(var z=0; z<tokens.length; z++){
       tokens[z] = tokens[z].replace(/^(\d+)\s*\/\s*([A-Za-z])$/,"$1$2");
     }
 
-    // unisci "15 B" -> "15B"
     for(var k=tokens.length-1; k>=1; k--){
       if(/^[A-Za-z]$/.test(tokens[k]) && /^\d+$/.test(tokens[k-1])){
         tokens[k-1] = tokens[k-1] + tokens[k];
@@ -587,7 +618,6 @@ function parseSMS(t){
       return /^\d+[A-Za-z]?(?:\/\d+)?$/.test(tok);
     }
 
-    // civico = ULTIMO civico valido (così VIA 25 APRILE 473 => 473)
     var civIdx = -1;
     for(var i=tokens.length-1; i>=1; i--){
       if(isCivico(tokens[i])) { civIdx = i; break; }
@@ -601,7 +631,6 @@ function parseSMS(t){
       r.citta = "";
     }
 
-    // sicurezza: comune non deve contenere parole tecniche
     if(/\b(id|matricola|apparecchio|modello|tel)\b/i.test(r.citta)){
       r.citta = "";
     }
@@ -737,7 +766,7 @@ if(manualModeBtn){
 }
 
 /* =========================
-   INBOX (SMS in attesa) - con contatore x2/x3...
+   INBOX - contatore x2/x3...
    ========================= */
 function findInboxIndexByRaw(text){
   text = safeTrim(text);
@@ -875,7 +904,7 @@ if(clearInboxBtn){
 }
 
 /* =========================
-   SCHEDA PRESENTE (NOTIFICHE) - contatore x2/x3 SOLO negli avvisi
+   SCHEDA PRESENTE (NOTIFICHE) - x2/x3 SOLO negli avvisi
    ========================= */
 function hasPresentKey(key){
   for(var i=0;i<presentNotifs.length;i++){
@@ -911,7 +940,7 @@ function removePresentAt(i){
   presentNotifs.splice(i,1);
   salvaPresent();
   renderPresent();
-  render(); // aggiorna highlight sticky
+  render();
   updateAutoBoxVisibility();
 }
 function renderPresent(){
@@ -995,7 +1024,7 @@ if(clearPresentBtn){
 }
 
 /* =========================
-   LOAD da SMS (manuale o inbox)
+   LOAD da SMS
    ========================= */
 function loadFromSmsText(testo){
   var d = parseSMS(testo);
@@ -1016,33 +1045,25 @@ function loadFromSmsText(testo){
   armFase2();
 }
 
-/* ============================================================
-   INGRESSO SMS DA AUTOMAZIONE:
-   - Legge sia ?sms=...&t=... che #sms=...&t=...
-   - Pulisce subito la URL (evita doppie letture su focus/pageshow)
-   ============================================================ */
+/* =========================
+   INGRESSO SMS DA AUTOMAZIONE
+   ========================= */
 function readIncoming(){
   try{
     var smsText = "";
-    var token = "";
-
-    // query ?sms=&t=
     var p = new URLSearchParams(window.location.search);
     smsText = p.get("sms") || "";
-    token   = p.get("t") || "";
 
-    // hash #sms=&t=
     if(!smsText){
       var h = (window.location.hash || "").replace(/^#/, "");
       if(h){
         var hp = new URLSearchParams(h);
         smsText = hp.get("sms") || "";
-        token   = token || (hp.get("t") || "");
       }
     }
-    return { smsText:smsText, token:token };
+    return smsText;
   }catch(e){
-    return { smsText:"", token:"" };
+    return "";
   }
 }
 function clearIncomingFromUrl(){
@@ -1052,11 +1073,9 @@ function clearIncomingFromUrl(){
 }
 function handleIncomingSmsFromUrl(){
   try{
-    var inc = readIncoming();
-    var smsText = inc.smsText || "";
+    var smsText = readIncoming();
     if(!smsText) return;
 
-    // pulisci subito (così focus/pageshow non rielaborano)
     clearIncomingFromUrl();
 
     var parsed = parseSMS(smsText);
@@ -1167,7 +1186,6 @@ addBtn.onclick=function(){
   var problemaFinale = problema.value;
   if(problema.value === "ALTRO") problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
 
-  // evita doppione
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey) >= 0){
     showToast("⚠️ Cliente già presente: non aggiunto");
@@ -1189,7 +1207,6 @@ addBtn.onclick=function(){
     note:note.value
   });
 
-  // se veniva dall’inbox -> rimuovi sms (indipendentemente dal count)
   if(selectedInboxIndex >= 0){
     inbox.splice(selectedInboxIndex, 1);
     selectedInboxIndex = -1;
@@ -1204,7 +1221,7 @@ addBtn.onclick=function(){
 };
 
 /* =========================
-   MODALI (con lock scroll iOS/Android)
+   MODALI (lock scroll)
    ========================= */
 var __scrollY = 0;
 function lockBodyScroll(){
@@ -1270,7 +1287,6 @@ function buildCard(c, i){
   var cKey = clientKeyFromClientObj(c);
   d.id = safeIdFromKey(cKey);
 
-  // highlight persistente se c'è avviso scheda presente
   if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
 
   var stEl=document.createElement("span");
@@ -1373,7 +1389,7 @@ function render(){
 }
 
 /* =========================
-   MODIFICA (fase 3) - matricola numerica + modal scroll
+   MODIFICA (fase 3) - ID numerico + bottone A, Matricola numerica
    ========================= */
 function openEdit(i){
   var c = clients[i];
@@ -1401,7 +1417,12 @@ function openEdit(i){
 
       '<div class="row"><div class="small">Modello caldaia</div><input id="e_modello" value="'+escapeHtml(c.modello)+'"></div>'+
 
-      '<div class="row"><div class="small">ID Apparecchio</div><input id="e_idapp" value="'+escapeHtml(c.idApparecchio||"")+'"></div>'+
+      '<div class="row"><div class="small">ID Apparecchio</div>'+
+        '<div class="input-row" style="margin-bottom:0">'+
+          '<input id="e_idapp" inputmode="numeric" autocomplete="off" value="'+escapeHtml(c.idApparecchio||"")+'">'+
+          '<button type="button" class="btn-chip" id="insA_e_idapp">A</button>'+
+        '</div>'+
+      '</div>'+
 
       '<div class="row"><div class="small">Matricola</div>'+
         '<input id="e_matricola" inputmode="numeric" pattern="[0-9]*" value="'+escapeHtml(c.matricola||"")+'">'+
@@ -1424,6 +1445,12 @@ function openEdit(i){
 
     modal.querySelector("#e_stato").value = c.stato || "";
     modal.querySelector("#e_problema").value = probSel;
+
+    var eId = modal.querySelector("#e_idapp");
+    var btnA = modal.querySelector("#insA_e_idapp");
+    if(btnA && eId){
+      btnA.onclick = function(){ insertAtCursor(eId, "A"); };
+    }
 
     function refreshAlt(){
       var v = modal.querySelector("#e_problema").value;
@@ -1536,7 +1563,7 @@ function cancellaTutto(){
 }
 
 /* =========================
-   PDF (con ID + Matricola)
+   PDF
    ========================= */
 function generaPdfWhatsapp(){
   if(!clients.length){
@@ -1682,10 +1709,8 @@ renderPresent();
 applyMode();
 updateAutoBoxVisibility();
 
-// 1) prova subito all’avvio
 handleIncomingSmsFromUrl();
 
-// 2) riprova quando l’app torna attiva (Safari iPhone + Chrome Android)
 window.addEventListener("hashchange", handleIncomingSmsFromUrl);
 window.addEventListener("pageshow", handleIncomingSmsFromUrl);
 window.addEventListener("focus", handleIncomingSmsFromUrl);
@@ -1695,7 +1720,7 @@ document.addEventListener("visibilitychange", function(){
 </script>
 
 <script>
-  // PWA: service worker (aumenta SW_VER per forzare update)
+  // PWA: service worker
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
