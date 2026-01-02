@@ -12,10 +12,6 @@
 
 <link rel="manifest" href="manifest.json" />
 
-<meta name="mobile-web-app-capable" content="yes" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<link rel="icon" href="icon-192.png" />
-
 <style>
 
 :root{
@@ -2342,7 +2338,7 @@ var lastUpdateTs = Date.now();
 function touchUpdate(){
   lastUpdateTs = Date.now();
   if(!headerStatus) return;
-  headerStatus.textContent = "Aggiornato: " + fmtDateTime(lastUpdateTs) + " • SW:" + SW_VER + demoTag;
+  headerStatus.textContent = "Aggiornato: " + fmtDateTime(lastUpdateTs) + " • SW:" + SW_VER;
 }
 
 /* =========================
@@ -2366,7 +2362,6 @@ if(localStorage.getItem("rapportiManualMode") === null){
   salvaModo();
 }
 
-setDemoFlag(false);
 setVersionBadge();
 render();
 renderInbox();
