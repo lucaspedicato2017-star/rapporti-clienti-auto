@@ -5,134 +5,355 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Rapporti Clienti – Reperibilità</title>
 
-<meta name="theme-color" content="#2563eb" />
+<meta name="theme-color" content="#0b1220" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reperibilità" />
 
 <link rel="manifest" href="manifest.json" />
 
-<style>
-body{font-family:system-ui;background:#f3f4f6;margin:0}
-.app{
-  max-width:900px;margin:auto;
-  padding:12px;
-  padding-top:calc(12px + env(safe-area-inset-top));
-  padding-bottom:calc(12px + env(safe-area-inset-bottom));
-}
-.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 10px rgba(0,0,0,.08)}
-textarea,input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #d1d5db;margin-bottom:8px;font-size:16px}
-button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-secondary{background:#e5e7eb}
-.btn-danger{background:#dc2626;color:#fff}
-.hidden{display:none}
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
 
-/* Input row (ID App + bottone A) */
-.input-row{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
-.input-row input{margin-bottom:0;flex:1}
-.btn-chip{background:#e5e7eb;color:#111827;border-radius:10px;padding:10px 14px;font-weight:900;min-width:54px}
+<style>
+
+:root{
+  --bg:#070a12;
+  --card:rgba(15,23,42,.68);
+  --text:#e5e7eb;
+  --muted:#9aa7bd;
+  --stroke:rgba(148,163,184,.14);
+
+  --brand:#3b82f6;
+  --brand2:#2563eb;
+  --danger:#ef4444;
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --pink:#ec4899;
+  --violet:#8b5cf6;
+  --teal:#14b8a6;
+
+  --radius:18px;
+  --shadow:0 22px 70px rgba(0,0,0,.48);
+  --shadow2:0 12px 28px rgba(0,0,0,.38);
+
+  --navH:64px;
+
+    --navRealH: calc(var(--navH) + env(safe-area-inset-bottom));
+/* superfici colorate */
+  --surf-blue: rgba(59,130,246,.16);
+  --surf-pink: rgba(236,72,153,.14);
+  --surf-amber: rgba(245,158,11,.16);
+  --surf-green: rgba(34,197,94,.14);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 900px at 8% -12%, rgba(59,130,246,.40), transparent 62%),
+    radial-gradient(1000px 760px at 102% 10%, rgba(236,72,153,.26), transparent 64%),
+    radial-gradient(980px 780px at 22% 112%, rgba(20,184,166,.22), transparent 62%),
+    radial-gradient(860px 640px at 70% 120%, rgba(139,92,246,.22), transparent 64%),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 42%),
+    var(--bg);
+  color:var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+a{color:inherit}
+
+.hidden{display:none!important}
+
+.app-shell{
+  min-height:100dvh;
+  padding-top:calc(env(safe-area-inset-top));
+  padding-bottom:calc(var(--navRealH) + 12px);
+}
+
+/* Top bar */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:1200;
+  padding:12px 12px 10px;
+  background:linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.62));
+  backdrop-filter: blur(12px);
+  border-bottom:1px solid rgba(148,163,184,.16);
+}
+.toprow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  font-weight:1000;
+}
+.logo{
+  width:34px;height:34px;border-radius:12px;
+  background:linear-gradient(135deg, rgba(59,130,246,1), rgba(37,99,235,1));
+  box-shadow: 0 14px 26px rgba(37,99,235,.25);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:1000;
+}
+.title{
+  display:flex;flex-direction:column;line-height:1.05;
+}
+.title .t1{font-size:15px}
+.title .t2{font-size:12px;color:var(--muted);font-weight:900;margin-top:2px}
+.pill{
+  font-size:11px;
+  font-weight:1000;
+  color:var(--muted);
+  background:rgba(15,23,42,.78);
+  border:1px solid var(--stroke);
+  padding:7px 10px;
+  border-radius:999px;
+  box-shadow: var(--shadow2);
+  max-width: 92vw;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Screens */
+.screens{
+  padding:12px;
+  max-width:980px;
+  margin:0 auto;
+  background:transparent;
+}
+.screen{display:none; animation: fadeIn .14s ease-out;}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:.3;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+/* Cards / Sections */
+.card{
+  background:var(--card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border:1px solid var(--stroke);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.cardhead{
+  padding:12px 12px 10px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  position:relative;
+}
+.cardhead::after{
+  content:"";
+  position:absolute;
+  left:12px; right:12px; bottom:-1px;
+  height:2px; border-radius:999px;
+  background:rgba(148,163,184,.18);
+}
+.cardhead-left{display:flex; gap:10px; align-items:flex-start;}
+.icon{
+  width:34px;height:34px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:1000;
+  background:rgba(2,6,23,.06);
+  box-shadow:0 10px 18px rgba(2,6,23,.10);
+}
+.hgroup h3{margin:0;font-size:15px;font-weight:1000}
+.hgroup .sub{margin-top:2px;font-size:12px;color:var(--muted);font-weight:900}
+.cardbody{padding:12px}
+
+/* Color themes */
+.theme-auto .cardhead{background:linear-gradient(135deg, rgba(236,72,153,.22), rgba(37,99,235,.08), rgba(255,255,255,0));}
+.theme-auto .icon{background:rgba(236,72,153,.18)}
+.theme-auto .cardhead::after{background:linear-gradient(90deg, rgba(236,72,153,.55), rgba(37,99,235,.25), transparent);}
+
+.theme-manual .cardhead{background:linear-gradient(135deg, rgba(37,99,235,.22), rgba(124,58,237,.08), rgba(255,255,255,0));}
+.theme-manual .icon{background:rgba(37,99,235,.18)}
+.theme-manual .cardhead::after{background:linear-gradient(90deg, rgba(37,99,235,.55), rgba(124,58,237,.22), transparent);}
+
+.theme-gestione .cardhead{background:linear-gradient(135deg, rgba(245,158,11,.24), rgba(34,197,94,.08), rgba(255,255,255,0));}
+.theme-gestione .icon{background:rgba(245,158,11,.20)}
+.theme-gestione .cardhead::after{background:linear-gradient(90deg, rgba(245,158,11,.62), rgba(34,197,94,.18), transparent);}
+
+.theme-clienti .cardhead{background:linear-gradient(135deg, rgba(34,197,94,.22), rgba(20,184,166,.08), rgba(255,255,255,0));}
+.theme-clienti .icon{background:rgba(34,197,94,.18)}
+.theme-clienti .cardhead::after{background:linear-gradient(90deg, rgba(34,197,94,.62), rgba(20,184,166,.18), transparent);}
+
+.divider{height:1px;background:rgba(15,23,42,.08)}
+
+/* Inputs */
+textarea,input,select{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(2,6,23,.45);
+  color:var(--text);
+
+  margin-bottom:10px;
+  font-size:16px;
+  outline:none;
+}
+textarea::placeholder,input::placeholder{color:rgba(148,163,184,.72)}
+select{color:var(--text)}
+textarea:focus,input:focus,select:focus{
+  border-color:rgba(37,99,235,.55);
+  box-shadow:0 0 0 4px rgba(37,99,235,.10);
+}
+
+
+/* Note: textarea espandibile (si apre "a tendina" quando tocchi) */
+.noteExp{
+  height:46px;
+  min-height:46px;
+  max-height:260px;
+  transition: height .16s ease;
+  resize: vertical;
+}
+.noteExp:focus{
+  height:160px;
+}
+
+.row{display:flex; gap:10px; flex-wrap:wrap;}
+.row > *{flex:1}
+.actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+
+/* Buttons */
+button{
+  border:none;
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:1000;
+  cursor:pointer;
+  user-select:none;
+}
+button:active{transform:scale(.99)}
+.btn-primary{background:linear-gradient(135deg, rgba(59,130,246,1), rgba(37,99,235,1)); color:#fff; box-shadow:0 12px 22px rgba(37,99,235,.22)}
+.btn-secondary{background:rgba(148,163,184,.18); color:var(--text)}
+.btn-danger{background:linear-gradient(135deg, #ef4444, var(--danger)); color:#fff; box-shadow:0 12px 22px rgba(220,38,38,.18)}
+.btn-chip{
+  background:linear-gradient(135deg, rgba(2,6,23,.92), rgba(2,6,23,.78));
+  color:#fff;
+  border-radius:14px;
+  padding:10px 14px;
+  min-width:56px;
+  box-shadow:0 12px 22px rgba(2,6,23,.18);
+}
+.btn-soft{
+  background:rgba(148,163,184,.12);
+  border:1px solid rgba(148,163,184,.14);
+  color:var(--text);
+  box-shadow:0 10px 18px rgba(2,6,23,.06);
+}
+
+.small{font-size:12px}
+.muted{color:var(--muted);font-weight:900}
 
 /* LED */
-.led{width:14px;height:14px;border-radius:50%;background:#9ca3af;display:inline-block;margin-left:8px;vertical-align:middle}
-.led.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25), 0 0 14px rgba(34,197,94,.6)}
+.led{width:14px;height:14px;border-radius:50%;background:#9ca3af;display:inline-block;vertical-align:middle}
+.led.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(34,197,94,.22), 0 0 14px rgba(34,197,94,.55)}
 
-/* CARD */
-.gc-card{border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
-.gc-none{background:#e5e7eb}
-.gc-telefonica{background:#dcfce7}
-.gc-richiamare{background:#ffedd5}
-.gc-da_richiamare{background:#fef9c3}
-.gc-uscita{background:#dbeafe}
-.gc-rifiutato{background:#fee2e2}
-.gc-ripartita{background:#ede9fe}
+/* Inbox / present lists */
+.box-soft{
+  background:rgba(15,23,42,.58);
+  border:1px dashed rgba(148,163,184,.18);
+  border-radius:16px;
+  padding:10px;
+  margin-top:10px;
+}
 
-.gc-title{font-size:18px;font-weight:900}
-.gc-big{font-size:16px;font-weight:800;margin-top:6px}
+/* Box con sfondo chiaro: testo più leggibile */
+.box-light{
+  color:#0b1220;
+}
+.box-light .muted{
+  color:rgba(17,24,39,.70);
+}
+.box-light .small{
+  color:rgba(17,24,39,.78);
+}
+.kpi{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  margin-top:8px;
+}
+.kpi .chip{
+  background:rgba(2,6,23,.35);
+  border:1px solid rgba(148,163,184,.14);
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:1000;
+  color:rgba(2,6,23,.78);
+}
+.inbox-item{
+  background:rgba(2,6,23,.45);
+  color:var(--text);
+
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:16px;
+  padding:10px;
+  margin-top:10px;
+  box-shadow: 0 12px 22px rgba(2,6,23,.06);
+}
+.inbox-title{font-weight:1000}
+.inbox-sub{font-size:12px;color:var(--muted);margin-top:4px;font-weight:900}
+.inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.inbox-highlight{
+  outline:4px solid rgba(37,99,235,.65);
+  box-shadow:0 0 0 6px rgba(37,99,235,.10);
+  animation:pulseHL 1.1s ease-in-out 0s 2;
+}
+@keyframes pulseHL{0%{transform:scale(1)}50%{transform:scale(1.01)}100%{transform:scale(1)}}
+
+/* Customer cards */
+.gc-card{border-radius:18px;padding:12px;margin-bottom:10px;position:relative;border:1px solid rgba(0,0,0,.06);box-shadow: 0 14px 28px rgba(2,6,23,.09)}
+.gc-none{background:rgba(148,163,184,.10)}
+.gc-telefonica{background:rgba(34,197,94,.18)}
+.gc-richiamare{background:rgba(245,158,11,.18)}
+.gc-da_richiamare{background:rgba(245,158,11,.14)}
+.gc-uscita{background:rgba(59,130,246,.18)}
+.gc-rifiutato{background:rgba(239,68,68,.18)}
+.gc-ripartita{background:rgba(139,92,246,.18)}
+
+.gc-title{font-size:18px;font-weight:1000}
+.gc-big{font-size:16px;font-weight:900;margin-top:6px}
 .gc-row{font-size:13px;margin-top:4px}
 .gc-link{cursor:pointer;text-decoration:underline;color:inherit}
-
 .gc-stato{
   position:absolute;top:10px;right:12px;
-  font-size:12px;font-weight:900;
-  padding:3px 8px;border-radius:999px;
-  background:rgba(255,255,255,.75);
-  cursor:pointer;
+  font-size:12px;font-weight:1000;
+  padding:4px 10px;border-radius:999px;
+  background:linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.62));
+  cursor:pointer;border:1px solid rgba(0,0,0,.06);
 }
 .gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
 
-/* evidenziazione breve */
 .gc-highlight{
   outline:4px solid rgba(37,99,235,.75);
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
-  animation: pulseHL 1.1s ease-in-out 0s 2;
+  animation:pulseHL 1.1s ease-in-out 0s 2;
 }
-@keyframes pulseHL{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.01)}
-  100%{transform:scale(1)}
-}
-
-/* evidenziazione PERMANENTE (non cambia colore stato) */
 .gc-highlight-sticky{
   outline:4px solid rgba(37,99,235,.75);
   box-shadow:0 0 0 6px rgba(37,99,235,.12);
 }
-
-/* card "completa" (tutti campi ok) */
 .gc-complete{padding:14px}
 .gc-complete .gc-title{font-size:19px}
 .gc-complete .gc-big{font-size:17px}
 
-/* MODALE */
-.modal-backdrop{
-  position:fixed;left:0;top:0;right:0;bottom:0;
-  background:rgba(0,0,0,.45);
-  display:flex; align-items:center; justify-content:center;
-  z-index:9999;
-  padding:12px;
-  padding-top:calc(12px + env(safe-area-inset-top));
-  padding-bottom:calc(12px + env(safe-area-inset-bottom));
-}
-.modal{
-  width:100%; max-width:440px;
-  background:#fff;border-radius:14px;padding:12px;
-  max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-}
-.modal h3{margin:0 0 10px}
-.modal .row{margin-bottom:8px}
-
-/* Bottoni sticky */
-.modal .btn-row{
-  display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
-  position:sticky;
-  bottom:0;
-  background:#fff;
-  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-  margin:12px -12px -12px;
-  border-top:1px solid #e5e7eb;
-}
-.small{font-size:12px}
-
-/* FEEDBACK FASE 2 */
-.fase2-attesa{
-  background:#fff7ed;
-  outline:3px solid rgba(251,146,60,.65);
-  box-shadow:0 8px 20px rgba(251,146,60,.18);
-}
-.fase2-ok{
-  background:#f0fdf4;
-  outline:3px solid rgba(34,197,94,.65);
-  box-shadow:0 8px 20px rgba(34,197,94,.18);
-}
-
-/* FULLSCREEN FASE 3 */
+/* Fullscreen */
 .cards-fullscreen{
   position:fixed;left:0;top:0;right:0;bottom:0;
-  background:#f3f4f6;
+  background:var(--bg);
   z-index:9998;
   padding:12px;
   padding-top:calc(12px + env(safe-area-inset-top));
@@ -144,197 +365,455 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
   grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
   gap:12px;
 }
-
-/* GRUPPI PER COMUNE */
 .group-title{
-  font-size:14px;
-  font-weight:900;
-  padding:8px 10px;
-  border-radius:12px;
-  background:rgba(0,0,0,.05);
-  margin:14px 0 8px;
+  font-size:13px;font-weight:1000;
+  padding:9px 10px;border-radius:14px;
+  background:rgba(2,6,23,.30);
+  margin:14px 0 10px;
+  border:1px dashed rgba(148,163,184,.18);
 }
-.cards-fullscreen .group-title{ grid-column: 1 / -1; }
+.cards-fullscreen .group-title{grid-column:1 / -1}
 
-/* ITEM LISTE (inbox + scheda presente) */
-.inbox-item{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:10px;
-  margin-top:8px;
+/* Modal */
+.modal-backdrop{
+  position:fixed;left:0;top:0;right:0;bottom:0;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+  padding:12px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
 }
-.inbox-title{font-weight:900}
-.inbox-sub{font-size:12px;color:#6b7280;margin-top:4px}
-.inbox-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.modal{
+  width:100%;max-width:480px;
+  background:rgba(2,6,23,.45);
+  color:var(--text);
+border-radius:18px;padding:12px;
+  max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  box-shadow:0 22px 56px rgba(0,0,0,.18);
+}
+.modal h3{margin:0 0 10px}
+.modal .btn-row{
+  display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
+  position:sticky;bottom:0;
+  background:rgba(2,6,23,.45);
+  color:var(--text);
 
-/* evidenzia un item quando arriva di nuovo */
-.inbox-highlight{
-  outline:4px solid rgba(37,99,235,.75);
-  box-shadow:0 0 0 6px rgba(37,99,235,.12);
-  animation: pulseHL 1.1s ease-in-out 0s 2;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  margin:12px -12px -12px;
+  border-top:1px solid rgba(148,163,184,.16);
+}
+
+/* Fase2 states */
+.fase2-attesa{
+  outline:3px solid rgba(245,158,11,.55);
+  box-shadow:0 18px 40px rgba(245,158,11,.14);
+}
+.fase2-ok{
+  outline:3px solid rgba(34,197,94,.55);
+  box-shadow:0 18px 40px rgba(34,197,94,.14);
 }
 
 /* Toast */
 .toast{
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:calc(12px + env(safe-area-inset-bottom));
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--navH) + 12px + env(safe-area-inset-bottom));
   z-index:10001;
-  background:rgba(17,24,39,.92);
+  background:linear-gradient(135deg, rgba(2,6,23,.92), rgba(15,23,42,.92));
   color:#fff;
-  padding:10px 12px;
-  border-radius:14px;
-  font-size:13px;
-  font-weight:800;
+  padding:10px 12px;border-radius:16px;
+  font-size:13px;font-weight:1000;
   max-width:min(560px, calc(100% - 24px));
   text-align:center;
   display:none;
 }
 
-/* Badge versione */
-.version-badge{
+/* Bottom nav */
+.bottomnav{
+  min-height:calc(var(--navH) + env(safe-area-inset-bottom));
+  height:auto;
+
   position:fixed;
-  top:calc(8px + env(safe-area-inset-top));
-  left:10px;
-  z-index:10000;
-  font-size:11px;
-  font-weight:900;
-  color:#6b7280;
-  background:rgba(255,255,255,.85);
-  border:1px solid #e5e7eb;
-  padding:4px 8px;
-  border-radius:999px;
-  backdrop-filter: blur(6px);
+  left:0;right:0;bottom:0;
+padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.62));
+  border-top:1px solid rgba(148,163,184,.16);
+  backdrop-filter: blur(12px);
+  z-index:1400;
 }
+.navrow{
+  max-width:980px;
+  margin:0 auto;
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+.navbtn{
+  flex:1;
+  border-radius:18px;
+  padding:10px 10px;
+  background:rgba(2,6,23,.35);
+  border:1px solid rgba(148,163,184,.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:1000;
+  position:relative;
+}
+.navbtn.active{
+  background:linear-gradient(135deg, rgba(37,99,235,.28), rgba(37,99,235,.12));
+  border-color:rgba(37,99,235,.40);
+  box-shadow:0 16px 34px rgba(59,130,246,.18);
+}
+.navico{font-size:16px}
+.navlbl{ font-size:13px; font-weight:950; color:#ffffff; letter-spacing:.01em; }
+.badgeCount{
+  position:absolute;
+  top:6px;
+  right:8px;
+  background:linear-gradient(135deg, var(--pink), #db2777);
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  padding:2px 8px;
+  border-radius:999px;
+  box-shadow:0 10px 18px rgba(236,72,153,.22);
+  display:none;
+}
+.badgeCount.show{display:block}
+
+/* Small helper row for LED */
+.ledrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ---- UX richieste (v47) ---- */
+.kpi{gap:10px}
+.kpi .chip{
+  font-size:13px;
+  padding:8px 12px;
+  border-radius:999px;
+  box-shadow:0 14px 28px rgba(0,0,0,.28);
+}
+.kpiNum{
+  display:inline-block;
+  font-weight:1000;
+  font-size:14px;
+  padding:0 2px;
+}
+#kpi_inbox{
+  background:linear-gradient(135deg, rgba(59,130,246,.32), rgba(2,6,23,.35));
+  border-color:rgba(59,130,246,.38);
+  color:#eaf2ff;
+}
+#kpi_present{
+  background:linear-gradient(135deg, rgba(239,68,68,.28), rgba(2,6,23,.35));
+  border-color:rgba(239,68,68,.34);
+  color:#ffecec;
+}
+
+/* Navbar più visibile */
+.bottomnav{ box-shadow: 0 -18px 50px rgba(0,0,0,.55); }
+.navrow{gap:10px}
+.navbtn{ padding:14px 12px; min-height:52px; }
+.navico{font-size:18px}
+.navlbl{ font-size:13px; font-weight:950; color:#ffffff; letter-spacing:.01em; }
+.badgeCount{ top:6px; right:10px; font-size:12px; padding:3px 9px; }
+
+/* Modale più opaca (non si vede sotto) */
+.modal-backdrop{ background:rgba(0,0,0,.78); }
+.modal{ background:rgba(11,18,32,.98); }
+
+/* Card clienti: note lunghe sempre a capo */
+.gc-row{ overflow-wrap:anywhere; word-break:break-word; white-space:pre-wrap; }
+
+/* Più spazio tra indirizzo e telefono */
+.gc-big{margin-top:10px}
+.gc-big + .gc-big{margin-top:12px}
+
+/* Bottone filtro attivo */
+.btn-filter-active{
+  background:linear-gradient(135deg, rgba(59,130,246,.35), rgba(37,99,235,.18));
+  border:1px solid rgba(59,130,246,.40);
+  color:var(--text);
+  box-shadow:0 16px 34px rgba(59,130,246,.18);
+}
+
+
+/* ---- Extra UX (v47.1) ---- */
+
+/* Bottom nav: testo più leggibile */
+.navbtn{ color:rgba(229,231,235,.95); }
+.navlbl{ font-size:13px; font-weight:950; color:#ffffff; letter-spacing:.01em; }
+.navbtn.active .navlbl{ font-size:13px; font-weight:950; color:#ffffff; letter-spacing:.01em; }
+.navbtn.active .navico{ filter: drop-shadow(0 10px 16px rgba(59,130,246,.22)); }
+
+/* Fase 2: evidenza più forte */
+.fase2-attesa{
+  outline:4px solid rgba(245,158,11,.78) !important;
+  box-shadow:0 0 0 8px rgba(245,158,11,.16), 0 22px 50px rgba(245,158,11,.12) !important;
+}
+.fase2-ok{
+  outline:4px solid rgba(34,197,94,.78) !important;
+  box-shadow:0 0 0 8px rgba(34,197,94,.16), 0 22px 50px rgba(34,197,94,.12) !important;
+}
+
+
+
+/* ---- Gestione: Cliente compatto (default) ---- */
+#clienteBox.cliente-compact #via,
+#clienteBox.cliente-compact #citta,
+#clienteBox.cliente-compact #telefono,
+#clienteBox.cliente-compact #modello,
+#clienteBox.cliente-compact #idApp,
+#clienteBox.cliente-compact #matricola{
+  display:none !important;
+}
+#clienteBox.cliente-compact #nome{
+  margin-bottom:0;
+}
+
+/* =========================
+   FIX NAV OVERLAY
+   - la bottom nav prima era più "alta" del suo height (i bottoni sbordavano)
+   - la porto ad altezza reale (auto) e uso quella per il padding dello scroll
+   ========================= */
+.bottomnav{
+  height:auto !important;
+}
+/* =========================
+   FIX SOLO AUTOMATICO + GESTIONE (NON TOCCA CLIENTI)
+   - Evita il bug "non scrolla nulla" quando .screens è flex-container
+   - Aggiunge spazio finale così la bottom-nav non copre gli ultimi elementi
+   ========================= */
+html:not([data-screen="clients"]) .screens{
+  display:block;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(24px + var(--navRealH, var(--navH)));
+  scroll-padding-bottom: calc(24px + var(--navRealH, var(--navH)));
+}
+html:not([data-screen="clients"]) .screen{
+  flex:none !important;
+  min-height:auto !important;
+}
+
 </style>
 </head>
 
 <body>
-<div id="verBadge" class="version-badge">Versione: —</div>
 <div id="toast" class="toast"></div>
 
-<div class="app">
+<div class="app-shell">
 
-  <!-- FASE 1 (manuale) -->
-  <div class="card" id="fase1">
-    <h3>1. Incolla SMS</h3>
-    <textarea id="sms" placeholder="Incolla qui l'SMS..."></textarea>
-
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button id="initBtn" class="btn-primary">▶️ Inizializza</button>
-      <button id="clearSmsBtn" class="btn-secondary">🧹 Pulisci SMS</button>
-      <span id="led" class="led"></span>
-      <span id="ledTxt" style="font-weight:800;color:#6b7280">Non inizializzato</span>
+  <div class="topbar">
+    <div class="toprow" style="justify-content:center">
+      <div id="headerStatus" class="pill">Aggiornato: —</div>
     </div>
   </div>
 
-  <!-- BOX AUTOMATICO -->
-  <div class="card hidden" id="autoBox">
-    <h3>📥 Automatico</h3>
+  <main class="screens">
 
-    <!-- Schede già presenti -->
-    <div id="presentWrap" class="hidden" style="background:#fef2f2;border:1px dashed #fecaca;border-radius:14px;padding:10px;margin:10px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">⚠️ Scheda presente</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="presentCount" class="small" style="color:#6b7280"></span>
-          <button id="clearPresentBtn" class="btn-danger">🗑️ Svuota avvisi</button>
+    <!-- SCREEN: AUTOMATICO -->
+    <section id="screen_auto" class="screen">
+      <div class="card theme-auto" id="autoBox">
+        <div class="cardhead">
+          <div class="cardhead-left">
+            <div class="icon">📥</div>
+            <div class="hgroup">
+              <h3>Automatico</h3>
+              <div class="sub">SMS in attesa + avvisi scheda presente</div>
+              <div class="kpi">
+                <span class="chip" id="kpi_inbox">📩 0 in attesa</span>
+                <span class="chip" id="kpi_present">⚠️ 0 avvisi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cardbody">
+
+          <!-- Schede già presenti -->
+          <div id="presentWrap" class="hidden box-soft box-light" style="background:rgba(254,242,242,.9);border-color:rgba(220,38,38,.25)">
+            <div class="actions" style="justify-content:space-between">
+              <div style="font-weight:1000">⚠️ Scheda presente</div>
+              <div class="actions">
+                <span id="presentCount" class="small muted"></span>
+                <button id="clearPresentBtn" class="btn-danger">🗑️ Svuota avvisi</button>
+              </div>
+            </div>
+            <div id="presentList"></div>
+            <div class="small muted" style="margin-top:8px">
+              Se arriva un SMS per un cliente già in lista: <b>Mostra cliente</b> o <b>Elimina avviso</b>.
+              Finché l’avviso resta, la card rimane evidenziata.
+            </div>
+          </div>
+
+          <!-- Inbox -->
+          <div id="inboxWrap" class="hidden box-soft">
+            <div class="actions" style="justify-content:space-between">
+              <div style="font-weight:1000">📩 SMS in attesa</div>
+              <div class="actions">
+                <span id="inboxCount" class="small muted"></span>
+                <button id="clearInboxBtn" class="btn-danger">🗑️ Svuota</button>
+              </div>
+            </div>
+            <div id="inboxList"></div>
+            <div class="small muted" style="margin-top:8px">
+              Tocca <b>Apri</b> su un SMS, poi seleziona <b>PROBLEMA</b> e <b>TIPO GESTIONE</b> e premi <b>Aggiungi</b>.
+            </div>
+          </div>
+
+          <div id="autoEmpty" class="box-soft box-light" style="margin-top:0;background:rgba(255,255,255,.62)">
+            <div style="font-weight:1000">Nessun SMS da gestire</div>            <div class="small muted" style="margin-top:6px">
+              Quando arriva un SMS dall’automazione, lo troverai qui in <b>SMS in attesa</b> oppure in <b>Scheda presente</b>.
+            </div>
+          </div>
+
+
         </div>
       </div>
-      <div id="presentList"></div>
-      <div class="small" style="margin-top:8px;color:#6b7280">
-        Se arriva un SMS per un cliente già in lista: <b>Mostra cliente</b> o <b>Elimina avviso</b>.
-        Finché l’avviso resta, la card rimane evidenziata.
-      </div>
-    </div>
+    </section>
 
-    <!-- Inbox SMS -->
-    <div id="inboxWrap" class="hidden" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:14px;padding:10px;margin:10px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">📩 SMS in attesa</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="inboxCount" class="small" style="color:#6b7280"></span>
-          <button id="clearInboxBtn" class="btn-danger">🗑️ Svuota</button>
+    <!-- SCREEN: GESTIONE -->
+    <section id="screen_manage" class="screen active">
+
+      <!-- FASE 1 (solo manuale) -->
+      <div class="card theme-manual" id="fase1">
+        <div class="cardhead">
+          <div class="cardhead-left">
+            <div class="icon">✍️</div>
+            <div class="hgroup">
+              <h3>Incolla SMS (manuale)</h3>
+              <div class="sub">Incolla un SMS e inizializza i campi</div>
+            </div>
+          </div>
+          <div class="ledrow">
+            <span id="led" class="led"></span>
+            <span id="ledTxt" class="small" style="font-weight:1000;color:var(--muted)">Non inizializzato</span>
+          </div>
+        </div>
+        <div class="cardbody">
+          <textarea id="sms" placeholder="Incolla qui l'SMS..."></textarea>
+          <div class="actions">
+            <button id="initBtn" class="btn-primary">▶️ Inizializza</button>
+            <button id="clearSmsBtn" class="btn-secondary">🧹 Pulisci</button>
+          </div>
         </div>
       </div>
-      <div id="inboxList"></div>
-      <div class="small" style="margin-top:8px;color:#6b7280">
-        Tocca <b>Apri</b> su un SMS, poi seleziona <b>PROBLEMA</b> e <b>TIPO GESTIONE</b> e premi <b>Aggiungi</b>.
+
+      <!-- FASE 2 -->
+      <div class="card theme-gestione" id="fase2">
+        <div class="cardhead">
+          <div class="cardhead-left">
+            <div class="icon">🛠️</div>
+            <div class="hgroup">
+              <h3>Gestione</h3>
+              <div class="sub">Compila e aggiungi cliente alla lista</div>
+            </div>
+          </div>
+        </div>
+        <div class="cardbody">
+
+          <div class="actions" style="margin-bottom:10px">
+            <button id="manualModeBtn" class="btn-secondary">✍️ Manuale</button>
+            <button id="toggleCliente" class="btn-secondary">👁️ Mostra cliente</button>
+            <button id="newClientBtn" class="btn-primary">➕ Nuovo cliente</button>
+          </div>
+<div id="clientMiniName" class="clientMiniName">—</div>
+
+          <div id="clienteBox" class="cliente-compact">
+            <input id="nome" placeholder="Nome">
+            <input id="via" placeholder="Via">
+            <input id="citta" placeholder="Comune">
+            <input id="telefono" placeholder="Telefono" type="tel" inputmode="numeric" autocomplete="tel">
+            <input id="modello" placeholder="Modello caldaia">
+
+            <div class="row" style="margin-bottom:10px">
+              <div style="flex:1;min-width:220px">
+                <input id="idApp" placeholder="ID Apparecchio" inputmode="numeric" autocomplete="off" style="margin-bottom:0">
+              </div>
+              <div style="flex:0 0 auto">
+                <button type="button" class="btn-chip" id="insA_idApp">A</button>
+              </div>
+            </div>
+
+            <input id="matricola" placeholder="Matricola" inputmode="numeric" pattern="[0-9]*">
+          </div>
+
+          <select id="problema">
+            <option value="">-- PROBLEMA --</option>
+            <option>NO ACQUA CALDA</option>
+            <option>RISCALDAMENTO NON VA</option>
+            <option>RUMOROSA</option>
+            <option>PERDITA D'ACQUA</option>
+            <option>TUTTO FERMO</option>
+            <option>ALTRO</option>
+          </select>
+
+          <input id="problemaAltro" class="hidden" placeholder="Scrivi il problema...">
+
+          <select id="stato">
+            <option value="">-- TIPO GESTIONE --</option>
+            <option value="telefonica">GESTITA AL TELEFONO</option>
+            <option value="richiamare">RICHIAMANO LORO</option>
+            <option value="da_richiamare">DA RICHIAMARE</option>
+            <option value="uscita">USCITA</option>
+            <option value="rifiutato">RIFIUTATO</option>
+            <option value="ripartita">RIPARTITA</option>
+          </select>
+
+          <textarea id="note" class="noteExp" placeholder="Note"></textarea>
+
+          <div class="actions">
+            <button id="addBtn" class="btn-primary">➕ Aggiungi alla lista</button>
+            <button id="clearFieldsBtn" class="btn-secondary">🧹 Pulisci campi</button>
+          </div>
+
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- FASE 2 -->
-  <div class="card" id="fase2">
-    <h3>2. Gestione</h3>
+    </section>
 
-    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <button id="manualModeBtn" class="btn-secondary">✍️ Modalità manuale</button>
-      <button id="toggleCliente" class="btn-secondary">👁️ Mostra cliente</button>
-      <button id="newClientBtn" class="btn-primary">➕ Nuovo cliente</button>
-    </div>
-
-    <div id="clienteBox" class="hidden">
-      <input id="nome" placeholder="Nome">
-      <input id="via" placeholder="Via">
-      <input id="citta" placeholder="Comune">
-      <input id="telefono" placeholder="Telefono" type="tel" inputmode="numeric" autocomplete="tel">
-      <input id="modello" placeholder="Modello caldaia">
-
-      <!-- ID Apparecchio: tastiera numerica + bottone A -->
-      <div class="input-row">
-        <input id="idApp" placeholder="ID Apparecchio" inputmode="numeric" autocomplete="off">
-        <button type="button" class="btn-chip" id="insA_idApp">A</button>
+    <!-- SCREEN: CLIENTI -->
+    <section id="screen_clients" class="screen">
+      <div class="card theme-clienti" id="fase3">
+        <div class="cardhead">
+          <div class="cardhead-left">
+            <div class="icon">👥</div>
+            <div class="hgroup">
+              <h3>Clienti</h3>
+              <div class="sub">Lista operativa + PDF WhatsApp</div>
+            </div>
+          </div>
+        </div>
+        <div class="cardbody">
+          <div class="actions" style="margin-bottom:10px">
+            <button class="btn-primary" onclick="generaPdfWhatsapp()">📤 PDF WhatsApp</button>
+            <button class="btn-secondary" id="filterUsciteBtn" type="button">🚗 Solo uscite</button>
+            <button class="btn-danger" onclick="cancellaTutto()">🗑️ Elimina tutto</button>
+          </div>
+          <div id="cards"></div>
+        </div>
       </div>
+    </section>
 
-      <!-- Matricola: tastiera numerica -->
-      <input id="matricola" placeholder="Matricola" inputmode="numeric" pattern="[0-9]*">
+  </main>
+
+  <nav class="bottomnav">
+    <div class="navrow">
+      <button class="navbtn" id="nav_auto" data-screen="auto" type="button">
+        <span class="navico">📥</span><span class="navlbl">Automatico</span>
+        <span class="badgeCount" id="navBadgeAuto">0</span>
+      </button>
+      <button class="navbtn active" id="nav_manage" data-screen="manage" type="button">
+        <span class="navico">🛠️</span><span class="navlbl">Gestione</span>
+      </button>
+      <button class="navbtn" id="nav_clients" data-screen="clients" type="button">
+        <span class="navico">👥</span><span class="navlbl">Clienti</span>
+      </button>
     </div>
-
-    <select id="problema">
-      <option value="">-- PROBLEMA --</option>
-      <option>NO ACQUA CALDA</option>
-      <option>RISCALDAMENTO NON VA</option>
-      <option>RUMOROSA</option>
-      <option>PERDITA D'ACQUA</option>
-      <option>TUTTO FERMO</option>
-      <option>ALTRO</option>
-    </select>
-
-    <input id="problemaAltro" class="hidden" placeholder="Scrivi il problema...">
-
-    <select id="stato">
-      <option value="">-- TIPO GESTIONE --</option>
-      <option value="telefonica">GESTITA AL TELEFONO</option>
-      <option value="richiamare">RICHIAMANO LORO</option>
-      <option value="da_richiamare">DA RICHIAMARE</option>
-      <option value="uscita">USCITA</option>
-      <option value="rifiutato">RIFIUTATO</option>
-      <option value="ripartita">RIPARTITA</option>
-    </select>
-
-    <input id="note" placeholder="Note">
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button id="addBtn" class="btn-primary">➕ Aggiungi alla lista</button>
-      <button id="clearFieldsBtn" class="btn-secondary">🧹 Pulisci campi</button>
-    </div>
-  </div>
-
-  <!-- FASE 3 -->
-  <div class="card" id="fase3">
-    <h3>3. Clienti</h3>
-
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn-primary" onclick="generaPdfWhatsapp()">📤 PDF WhatsApp</button>
-      <button class="btn-secondary" id="fsBtn" onclick="toggleCardsFullscreen()">🖥️ Schermo intero</button>
-      <button class="btn-danger" onclick="cancellaTutto()">🗑️ Elimina tutto</button>
-    </div>
-
-    <div id="cards"></div>
-  </div>
+  </nav>
 
 </div>
 
@@ -345,17 +824,41 @@ button{border:none;border-radius:999px;padding:10px 14px;font-weight:700;cursor:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+
 /* =========================
    VERSIONE
    ========================= */
-var APP_VERSION = "2025-12-30.v47";
-var BUILD_LABEL = "2025-12-30";
-var SW_VER = 47;
+var APP_VERSION = "2025-12-31.v51";
+var BUILD_LABEL = "2025-12-31 12:00";
+var SW_VER = 51;
 
 /* =========================
    HELPERS
    ========================= */
 function $(id){ return document.getElementById(id); }
+
+
+/* =========================
+   NAV HEIGHT SYNC (evita che la bottom bar copra il fondo)
+   ========================= */
+function syncNavRealHeight(){
+  try{
+    var nav = document.querySelector(".bottomnav");
+    if(!nav) return;
+    var h = (nav.getBoundingClientRect ? nav.getBoundingClientRect().height : nav.offsetHeight) || 0;
+    // margine extra per ombre/spazi e differenze browser
+    h = Math.ceil(h + 10);
+    document.documentElement.style.setProperty("--navRealH", h + "px");
+  }catch(e){}
+}
+window.addEventListener("load", function(){
+  syncNavRealHeight();
+  requestAnimationFrame(syncNavRealHeight);
+  setTimeout(syncNavRealHeight, 200);
+});
+window.addEventListener("resize", syncNavRealHeight, { passive:true });
+window.addEventListener("orientationchange", syncNavRealHeight);
+
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
 function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
@@ -364,14 +867,12 @@ function escapeHtml(s){
   s = String(s||"");
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-
-/* Inserisce testo al cursore (per bottone A) */
 function insertAtCursor(input, text){
   if(!input) return;
   try{
     input.focus();
-    var start = input.selectionStart ?? input.value.length;
-    var end   = input.selectionEnd ?? input.value.length;
+    var start = (input.selectionStart ?? input.value.length);
+    var end   = (input.selectionEnd ?? input.value.length);
     if (typeof input.setRangeText === "function") {
       input.setRangeText(text, start, end, "end");
     } else {
@@ -397,6 +898,7 @@ var fase2 = $("fase2");
 var fase3 = $("fase3");
 
 var autoBox = $("autoBox");
+var autoEmpty = $("autoEmpty");
 
 var manualModeBtn = $("manualModeBtn");
 var toggleCliente = $("toggleCliente");
@@ -435,11 +937,64 @@ var clearPresentBtn = $("clearPresentBtn");
 
 var toastEl = $("toast");
 var verBadge = $("verBadge");
+var headerStatus = $("headerStatus");
+var filterUsciteBtn = $("filterUsciteBtn");
 
-/* Bottone A su ID (fase 2) */
+var navBadgeAuto = $("navBadgeAuto");
+
+var kpi_inbox = $("kpi_inbox");
+var kpi_present = $("kpi_present");
 if(insA_idApp && idApp){
   insA_idApp.onclick = function(){ insertAtCursor(idApp, "A"); };
 }
+
+/* =========================
+   NAV (app-like)
+   ========================= */
+var screens = { auto: $("screen_auto"), manage: $("screen_manage"), clients: $("screen_clients") };
+function setScreen(name){
+  document.documentElement.dataset.screen = name;
+
+  for(var k in screens){
+    if(!screens[k]) continue;
+    screens[k].classList.toggle("active", k === name);
+  }
+
+  $("nav_auto").classList.toggle("active", name === "auto");
+  $("nav_manage").classList.toggle("active", name === "manage");
+  $("nav_clients").classList.toggle("active", name === "clients");
+
+  function hardTop(){
+    try{
+      // NON tocco lo scroll della pagina (html/body): lo scroll è interno
+      var wrap = document.querySelector("main.screens") || document.querySelector(".screens");
+      if(wrap && name !== "clients") wrap.scrollTop = 0;
+
+      // In Clienti porto la lista in alto SOLO quando apro Clienti dal menu
+      // (quando apro da "Mostra cliente", ci pensa scrollToClientByKey)
+      if(name === "clients" && !window.__gotoClientKey){
+        var cwrap = $("cards");
+        if(cwrap) cwrap.scrollTop = 0;
+      }
+    }catch(e){}
+  }
+
+  hardTop();
+  requestAnimationFrame(hardTop);
+
+  // Per Safari: il "ritardo" serve spesso nelle schermate con scroll generale,
+  // ma in Clienti darebbe fastidio (fa risaltare lo scroll dopo un attimo).
+  if(name !== "clients"){
+    setTimeout(hardTop, 120);
+  }
+}
+
+document.querySelectorAll(".navbtn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var s = btn.getAttribute("data-screen");
+    if(s) setScreen(s);
+  });
+});
 
 /* =========================
    STATE
@@ -447,11 +1002,43 @@ if(insA_idApp && idApp){
 var clients = [];
 var fase2Armed = false;
 
-var inbox = [];           // {raw, ts, count}
-var presentNotifs = [];   // {key, raw, ts, count}
+var inbox = [];
+var presentNotifs = [];
 var selectedInboxIndex = -1;
 
 var manualMode = false;
+var newClientMode = false; // modalità inserimento cliente manuale (campi completi)
+
+// filtro lista clienti ("Solo uscite")
+var showOnlyUscite = false;
+
+// gestione vista cliente (compatta di default)
+function setClienteCompact(on){
+  if(!clienteBox) return;
+  clienteBox.classList.remove("hidden");
+  clienteBox.classList.toggle("cliente-compact", !!on);
+  updateToggleClienteLabel();
+}
+function isClienteCompact(){
+  if(!clienteBox) return true;
+  return clienteBox.classList.contains("cliente-compact");
+}
+function updateToggleClienteLabel(){
+  if(!toggleCliente || !clienteBox) return;
+
+  if(newClientMode){
+    toggleCliente.textContent = "⛔ Esci";
+    toggleCliente.classList.remove("btn-secondary");
+    toggleCliente.classList.add("btn-danger");
+    return;
+  }
+
+  toggleCliente.classList.remove("btn-danger");
+  toggleCliente.classList.add("btn-secondary");
+  toggleCliente.textContent = isClienteCompact() ? "👁️ Mostra cliente" : "🙈 Nascondi cliente";
+}
+
+
 
 var inboxPulseTs = 0;
 var presentPulseTs = 0;
@@ -473,7 +1060,7 @@ function showToast(msg){
 /* =========================
    SALVATAGGIO
    ========================= */
-function salvaDati(){ try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){} }
+function salvaDati(){ try{ localStorage.setItem("rapportiClienti", JSON.stringify(clients)); }catch(e){} touchUpdate(); }
 function caricaDati(){
   try{
     var dati = localStorage.getItem("rapportiClienti");
@@ -481,7 +1068,7 @@ function caricaDati(){
   }catch(e){ clients=[]; }
 }
 
-function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} }
+function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} touchUpdate(); }
 function caricaInbox(){
   try{
     var d = localStorage.getItem("rapportiInbox");
@@ -490,7 +1077,7 @@ function caricaInbox(){
   }catch(e){ inbox=[]; }
 }
 
-function salvaPresent(){ try{ localStorage.setItem("rapportiPresentNotifs", JSON.stringify(presentNotifs)); }catch(e){} }
+function salvaPresent(){ try{ localStorage.setItem("rapportiPresentNotifs", JSON.stringify(presentNotifs)); }catch(e){} touchUpdate(); }
 function caricaPresent(){
   try{
     var d = localStorage.getItem("rapportiPresentNotifs");
@@ -518,7 +1105,7 @@ function statoLabel(s){
 }
 
 /* =========================
-   PARSE SMS (AUTO-ROBUSTO)
+   PARSE SMS
    ========================= */
 function stripTecno(s){
   return String(s||"")
@@ -526,7 +1113,6 @@ function stripTecno(s){
     .replace(/\s+/g," ")
     .trim();
 }
-
 function parseSMS(t){
   var r={nome:"",via:"",citta:"",telefono:"",modello:"",idApparecchio:"",matricola:""};
 
@@ -552,7 +1138,7 @@ function parseSMS(t){
     if(mMob) r.telefono = mMob[1];
   }
 
-  // ID APPARECCHIO (accetta alfanumerico)
+  // ID APPARECCHIO (lettere + numeri)
   if(idPos >= 0){
     var tailId = t.slice(idPos);
     var mId = tailId.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9A-Za-z\/\-]+)/i);
@@ -585,7 +1171,7 @@ function parseSMS(t){
     if(mMod) r.modello = safeTrim(mMod[1].replace(/\s*-\s*$/,"").trim());
   }
 
-  // NOME + INDIRIZZO: solo prima di Tel (o Modello se manca Tel)
+  // NOME + INDIRIZZO
   var pre = t;
   if(telPos > 0) pre = t.slice(0, telPos).trim();
   else if(modPos > 0) pre = t.slice(0, modPos).trim();
@@ -605,7 +1191,6 @@ function parseSMS(t){
     for(var z=0; z<tokens.length; z++){
       tokens[z] = tokens[z].replace(/^(\d+)\s*\/\s*([A-Za-z])$/,"$1$2");
     }
-
     for(var k=tokens.length-1; k>=1; k--){
       if(/^[A-Za-z]$/.test(tokens[k]) && /^\d+$/.test(tokens[k-1])){
         tokens[k-1] = tokens[k-1] + tokens[k];
@@ -613,11 +1198,9 @@ function parseSMS(t){
         break;
       }
     }
-
     function isCivico(tok){
       return /^\d+[A-Za-z]?(?:\/\d+)?$/.test(tok);
     }
-
     var civIdx = -1;
     for(var i=tokens.length-1; i>=1; i--){
       if(isCivico(tokens[i])) { civIdx = i; break; }
@@ -630,7 +1213,6 @@ function parseSMS(t){
       r.via = addrFull;
       r.citta = "";
     }
-
     if(/\b(id|matricola|apparecchio|modello|tel)\b/i.test(r.citta)){
       r.citta = "";
     }
@@ -642,19 +1224,15 @@ function parseSMS(t){
 }
 
 /* =========================
-   CHIAVE CLIENTE + ID STABILE
+   CHIAVE CLIENTE
    ========================= */
 function clientKeyFromFields(n,v,c,tel){
   var ph = cleanPhone(tel);
   if(ph) return "tel:" + ph;
   return "addr:" + normKey(n) + "|" + normKey(v) + "|" + normKey(c);
 }
-function clientKeyFromClientObj(c){
-  return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono);
-}
-function clientKeyFromParsed(d){
-  return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono);
-}
+function clientKeyFromClientObj(c){ return clientKeyFromFields(c.nome,c.via,c.citta,c.telefono); }
+function clientKeyFromParsed(d){ return clientKeyFromFields(d.nome,d.via,d.citta,d.telefono); }
 function safeIdFromKey(key){
   var s = String(key||"");
   try{
@@ -672,12 +1250,25 @@ function findClientIndexByKey(key){
 }
 
 /* =========================
+   BADGE + KPI
+   ========================= */
+function updateAutoBadge(){
+  if(!navBadgeAuto) return;
+  var n = (inbox.length || 0) + (presentNotifs.length || 0);
+  navBadgeAuto.textContent = String(n);
+  navBadgeAuto.classList.toggle("show", n > 0);
+  if(autoEmpty) autoEmpty.style.display = (n === 0) ? "block" : "none";
+  if(kpi_inbox) kpi_inbox.textContent = "📩 " + (inbox.length || 0) + " in attesa";
+  if(kpi_present) kpi_present.textContent = "⚠️ " + (presentNotifs.length || 0) + " avvisi";
+}
+
+/* =========================
    AUTOBOX VISIBILITY
    ========================= */
 function updateAutoBoxVisibility(){
-  if(!autoBox) return;
-  if((presentNotifs.length || inbox.length)) autoBox.classList.remove("hidden");
-  else autoBox.classList.add("hidden");
+  if((presentNotifs.length || 0) === 0 && presentWrap) presentWrap.classList.add("hidden");
+  if((inbox.length || 0) === 0 && inboxWrap) inboxWrap.classList.add("hidden");
+  updateAutoBadge();
 }
 
 /* =========================
@@ -688,34 +1279,40 @@ function highlightOnceByKey(key){
   var el = document.getElementById(id);
   if(!el) return;
   el.classList.add("gc-highlight");
-  try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
   setTimeout(function(){ el.classList.remove("gc-highlight"); }, 2500);
 }
 function scrollToClientByKey(key){
   var id = safeIdFromKey(key);
   var el = document.getElementById(id);
-  if(!el) return;
-  try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
+  var wrap = $("cards");
+  if(!el || !wrap) return;
+
+  try{
+    var rEl = el.getBoundingClientRect();
+    var rW  = wrap.getBoundingClientRect();
+    var top = (rEl.top - rW.top) + wrap.scrollTop;
+
+    // centro l'elemento nel viewport dello scroller
+    var target = top - (wrap.clientHeight/2) + (el.offsetHeight/2);
+    if(target < 0) target = 0;
+
+    wrap.scrollTo({ top: target, behavior: "smooth" });
+  }catch(e){
+    // fallback
+    try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e2){}
+  }
 }
 
 /* =========================
-   FEEDBACK FASE 2
+   FASE 2 FEEDBACK
    ========================= */
 function setFase2State(state){
   fase2.classList.remove("fase2-attesa","fase2-ok");
   if(state==="attesa") fase2.classList.add("fase2-attesa");
   if(state==="ok") fase2.classList.add("fase2-ok");
 }
-function armFase2(){
-  fase2Armed = true;
-  setFase2State("attesa");
-  checkFase2Ready();
-  try{ fase2.scrollIntoView(true); }catch(e){}
-}
-function disarmFase2(){
-  fase2Armed = false;
-  setFase2State("normal");
-}
+function armFase2(){ fase2Armed = true; setFase2State("attesa"); checkFase2Ready(); }
+function disarmFase2(){ fase2Armed = false; setFase2State("normal"); }
 function checkFase2Ready(){
   if(!fase2Armed) return;
   var problemOk = !!problema.value;
@@ -736,13 +1333,43 @@ function setLedOk(on){
   }else{
     led.classList.remove("ok");
     ledTxt.textContent = "Non inizializzato";
-    ledTxt.style.color = "#6b7280";
+    ledTxt.style.color = "var(--muted)";
   }
 }
 
 /* =========================
-   MODALITÀ (manuale/automatica)
+   MODALITÀ
    ========================= */
+
+function enterNewClientMode(){
+  newClientMode = true;
+
+  // UI: nascondo la parte "Incolla SMS" e preparo i campi cliente completi
+  if(fase1) fase1.classList.add("hidden");
+  if(newClientBtn) newClientBtn.classList.add("hidden");
+
+  if(clienteBox){
+    clienteBox.classList.remove("hidden");
+    setClienteCompact(false); // mostra tutti i campi
+  }
+
+  resetCampiGestione();
+  if(sms) sms.value = "";
+  setLedOk(false);
+  armFase2();
+
+  updateToggleClienteLabel();
+}
+
+function exitNewClientMode(){
+  if(!newClientMode) return;
+  newClientMode = false;
+
+  resetUICompleta();
+  applyMode();            // ripristina visibilità (fase1 + pulsanti)
+  updateToggleClienteLabel();
+}
+
 function applyMode(){
   if(manualMode){
     fase1.classList.remove("hidden");
@@ -753,20 +1380,27 @@ function applyMode(){
     newClientBtn.classList.add("hidden");
     manualModeBtn.textContent = "✍️ Modalità manuale";
   }
+
+  // Modalità "Nuovo cliente": incolla nascosto + bottone Nuovo nascosto
+  if(newClientMode){
+    if(fase1) fase1.classList.add("hidden");
+    if(newClientBtn) newClientBtn.classList.add("hidden");
+  }
+
   renderInbox();
   renderPresent();
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
-if(manualModeBtn){
-  manualModeBtn.onclick = function(){
-    manualMode = !manualMode;
-    salvaModo();
-    applyMode();
-  };
-}
+manualModeBtn.onclick = function(){
+  if(newClientMode) exitNewClientMode();
+  manualMode = !manualMode;
+  salvaModo();
+  applyMode();
+};
 
 /* =========================
-   INBOX - contatore x2/x3...
+   INBOX (x2/x3)
    ========================= */
 function findInboxIndexByRaw(text){
   text = safeTrim(text);
@@ -785,7 +1419,6 @@ function addSmsToInbox(text){
     var it = inbox[idx];
     it.count = (it.count || 1) + 1;
     it.ts = Date.now();
-
     inbox.splice(idx,1);
     inbox.unshift(it);
 
@@ -793,19 +1426,20 @@ function addSmsToInbox(text){
     salvaInbox();
     renderInbox();
     updateAutoBoxVisibility();
+  updateToggleClienteLabel();
     showToast("📩 SMS già in attesa (x" + it.count + ")");
     return;
   }
 
   var obj = { raw:text, ts:Date.now(), count:1 };
   inbox.unshift(obj);
-
   inboxPulseTs = obj.ts;
+
   salvaInbox();
   renderInbox();
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
-
 function renderInbox(){
   if(!inboxWrap) return;
 
@@ -814,6 +1448,7 @@ function renderInbox(){
     if(inboxList) inboxList.innerHTML = "";
     if(inboxCount) inboxCount.textContent = "";
     updateAutoBoxVisibility();
+  updateToggleClienteLabel();
     return;
   }
 
@@ -831,7 +1466,7 @@ function renderInbox(){
       if(it.ts === inboxPulseTs) div.classList.add("inbox-highlight");
 
       var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
-      var badge = (it.count > 1) ? (" <span style='font-weight:900;color:#2563eb'>(x"+it.count+")</span>") : "";
+      var badge = (it.count > 1) ? (" <span style='font-weight:1000;color:#2563eb'>(x"+it.count+")</span>") : "";
 
       div.innerHTML =
         '<div class="inbox-title">SMS • ' + escapeHtml(preview) + badge + '</div>' +
@@ -846,6 +1481,7 @@ function renderInbox(){
       openBtn.onclick = function(){
         selectedInboxIndex = ii;
         loadFromSmsText(it.raw);
+        setScreen("manage");
       };
 
       var delBtn = document.createElement("button");
@@ -867,6 +1503,7 @@ function renderInbox(){
             salvaInbox();
             renderInbox();
             updateAutoBoxVisibility();
+  updateToggleClienteLabel();
             closeModal();
           };
         });
@@ -880,31 +1517,31 @@ function renderInbox(){
   }
 
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
-if(clearInboxBtn){
-  clearInboxBtn.onclick = function(){
-    showModal(function(m){
-      m.innerHTML =
-        '<h3>Svuotare tutti gli SMS in attesa?</h3>'+
-        '<div class="btn-row">'+
-          '<button class="btn-secondary" id="noClr">NO</button>'+
-          '<button class="btn-danger" id="siClr">SI</button>'+
-        '</div>';
-      m.querySelector("#noClr").onclick = closeModal;
-      m.querySelector("#siClr").onclick = function(){
-        inbox = [];
-        selectedInboxIndex = -1;
-        salvaInbox();
-        renderInbox();
-        updateAutoBoxVisibility();
-        closeModal();
-      };
-    });
-  };
-}
+clearInboxBtn.onclick = function(){
+  showModal(function(m){
+    m.innerHTML =
+      '<h3>Svuotare tutti gli SMS in attesa?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noClr">NO</button>'+
+        '<button class="btn-danger" id="siClr">SI</button>'+
+      '</div>';
+    m.querySelector("#noClr").onclick = closeModal;
+    m.querySelector("#siClr").onclick = function(){
+      inbox = [];
+      selectedInboxIndex = -1;
+      salvaInbox();
+      renderInbox();
+      updateAutoBoxVisibility();
+  updateToggleClienteLabel();
+      closeModal();
+    };
+  });
+};
 
 /* =========================
-   SCHEDA PRESENTE (NOTIFICHE) - x2/x3 SOLO negli avvisi
+   SCHEDA PRESENTE (x2/x3 SOLO avvisi)
    ========================= */
 function hasPresentKey(key){
   for(var i=0;i<presentNotifs.length;i++){
@@ -925,7 +1562,6 @@ function addPresentNotif(key, raw){
 
     presentNotifs.splice(idx,1);
     presentNotifs.unshift(it);
-
     presentPulseTs = it.ts;
   }else{
     var obj = { key:key, raw:raw, ts:Date.now(), count:1 };
@@ -935,6 +1571,7 @@ function addPresentNotif(key, raw){
   salvaPresent();
   renderPresent();
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
 function removePresentAt(i){
   presentNotifs.splice(i,1);
@@ -942,6 +1579,7 @@ function removePresentAt(i){
   renderPresent();
   render();
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
 function renderPresent(){
   if(!presentWrap) return;
@@ -951,6 +1589,7 @@ function renderPresent(){
     if(presentList) presentList.innerHTML = "";
     if(presentCount) presentCount.textContent = "";
     updateAutoBoxVisibility();
+  updateToggleClienteLabel();
     return;
   }
 
@@ -964,7 +1603,7 @@ function renderPresent(){
       if(!it.count) it.count = 1;
 
       var preview = (it.raw||"").replace(/\s+/g," ").slice(0,140);
-      var badge = (it.count > 1) ? (" <span style='font-weight:900;color:#dc2626'>(x"+it.count+")</span>") : "";
+      var badge = (it.count > 1) ? (" <span style='font-weight:1000;color:#dc2626'>(x"+it.count+")</span>") : "";
 
       var div = document.createElement("div");
       div.className = "inbox-item";
@@ -972,7 +1611,7 @@ function renderPresent(){
 
       div.innerHTML =
         '<div class="inbox-title">SCHEDA PRESENTE' + badge + ' • ' + escapeHtml(preview || it.key) + '</div>' +
-        '<div class="inbox-sub">Elimina avviso oppure mostra cliente (la card resta evidenziata finché l’avviso esiste)</div>';
+        '<div class="inbox-sub">Elimina avviso oppure mostra cliente</div>';
 
       var actions = document.createElement("div");
       actions.className = "inbox-actions";
@@ -982,8 +1621,14 @@ function renderPresent(){
       showBtn.textContent = "Mostra cliente";
       showBtn.onclick = function(){
         render();
-        scrollToClientByKey(it.key);
-        highlightOnceByKey(it.key);
+        window.__gotoClientKey = it.key;
+        setScreen("clients");
+        setTimeout(function(){
+          scrollToClientByKey(it.key);
+          highlightOnceByKey(it.key);
+          // dopo la navigazione, rimuovo il flag
+          setTimeout(function(){ window.__gotoClientKey = null; }, 250);
+        }, 80);
       };
 
       var delBtn = document.createElement("button");
@@ -1000,36 +1645,37 @@ function renderPresent(){
   }
 
   updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 }
-if(clearPresentBtn){
-  clearPresentBtn.onclick = function(){
-    showModal(function(m){
-      m.innerHTML =
-        '<h3>Svuotare tutti gli avvisi?</h3>'+
-        '<div class="btn-row">'+
-          '<button class="btn-secondary" id="noClrP">NO</button>'+
-          '<button class="btn-danger" id="siClrP">SI</button>'+
-        '</div>';
-      m.querySelector("#noClrP").onclick = closeModal;
-      m.querySelector("#siClrP").onclick = function(){
-        presentNotifs = [];
-        salvaPresent();
-        renderPresent();
-        render();
-        updateAutoBoxVisibility();
-        closeModal();
-      };
-    });
-  };
-}
+clearPresentBtn.onclick = function(){
+  showModal(function(m){
+    m.innerHTML =
+      '<h3>Svuotare tutti gli avvisi?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noClrP">NO</button>'+
+        '<button class="btn-danger" id="siClrP">SI</button>'+
+      '</div>';
+    m.querySelector("#noClrP").onclick = closeModal;
+    m.querySelector("#siClrP").onclick = function(){
+      presentNotifs = [];
+      salvaPresent();
+      renderPresent();
+      render();
+      updateAutoBoxVisibility();
+  updateToggleClienteLabel();
+      closeModal();
+    };
+  });
+};
 
 /* =========================
-   LOAD da SMS
+   LOAD DA SMS
    ========================= */
 function loadFromSmsText(testo){
   var d = parseSMS(testo);
 
   clienteBox.classList.remove("hidden");
+  setClienteCompact(true);
 
   nome.value = d.nome;
   via.value = d.via;
@@ -1046,7 +1692,7 @@ function loadFromSmsText(testo){
 }
 
 /* =========================
-   INGRESSO SMS DA AUTOMAZIONE
+   INGRESSO SMS (URL)
    ========================= */
 function readIncoming(){
   try{
@@ -1067,9 +1713,7 @@ function readIncoming(){
   }
 }
 function clearIncomingFromUrl(){
-  try{
-    history.replaceState({}, document.title, window.location.pathname);
-  }catch(e){}
+  try{ history.replaceState({}, document.title, window.location.pathname); }catch(e){}
 }
 function handleIncomingSmsFromUrl(){
   try{
@@ -1086,8 +1730,7 @@ function handleIncomingSmsFromUrl(){
       addPresentNotif(cKey, smsText);
       showToast("⚠️ SCHEDA PRESENTE: elimina avviso o mostra cliente");
       render();
-      scrollToClientByKey(cKey);
-      highlightOnceByKey(cKey);
+      setScreen("auto");
       return;
     }
 
@@ -1096,8 +1739,7 @@ function handleIncomingSmsFromUrl(){
     manualMode = false;
     salvaModo();
     applyMode();
-
-    try{ autoBox.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
+    setScreen("auto");
   }catch(e){}
 }
 
@@ -1120,17 +1762,22 @@ function resetCampiGestione(){
 }
 function resetUICompleta(){
   resetCampiGestione();
-  sms.value="";
+  if(sms) sms.value="";
   setLedOk(false);
   clienteBox.classList.add("hidden");
   disarmFase2();
   selectedInboxIndex = -1;
+
+  // se ero in "Nuovo cliente", esco automaticamente
+  newClientMode = false;
+  updateToggleClienteLabel();
 }
 
+
 /* =========================
-   FASE 1 (manuale)
+   FASE 1
    ========================= */
-initBtn.onclick=function(){
+if(initBtn) initBtn.onclick=function(){
   var testo = safeTrim(sms.value);
   if(!testo){
     alert("Incolla prima l'SMS.");
@@ -1138,22 +1785,20 @@ initBtn.onclick=function(){
   }
   loadFromSmsText(testo);
 };
-clearSmsBtn.onclick=function(){ resetUICompleta(); };
+if(clearSmsBtn) clearSmsBtn.onclick=function(){ resetUICompleta(); };
 
 /* =========================
    FASE 2
    ========================= */
 toggleCliente.onclick=function(){
-  if(clienteBox.classList.contains("hidden")) clienteBox.classList.remove("hidden");
-  else clienteBox.classList.add("hidden");
+  if(newClientMode){
+    exitNewClientMode();
+    return;
+  }
+  setClienteCompact(!isClienteCompact());
 };
-
 newClientBtn.onclick=function(){
-  clienteBox.classList.remove("hidden");
-  resetCampiGestione();
-  sms.value="";
-  setLedOk(false);
-  armFase2();
+  enterNewClientMode();
 };
 
 problema.onchange=function(){
@@ -1169,10 +1814,7 @@ problema.onchange=function(){
 problemaAltro.oninput=function(){ checkFase2Ready(); };
 stato.onchange=function(){ checkFase2Ready(); };
 
-clearFieldsBtn.onclick=function(){
-  resetUICompleta();
-  applyMode();
-};
+clearFieldsBtn.onclick=function(){ resetUICompleta(); applyMode(); };
 
 addBtn.onclick=function(){
   var problemOk = !!problema.value;
@@ -1218,6 +1860,7 @@ addBtn.onclick=function(){
   render();
   resetUICompleta();
   applyMode();
+  setScreen("clients");
 };
 
 /* =========================
@@ -1226,22 +1869,18 @@ addBtn.onclick=function(){
 var __scrollY = 0;
 function lockBodyScroll(){
   try{
-    __scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    document.body.style.position = "fixed";
-    document.body.style.top = (-__scrollY) + "px";
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.width = "100%";
+    var wrap = document.querySelector("main.screens") || document.querySelector(".screens");
+    if(!wrap) return;
+    __scrollY = wrap.scrollTop || 0;
+    wrap.style.overflow = "hidden";
   }catch(e){}
 }
 function unlockBodyScroll(){
   try{
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.left = "";
-    document.body.style.right = "";
-    document.body.style.width = "";
-    window.scrollTo(0, __scrollY || 0);
+    var wrap = document.querySelector("main.screens") || document.querySelector(".screens");
+    if(!wrap) return;
+    wrap.style.overflow = "";
+    wrap.scrollTop = __scrollY || 0;
   }catch(e){}
 }
 function showModal(build){
@@ -1251,11 +1890,9 @@ function showModal(build){
 
   var b=document.createElement("div");
   b.className="modal-backdrop";
-
   var m=document.createElement("div");
   m.className="modal";
   build(m);
-
   b.appendChild(m);
   modalRoot.appendChild(b);
 }
@@ -1266,7 +1903,7 @@ function closeModal(){
 }
 
 /* =========================
-   RENDER
+   RENDER CLIENTI
    ========================= */
 function row(t){
   var r=document.createElement("div");
@@ -1358,11 +1995,19 @@ function buildCard(c, i){
 function render(){
   cards.innerHTML="";
 
+  // aggiorna pulsante filtro (se presente)
+  if(filterUsciteBtn){
+    filterUsciteBtn.textContent = showOnlyUscite ? "Mostra tutti" : "Solo uscite";
+    filterUsciteBtn.classList.toggle("active", showOnlyUscite);
+  }
+
   var order = [];
   var groups = {};
 
   for(var idx=0; idx<clients.length; idx++){
     var c = clients[idx];
+    if(showOnlyUscite && (c.stato||"") !== "uscita") continue;
+
     var raw = safeTrim(c.citta);
     var key = raw ? raw.toLowerCase() : "__no_city__";
 
@@ -1389,7 +2034,7 @@ function render(){
 }
 
 /* =========================
-   MODIFICA (fase 3) - ID numerico + bottone A, Matricola numerica
+   MODIFICA
    ========================= */
 function openEdit(i){
   var c = clients[i];
@@ -1407,36 +2052,36 @@ function openEdit(i){
     modal.innerHTML =
       '<h3>Modifica cliente</h3>'+
 
-      '<div class="row"><div class="small">Nome</div><input id="e_nome" value="'+escapeHtml(c.nome)+'"></div>'+
-      '<div class="row"><div class="small">Via</div><input id="e_via" value="'+escapeHtml(c.via)+'"></div>'+
-      '<div class="row"><div class="small">Comune</div><input id="e_citta" value="'+escapeHtml(c.citta)+'"></div>'+
+      '<div class="row"><div class="small muted">Nome</div><input id="e_nome" value="'+escapeHtml(c.nome)+'"></div>'+
+      '<div class="row"><div class="small muted">Via</div><input id="e_via" value="'+escapeHtml(c.via)+'"></div>'+
+      '<div class="row"><div class="small muted">Comune</div><input id="e_citta" value="'+escapeHtml(c.citta)+'"></div>'+
 
-      '<div class="row"><div class="small">Telefono</div>'+
+      '<div class="row"><div class="small muted">Telefono</div>'+
         '<input id="e_telefono" type="tel" inputmode="numeric" autocomplete="tel" value="'+escapeHtml(c.telefono)+'">'+
       '</div>'+
 
-      '<div class="row"><div class="small">Modello caldaia</div><input id="e_modello" value="'+escapeHtml(c.modello)+'"></div>'+
+      '<div class="row"><div class="small muted">Modello caldaia</div><input id="e_modello" value="'+escapeHtml(c.modello)+'"></div>'+
 
-      '<div class="row"><div class="small">ID Apparecchio</div>'+
-        '<div class="input-row" style="margin-bottom:0">'+
-          '<input id="e_idapp" inputmode="numeric" autocomplete="off" value="'+escapeHtml(c.idApparecchio||"")+'">'+
+      '<div class="row"><div class="small muted">ID Apparecchio</div>'+
+        '<div style="display:flex;gap:10px;align-items:stretch">'+
+          '<input id="e_idapp" inputmode="numeric" autocomplete="off" value="'+escapeHtml(c.idApparecchio||"")+'" style="margin-bottom:0;flex:1">'+
           '<button type="button" class="btn-chip" id="insA_e_idapp">A</button>'+
         '</div>'+
       '</div>'+
 
-      '<div class="row"><div class="small">Matricola</div>'+
+      '<div class="row"><div class="small muted">Matricola</div>'+
         '<input id="e_matricola" inputmode="numeric" pattern="[0-9]*" value="'+escapeHtml(c.matricola||"")+'">'+
       '</div>'+
 
-      '<div class="row"><div class="small">Problema</div><select id="e_problema">'+problema.innerHTML+'</select></div>'+
+      '<div class="row"><div class="small muted">Problema</div><select id="e_problema">'+problema.innerHTML+'</select></div>'+
 
       '<div class="row" id="e_prob_alt_row" style="display:none">'+
-        '<div class="small">Scrivi il problema</div>'+
+        '<div class="small muted">Scrivi il problema</div>'+
         '<input id="e_problemaAltro" value="'+escapeHtml(probAlt)+'">'+
       '</div>'+
 
-      '<div class="row"><div class="small">Tipo gestione</div><select id="e_stato">'+stato.innerHTML+'</select></div>'+
-      '<div class="row"><div class="small">Note</div><input id="e_note" value="'+escapeHtml(c.note)+'"></div>'+
+      '<div class="row"><div class="small muted">Tipo gestione</div><select id="e_stato">'+stato.innerHTML+'</select></div>'+
+      '<div class="row"><div class="small muted">Note</div><textarea id="e_note" class="noteExp" placeholder="Note">'+escapeHtml(c.note)+'</textarea></div>'+
 
       '<div class="btn-row">'+
         '<button class="btn-secondary" id="annullaEdit">Annulla</button>'+
@@ -1448,9 +2093,7 @@ function openEdit(i){
 
     var eId = modal.querySelector("#e_idapp");
     var btnA = modal.querySelector("#insA_e_idapp");
-    if(btnA && eId){
-      btnA.onclick = function(){ insertAtCursor(eId, "A"); };
-    }
+    if(btnA && eId){ btnA.onclick = function(){ insertAtCursor(eId, "A"); }; }
 
     function refreshAlt(){
       var v = modal.querySelector("#e_problema").value;
@@ -1535,10 +2178,10 @@ function openDelete(i){
       render();
       salvaDati();
       updateAutoBoxVisibility();
+  updateToggleClienteLabel();
     };
   });
 }
-
 function cancellaTutto(){
   showModal(function(m){
     m.innerHTML=
@@ -1558,6 +2201,7 @@ function cancellaTutto(){
       renderInbox();
       renderPresent();
       updateAutoBoxVisibility();
+  updateToggleClienteLabel();
     };
   });
 }
@@ -1684,9 +2328,29 @@ function toggleCardsFullscreen(){
 /* =========================
    VERSION BADGE
    ========================= */
+function fmtDateTime(ts){
+  var d = new Date(ts || Date.now());
+  var dd = pad2(d.getDate());
+  var mm = pad2(d.getMonth()+1);
+  var yy = String(d.getFullYear()).slice(-2);
+  var hh = pad2(d.getHours());
+  var mi = pad2(d.getMinutes());
+  return dd + "/" + mm + "/" + yy + " " + hh + ":" + mi;
+}
+var lastUpdateTs = Date.now();
+
+function touchUpdate(){
+  lastUpdateTs = Date.now();
+  if(!headerStatus) return;
+  headerStatus.textContent = "Aggiornato: " + fmtDateTime(lastUpdateTs) + " • SW:" + SW_VER + demoTag;
+}
+
+/* =========================
+   VERSION / HEADER
+   ========================= */
 function setVersionBadge(){
-  if(!verBadge) return;
-  verBadge.textContent = "Versione: " + APP_VERSION + " • Build: " + BUILD_LABEL + " • SW:" + SW_VER;
+  // Mantengo il nome per compatibilità: aggiorna la pill in alto (data/ora + SW)
+  touchUpdate();
 }
 
 /* =========================
@@ -1702,30 +2366,53 @@ if(localStorage.getItem("rapportiManualMode") === null){
   salvaModo();
 }
 
+setDemoFlag(false);
 setVersionBadge();
 render();
 renderInbox();
 renderPresent();
 applyMode();
 updateAutoBoxVisibility();
+  updateToggleClienteLabel();
 
+// filtro uscite
+if(filterUsciteBtn){
+  filterUsciteBtn.onclick = function(){
+    showOnlyUscite = !showOnlyUscite;
+    render();
+    setScreen("clients");
+  };
+}
+
+// cliente compatto di default
+setClienteCompact(true);
+updateToggleClienteLabel();
+
+// schermo iniziale
+if(inbox.length || presentNotifs.length) setScreen("auto");
+else if(clients.length) setScreen("clients");
+else setScreen("manage");
+
+// 1) prova subito all’avvio
 handleIncomingSmsFromUrl();
 
+// 2) riprova quando cambia hash o l’app torna attiva
 window.addEventListener("hashchange", handleIncomingSmsFromUrl);
 window.addEventListener("pageshow", handleIncomingSmsFromUrl);
 window.addEventListener("focus", handleIncomingSmsFromUrl);
 document.addEventListener("visibilitychange", function(){
   if(!document.hidden) handleIncomingSmsFromUrl();
 });
-</script>
 
-<script>
-  // PWA: service worker
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
-    });
-  }
+/* =========================
+   PWA: service worker
+   ========================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("service-worker.js?v=" + SW_VER).catch(function(){});
+  });
+}
+
 </script>
 
 </body>
