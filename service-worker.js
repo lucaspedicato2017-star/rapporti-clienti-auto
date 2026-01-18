@@ -1,130 +1,114 @@
-const CACHE_PREFIX = "rapporti-clienti-auto";
+/* =========================
+   SERVICE WORKER – Reperibilità
+   Cache smart per PWA su GitHub Pages
+   - HTML: Network-first (così si aggiorna sempre)
+   - Assets: Cache-first (veloce + offline)
+   ========================= */
 
-const SW_URL = (self.location && self.location.href) ? self.location.href : "";
-const SW_VER = (() => {
-  try {
-    const u = new URL(SW_URL);
-    return u.searchParams.get("v") || "0";
-  } catch (e) {
-    const m = SW_URL.match(/[?&]v=([^&]+)/);
-    return m ? m[1] : "0";
-  }
-})();
+const CACHE_VERSION = "v108"; // 👈 cambia numero quando aggiorni app/icone
+const CACHE_NAME = `rapporti-clienti-${CACHE_VERSION}`;
 
-const CACHE_NAME = `${CACHE_PREFIX}-v${SW_VER}`;
-
-/**
- * CORE:
- * - metto sia i nuovi percorsi (icons/ + manifest.webmanifest)
- * - sia i vecchi (manifest.json + icon-*.png) come fallback
- * - MA li aggiungo in modo "safe" (se uno manca non rompe l’install)
- */
-const CORE = [
+// ✅ Metti qui TUTTI i file importanti da tenere offline
+const ASSETS = [
   "./",
   "./index.html",
-
   "./manifest.webmanifest",
-  "./manifest.json", // fallback se esiste ancora
 
+  // ✅ Icone Android
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./icons/icon-192-maskable.png",
+  "./icons/icon-512-maskable.png",
 
-  "./icon-192.png",  // fallback vecchio
-  "./icon-512.png"   // fallback vecchio
+  // ✅ Icone iPhone + favicon (se le hai)
+  "./apple-touch-icon.png",
+  "./favicon-32.png",
+  "./favicon.ico"
 ];
 
-async function safeAddAll(cache, urls) {
-  await Promise.all(
-    urls.map((u) => cache.add(u).catch(() => null))
-  );
-}
-
+// ✅ INSTALL: pre-cache
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    await safeAddAll(cache, CORE);
-  })());
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(ASSETS);
+      await self.skipWaiting();
+    })()
+  );
 });
 
+// ✅ ACTIVATE: pulizia cache vecchie
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(
-      keys
-        .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
-        .map((k) => caches.delete(k))
-    );
-    await self.clients.claim();
-  })());
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.map((k) => {
+          if (k !== CACHE_NAME) return caches.delete(k);
+          return Promise.resolve(true);
+        })
+      );
+      await self.clients.claim();
+    })()
+  );
 });
 
-async function cacheMatch(req) {
-  return caches.match(req, { ignoreSearch: true });
-}
-
-async function networkFirstHTML(req) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const res = await fetch(req, { cache: "no-store" });
-    if (res && res.ok) {
-      // aggiorno sempre la shell
-      await cache.put(new Request("./index.html"), res.clone());
-    }
-    return res;
-  } catch (e) {
-    // offline -> torno alla shell cache
-    const cachedIndex = await cacheMatch("./index.html");
-    if (cachedIndex) return cachedIndex;
-    throw e;
-  }
-}
-
-async function cacheFirst(req) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cacheMatch(req);
-
-  if (cached) {
-    // aggiorno in background (solo same-origin)
-    fetch(req).then((res) => {
-      try {
-        const url = new URL(req.url);
-        if (res && res.ok && url.origin === self.location.origin) {
-          cache.put(req, res.clone());
-        }
-      } catch (_) {}
-    }).catch(() => {});
-    return cached;
-  }
-
-  const res = await fetch(req);
-  try {
-    const url = new URL(req.url);
-    if (res && res.ok && url.origin === self.location.origin) {
-      cache.put(req, res.clone());
-    }
-  } catch (_) {}
-  return res;
-}
-
+// ✅ FETCH: gestione intelligente
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+
+  // Solo GET
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  const accept = req.headers.get("accept") || "";
 
-  // Navigazioni / HTML -> network first con fallback a index.html
-  if (req.mode === "navigate" || accept.includes("text/html")) {
-    // solo per same-origin: se no lascio fare al browser
-    if (url.origin === self.location.origin) {
-      event.respondWith(networkFirstHTML(req));
-    }
+  // Solo stesso dominio
+  if (url.origin !== self.location.origin) return;
+
+  // ✅ 1) Navigazione / apertura pagina (HTML): NETWORK FIRST
+  if (req.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          // Prova sempre internet per avere aggiornamenti
+          const fresh = await fetch(req);
+          const cache = await caches.open(CACHE_NAME);
+          cache.put("./index.html", fresh.clone());
+          return fresh;
+        } catch (e) {
+          // Se offline, torna alla cache
+          const cached = await caches.match("./index.html");
+          return cached || new Response("Offline", { status: 503, statusText: "Offline" });
+        }
+      })()
+    );
     return;
   }
 
-  // Statici same-origin -> cache first
-  if (url.origin === self.location.origin) {
-    event.respondWith(cacheFirst(req));
-  }
+  // ✅ 2) File statici (icone, css, js): CACHE FIRST
+  event.respondWith(
+    (async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+
+      try {
+        const resp = await fetch(req);
+
+        // non cacheare risposte strane
+        if (!resp || resp.status !== 200 || resp.type === "opaque") return resp;
+
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, resp.clone());
+        return resp;
+      } catch (e) {
+        return cached || new Response("Offline", { status: 503, statusText: "Offline" });
+      }
+    })()
+  );
+});
+
+// ✅ (OPZIONALE) Se vuoi forzare update manuale dalla pagina:
+// navigator.serviceWorker.controller.postMessage("SKIP_WAITING");
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
