@@ -30,14 +30,17 @@
   --violet:#8b5cf6;
   --teal:#14b8a6;
 
+  /* ✅ FATTO (contorno verde fluo) */
+  --done:#00ff6a;
+
   --radius:18px;
   --shadow:0 22px 70px rgba(0,0,0,.48);
   --shadow2:0 12px 28px rgba(0,0,0,.38);
 
   --navH:64px;
 
-    --navRealH: calc(var(--navH) + env(safe-area-inset-bottom));
-/* superfici colorate */
+  --navRealH: calc(var(--navH) + env(safe-area-inset-bottom));
+  /* superfici colorate */
   --surf-blue: rgba(59,130,246,.16);
   --surf-pink: rgba(236,72,153,.14);
   --surf-amber: rgba(245,158,11,.16);
@@ -222,6 +225,32 @@ textarea:focus,input:focus,select:focus{
 .row{display:flex; gap:10px; flex-wrap:wrap;}
 .row > *{flex:1}
 .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.day-actions{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+.day-actions::-webkit-scrollbar{display:none}
+
+
+
+/* Stato picker (modal) */
+.pick-grid{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.pick-btn{
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:14px 14px;
+  font-weight:1000;
+  font-size:14px;
+  text-align:left;
+  background:rgba(148,163,184,.12);
+  border:1px solid rgba(148,163,184,.14);
+  color:var(--text);
+  box-shadow:0 10px 18px rgba(2,6,23,.10);
+}
+.pick-btn:active{transform:scale(.99)}
+.pick-btn.active{
+  background:linear-gradient(135deg, rgba(59,130,246,.35), rgba(37,99,235,.18));
+  border-color:rgba(59,130,246,.42);
+}
+.pick-hint{font-size:12px;color:var(--muted);font-weight:900;margin-top:8px}
 
 /* Buttons */
 button{
@@ -249,6 +278,27 @@ button:active{transform:scale(.99)}
   border:1px solid rgba(148,163,184,.14);
   color:var(--text);
   box-shadow:0 10px 18px rgba(2,6,23,.06);
+}
+
+/* ✅ Bottone FATTO */
+.btn-done{
+  background:linear-gradient(135deg, rgba(0,255,106,.30), rgba(2,6,23,.55));
+  border:1px solid rgba(0,255,106,.40);
+  color:#eafff0;
+  box-shadow:0 16px 34px rgba(0,255,106,.12);
+}
+.btn-undone{
+  background:rgba(148,163,184,.14);
+  border:1px solid rgba(148,163,184,.18);
+  color:var(--text);
+}
+
+/* ✅ Bottone giornata chiusa */
+.btn-closed-day{
+  background:linear-gradient(135deg, rgba(20,184,166,1), rgba(37,99,235,1));
+  border:1px solid rgba(20,184,166,.40);
+  color:#ffffff;
+  box-shadow:0 12px 22px rgba(20,184,166,.18);
 }
 
 .small{font-size:12px}
@@ -311,14 +361,84 @@ button:active{transform:scale(.99)}
 @keyframes pulseHL{0%{transform:scale(1)}50%{transform:scale(1.01)}100%{transform:scale(1)}}
 
 /* Customer cards */
-.gc-card{border-radius:18px;padding:12px;margin-bottom:10px;position:relative;border:1px solid rgba(0,0,0,.06);box-shadow: 0 14px 28px rgba(2,6,23,.09)}
-.gc-none{background:rgba(148,163,184,.10)}
-.gc-telefonica{background:rgba(34,197,94,.18)}
-.gc-richiamare{background:rgba(245,158,11,.18)}
-.gc-da_richiamare{background:rgba(245,158,11,.14)}
-.gc-uscita{background:rgba(59,130,246,.18)}
-.gc-rifiutato{background:rgba(239,68,68,.18)}
-.gc-ripartita{background:rgba(139,92,246,.18)}
+.gc-card{
+  border-radius:18px;
+  padding:12px;
+  margin-bottom:10px;
+  position:relative;
+  border:1px solid rgba(148,163,184,.18);
+  box-shadow: 0 18px 38px rgba(0,0,0,.28);
+}
+
+/* ✅ Colori più visibili + bordo sinistro “segnaposto” */
+.gc-none{
+  background:linear-gradient(135deg, rgba(148,163,184,.24), rgba(2,6,23,.28));
+  border-color:rgba(148,163,184,.30);
+}
+
+/* 📞 Telefonica (viola: diversa da USCITA) */
+.gc-telefonica{
+  background:linear-gradient(135deg, rgba(124,58,237,.42), rgba(2,6,23,.28));
+  border-color:rgba(124,58,237,.76);
+  border-left:6px solid rgba(124,58,237,.98);
+  box-shadow:0 20px 42px rgba(124,58,237,.18);
+}
+
+/* 🔁 Richiamano loro (rosa acceso) */
+.gc-richiamare{
+  background:linear-gradient(135deg, rgba(236,72,153,.52), rgba(2,6,23,.28));
+  border-color:rgba(236,72,153,.68);
+  border-left:6px solid rgba(236,72,153,.98);
+  box-shadow:0 20px 42px rgba(236,72,153,.18);
+}
+
+/* ⏳ Da richiamare (giallo/ambra forte) */
+.gc-da_richiamare{
+  background:linear-gradient(135deg, rgba(245,158,11,.58), rgba(2,6,23,.28));
+  border-color:rgba(245,158,11,.72);
+  border-left:6px solid rgba(245,158,11,.98);
+  box-shadow:0 20px 42px rgba(245,158,11,.18);
+}
+
+/* 🚗 Uscita (blu più deciso) */
+.gc-uscita{
+  background:linear-gradient(135deg, rgba(59,130,246,.52), rgba(2,6,23,.28));
+  border-color:rgba(59,130,246,.72);
+  border-left:6px solid rgba(59,130,246,.98);
+  box-shadow:0 20px 42px rgba(59,130,246,.16);
+}
+
+/* ⛔ Rifiutato (rosso intenso) */
+.gc-rifiutato{
+  background:linear-gradient(135deg, rgba(239,68,68,.52), rgba(2,6,23,.28));
+  border-color:rgba(239,68,68,.72);
+  border-left:6px solid rgba(239,68,68,.98);
+  box-shadow:0 20px 42px rgba(239,68,68,.16);
+}
+
+/* ✅ Ripartita (turchese / teal: più contrasto) */
+.gc-ripartita{
+  background:linear-gradient(135deg, rgba(20,184,166,.58), rgba(2,6,23,.28));
+  border-color:rgba(20,184,166,.72);
+  border-left:6px solid rgba(20,184,166,.98);
+  box-shadow:0 20px 42px rgba(20,184,166,.16);
+}
+
+/* ✅ FATTO: contorno verde fluo + leggero scurimento (mantiene il colore di base) */
+.gc-card > *{ position:relative; z-index:1; }
+.gc-card.gc-done{
+  outline:4px solid var(--done);
+  box-shadow:0 0 0 9px rgba(0,255,106,.18), 0 18px 44px rgba(0,255,106,.14);
+}
+.gc-card.gc-done::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:rgba(0,0,0,.12);
+  pointer-events:none;
+  z-index:0;
+}
 
 .gc-title{font-size:18px;font-weight:1000}
 .gc-big{font-size:16px;font-weight:900;margin-top:6px}
@@ -327,11 +447,32 @@ button:active{transform:scale(.99)}
 .gc-stato{
   position:absolute;top:10px;right:12px;
   font-size:12px;font-weight:1000;
-  padding:4px 10px;border-radius:999px;
-  background:linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.62));
-  cursor:pointer;border:1px solid rgba(0,0,0,.06);
+  padding:6px 12px;border-radius:999px;
+  background:linear-gradient(180deg, rgba(15,23,42,.88), rgba(15,23,42,.72));
+  cursor:pointer;border:1px solid rgba(148,163,184,.18);
+  color:#fff;
+  box-shadow:0 10px 18px rgba(0,0,0,.22);
+  user-select:none;
+  z-index:5;
 }
-.gc-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
+.gc-actions{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  margin-top:10px;
+
+  /* ✅ BOTTONI SEMPRE IN RIGA (non in colonna) */
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none; /* Firefox */
+  padding:2px 4px 0;
+}
+.gc-actions::-webkit-scrollbar{display:none}
+.gc-actions button{
+  padding:8px 12px;
+  font-size:12px;
+}
 
 .gc-highlight{
   outline:4px solid rgba(37,99,235,.75);
@@ -384,7 +525,7 @@ button:active{transform:scale(.99)}
   width:100%;max-width:480px;
   background:rgba(2,6,23,.45);
   color:var(--text);
-border-radius:18px;padding:12px;
+  border-radius:18px;padding:12px;
   max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -434,7 +575,7 @@ border-radius:18px;padding:12px;
 
   position:fixed;
   left:0;right:0;bottom:0;
-padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.62));
   border-top:1px solid rgba(148,163,184,.16);
   backdrop-filter: blur(12px);
@@ -595,6 +736,100 @@ html:not([data-screen="clients"]) .screen{
   min-height:auto !important;
 }
 
+
+/* ---- Clienti: Tabs Oggi/Domani ---- */
+.daytabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+.daytab{
+  flex:1;
+  border-radius:16px;
+  padding:12px 12px;
+  background:rgba(2,6,23,.35);
+  border:1px solid rgba(148,163,184,.14);
+  color:rgba(229,231,235,.96);
+  font-weight:1000;
+  letter-spacing:.01em;
+  box-shadow:0 12px 22px rgba(2,6,23,.12);
+}
+.daytab:active{transform:scale(.99)}
+.daytab.active{
+  background:linear-gradient(135deg, rgba(34,197,94,.26), rgba(20,184,166,.12));
+  border-color:rgba(34,197,94,.40);
+  box-shadow:0 18px 40px rgba(34,197,94,.14);
+}
+.daytab.disabled{opacity:.55; pointer-events:none; filter:saturate(.8);}
+.daytab .subdate{display:block;font-size:12px;color:var(--muted);font-weight:900;margin-top:2px}
+
+
+
+/* Day actions (Clienti): sempre visibili, scroll orizzontale se spazio poco */
+.day-actions{
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.day-actions::-webkit-scrollbar{display:none}
+
+/* ---- GPS Switch (Auto FATTO USCITA) ---- */
+.gpsToggleWrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(2,6,23,.35);
+  border:1px solid rgba(148,163,184,.16);
+  box-shadow:0 12px 22px rgba(2,6,23,.12);
+}
+.gpsLblTxt{
+  font-size:12px;
+  font-weight:1000;
+  color:rgba(229,231,235,.94);
+  white-space:nowrap;
+}
+.switch{
+  position:relative;
+  display:inline-block;
+  width:48px;
+  height:28px;
+  flex:0 0 auto;
+}
+.switch input{opacity:0;width:0;height:0}
+.slider{
+  position:absolute;
+  inset:0;
+  cursor:pointer;
+  background:rgba(148,163,184,.28);
+  border:1px solid rgba(148,163,184,.18);
+  transition:.18s ease;
+  border-radius:999px;
+}
+.slider:before{
+  content:"";
+  position:absolute;
+  height:22px;
+  width:22px;
+  left:3px;
+  top:50%;
+  transform:translateY(-50%);
+  background:#ffffff;
+  border-radius:50%;
+  transition:.18s ease;
+  box-shadow:0 10px 18px rgba(0,0,0,.38);
+}
+.switch input:checked + .slider{
+  background:linear-gradient(135deg, rgba(59,130,246,1), rgba(37,99,235,1));
+  border-color:rgba(59,130,246,.40);
+  box-shadow:0 14px 26px rgba(37,99,235,.18);
+}
+.switch input:checked + .slider:before{
+  transform:translate(20px,-50%);
+}
+
 </style>
 </head>
 
@@ -618,7 +853,7 @@ html:not([data-screen="clients"]) .screen{
           <div class="cardhead-left">
             <div class="icon">📥</div>
             <div class="hgroup">
-              <h3>Lista d'attesa</h3>
+              <h3>Automatico</h3>
               <div class="sub">SMS in attesa + avvisi scheda presente</div>
               <div class="kpi">
                 <span class="chip" id="kpi_inbox">📩 0 in attesa</span>
@@ -681,7 +916,7 @@ html:not([data-screen="clients"]) .screen{
             <div class="icon">✍️</div>
             <div class="hgroup">
               <h3>Incolla SMS (manuale)</h3>
-              <div class="sub">Incolla un SMS e compila i campi</div>
+              <div class="sub">Incolla un SMS e inizializza i campi</div>
             </div>
           </div>
           <div class="ledrow">
@@ -692,7 +927,7 @@ html:not([data-screen="clients"]) .screen{
         <div class="cardbody">
           <textarea id="sms" placeholder="Incolla qui l'SMS..."></textarea>
           <div class="actions">
-            <button id="initBtn" class="btn-primary">▶️ Compila</button>
+            <button id="initBtn" class="btn-primary">▶️ Inizializza</button>
             <button id="clearSmsBtn" class="btn-secondary">🧹 Pulisci</button>
           </div>
         </div>
@@ -711,12 +946,12 @@ html:not([data-screen="clients"]) .screen{
         </div>
         <div class="cardbody">
 
-          <div class="actions" style="margin-bottom:10px">
+          <div class="actions day-actions" style="margin-bottom:10px">
             <button id="manualModeBtn" class="btn-secondary">✍️ Manuale</button>
             <button id="toggleCliente" class="btn-secondary">👁️ Mostra cliente</button>
             <button id="newClientBtn" class="btn-primary">➕ Nuovo cliente</button>
           </div>
-<div id="clientMiniName" class="clientMiniName">—</div>
+          <div id="clientMiniName" class="clientMiniName">—</div>
 
           <div id="clienteBox" class="cliente-compact">
             <input id="nome" placeholder="Nome">
@@ -782,13 +1017,36 @@ html:not([data-screen="clients"]) .screen{
               <div class="sub">Lista operativa + PDF WhatsApp</div>
             </div>
           </div>
+
+          <div class="cardhead-right">
+            <div class="gpsToggleWrap" title="Attiva/Disattiva GPS automatico per interventi USCITA">
+              <span class="gpsLblTxt" id="gpsLblTxt">GPS OFF</span>
+              <label class="switch">
+                <input type="checkbox" id="gpsToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
         <div class="cardbody">
-          <div class="actions" style="margin-bottom:10px">
-            <button class="btn-primary" onclick="generaPdfWhatsapp()">📤 PDF WhatsApp</button>
-            <button class="btn-secondary" id="filterUsciteBtn" type="button">🚗 Solo uscite</button>
-            <button class="btn-danger" onclick="cancellaTutto()">🗑️ Elimina tutto</button>
-          </div>
+
+          <div class="daytabs" id="dayTabs">
+            <button class="daytab active" id="tabOggi" type="button">OGGI</button>
+            <button class="daytab" id="tabDomani" type="button">DOMANI</button>
+</div>
+
+<div class="daytabs hidden" id="pastTabs"></div>
+<div id="pastReminder" class="hidden box-soft box-light" style="margin:0 0 10px;background:rgba(255,255,255,.62)">
+  <div style="font-weight:1000">⚠️ Giornata non chiusa</div>
+  <div class="small muted" style="margin-top:6px">Apri la data qui sopra e premi <b>Chiudi + PDF</b>.</div>
+</div>
+
+          <div class="actions" style="margin-bottom:10px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+  <button class="btn-secondary" id="closeDayBtn" type="button">✅ Chiudi giornata</button>
+  <button class="btn-primary" id="pdfBtn" type="button">📤 PDF WhatsApp</button>
+  <button class="btn-secondary" id="filterUsciteBtn" type="button">🚗 Solo uscite</button>
+  <button class="btn-danger" id="deleteDayBtn" type="button">🗑️ Elimina giornata</button>
+</div>
           <div id="cards"></div>
         </div>
       </div>
@@ -799,7 +1057,7 @@ html:not([data-screen="clients"]) .screen{
   <nav class="bottomnav">
     <div class="navrow">
       <button class="navbtn" id="nav_auto" data-screen="auto" type="button">
-        <span class="navico">📥</span><span class="navlbl">Lista d'attesa</span>
+        <span class="navico">📥</span><span class="navlbl">Automatico</span>
         <span class="badgeCount" id="navBadgeAuto">0</span>
       </button>
       <button class="navbtn active" id="nav_manage" data-screen="manage" type="button">
@@ -824,9 +1082,9 @@ html:not([data-screen="clients"]) .screen{
 /* =========================
    VERSIONE
    ========================= */
-var APP_VERSION = "2025-12-31.v51";
-var BUILD_LABEL = "2025-12-31 12:00";
-var SW_VER = 51;
+var APP_VERSION = "2026-01-18.v108";
+var BUILD_LABEL = "2026-01-18";
+var SW_VER = 108;
 
 /* =========================
    HELPERS
@@ -857,6 +1115,7 @@ window.addEventListener("orientationchange", syncNavRealHeight);
 
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
 function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
+function nowHM(){ var d=new Date(); return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
 function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
 function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," "); }
 function escapeHtml(s){
@@ -879,6 +1138,86 @@ function insertAtCursor(input, text){
     input.value = (input.value || "") + text;
   }
 }
+
+/* =========================
+   UID (dedupe e conteggi corretti)
+   ========================= */
+function genUid(){
+  return 'u' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+function ensureUid(it){
+  if(!it) return;
+  if(!it.uid) it.uid = genUid();
+}
+function fallbackUniqKey(it){
+  // fallback stabile anche per dati vecchi (senza uid)
+  var tel = cleanPhone(it && it.telefono);
+  var base = tel ? ('tel:' + tel) : ('addr:' + normKey(it && it.nome) + '|' + normKey(it && it.via) + '|' + normKey(it && it.citta));
+  return base + '|' + (it && it.ora || '') + '|' + (it && it.stato || '') + '|' + (it && it.problema || '') + '|' + (it && it.note || '');
+}
+function stableDedupKey(it){
+  if(!it) return "";
+  if(it.uid) return "uid:"+it.uid;
+  var ph = cleanPhone(it.telefono||"");
+  var base = ph ? ("tel:"+ph) : ("addr:"+normKey(it.nome)+"|"+normKey(it.via)+"|"+normKey(it.citta));
+  base += "|id:" + safeTrim(it.idApparecchio||"");
+  base += "|mat:" + safeTrim(it.matricola||"");
+  base += "|ora:" + safeTrim(it.ora||"");
+  return base;
+}
+
+// ✅ dedupe "morbido": se lo stesso intervento finisce due volte nello snapshot, tengo l’ultima versione
+function uniqueByUidOrKey(arr){
+  arr = arr || [];
+  var map = {};
+  var order = [];
+  for(var i=0;i<arr.length;i++){
+    var it = arr[i];
+    if(!it) continue;
+    var k = stableDedupKey(it);
+    if(!k) continue;
+    if(!map[k]) order.push(k);
+    map[k] = it; // override
+  }
+  var out = [];
+  for(var j=0;j<order.length;j++){
+    var it2 = map[order[j]];
+    if(!it2) continue;
+    if(!it2.uid) it2.uid = genUid();
+    out.push(it2);
+  }
+  return out;
+}
+
+function mergeUniqueLists(listA, listB){
+  return uniqueByUidOrKey([].concat(listA||[], listB||[]));
+}
+function ensureUidsEverywhere(){
+  try{
+    for(var i=0;i<clients.length;i++){
+      var c = clients[i];
+      if(!c) continue;
+      ensureUid(c);
+      if(typeof c.fatto !== 'boolean') c.fatto = false;
+      if(typeof c.giorno === 'undefined') c.giorno = 0;
+    }
+  }catch(e){}
+  try{
+    for(var k in (daySnapshots||{})){
+      var snap = daySnapshots[k];
+      if(!snap || !Array.isArray(snap.items)) continue;
+      for(var j=0;j<snap.items.length;j++){
+        var it = snap.items[j];
+        if(!it) continue;
+        ensureUid(it);
+        if(typeof it.fatto !== 'boolean') it.fatto = false;
+        if(typeof it.giorno === 'undefined') it.giorno = 0;
+      }
+      snap.items = uniqueByUidOrKey(snap.items);
+    }
+  }catch(e){}
+}
+
 
 /* =========================
    DOM refs
@@ -932,9 +1271,22 @@ var presentCount = $("presentCount");
 var clearPresentBtn = $("clearPresentBtn");
 
 var toastEl = $("toast");
-var verBadge = $("verBadge");
 var headerStatus = $("headerStatus");
 var filterUsciteBtn = $("filterUsciteBtn");
+
+var tabOggi = $("tabOggi");
+var tabDomani = $("tabDomani");
+var tabIeri = $("tabIeri");
+var pdfBtn = $("pdfBtn");
+
+var closeDayBtn = $("closeDayBtn");
+var deleteDayBtn = $("deleteDayBtn");
+var pastTabs = $("pastTabs");
+var pastReminder = $("pastReminder");
+
+// GPS
+var gpsToggle = $("gpsToggle");
+var gpsLblTxt = $("gpsLblTxt");
 
 var navBadgeAuto = $("navBadgeAuto");
 
@@ -959,6 +1311,13 @@ function setScreen(name){
   $("nav_auto").classList.toggle("active", name === "auto");
   $("nav_manage").classList.toggle("active", name === "manage");
   $("nav_clients").classList.toggle("active", name === "clients");
+
+
+  // ✅ Ogni volta che apri CLIENTI aggiorno tabs e lista (anche se OGGI è vuoto)
+  if(name === "clients"){
+    try{ refreshDayTabsUI(); }catch(e){}
+    try{ render(); }catch(e){}
+  }
 
   function hardTop(){
     try{
@@ -1008,6 +1367,271 @@ var newClientMode = false; // modalità inserimento cliente manuale (campi compl
 // filtro lista clienti ("Solo uscite")
 var showOnlyUscite = false;
 
+// tab Clienti: 0=OGGI, 1=DOMANI, 2=GIORNATA PRECEDENTE
+var selectedDayTab = 0;
+var selectedPastKey = "";
+
+// giornate chiuse / snapshot per PDF e per "ieri"
+var daySnapshots = {};
+var lastDateKey = "";
+
+/* =========================
+   GPS (Auto chiusura USCITA)
+   - Toggle ON/OFF
+   - Funziona SOLO se hai aperto il navigatore da una card USCITA
+   - Quando sei a <100m dalla destinazione e poi ti allontani >100m per >3 minuti
+     alla riapertura dell'app chiede conferma per segnare FATTO
+   ========================= */
+var gpsEnabled = false;
+var gpsWatchId = null;
+var gpsSession = null;
+var GPS_NEAR_M = 100;
+var GPS_AWAY_MS = 3 * 60 * 1000;
+var GPS_MIN_PROMPT_GAP_MS = 2 * 60 * 1000;
+
+function loadGpsEnabled(){
+  try{ gpsEnabled = (localStorage.getItem('rapportiGpsEnabled') === '1'); }catch(e){ gpsEnabled = false; }
+}
+function saveGpsEnabled(){
+  try{ localStorage.setItem('rapportiGpsEnabled', gpsEnabled ? '1' : '0'); }catch(e){}
+}
+function loadGpsSession(){
+  try{
+    var raw = localStorage.getItem('rapportiGpsSession');
+    gpsSession = raw ? (JSON.parse(raw) || null) : null;
+  }catch(e){ gpsSession = null; }
+}
+function saveGpsSession(){
+  try{ localStorage.setItem('rapportiGpsSession', JSON.stringify(gpsSession || null)); }catch(e){}
+}
+function clearGpsSession(){
+  gpsSession = null;
+  saveGpsSession();
+}
+
+function updateGpsToggleUI(){
+  if(gpsToggle) gpsToggle.checked = !!gpsEnabled;
+  if(gpsLblTxt) gpsLblTxt.textContent = gpsEnabled ? 'GPS ON' : 'GPS OFF';
+}
+
+function haversineMeters(lat1, lon1, lat2, lon2){
+  function toRad(x){ return x * Math.PI / 180; }
+  var R = 6371000;
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function findClientIndexByUid(uid){
+  uid = String(uid||'');
+  if(!uid) return -1;
+  for(var i=0;i<clients.length;i++){
+    if(String(clients[i] && clients[i].uid || '') === uid) return i;
+  }
+  return -1;
+}
+
+function stopGpsWatch(){
+  try{
+    if(gpsWatchId !== null && navigator.geolocation && navigator.geolocation.clearWatch){
+      navigator.geolocation.clearWatch(gpsWatchId);
+    }
+  }catch(e){}
+  gpsWatchId = null;
+}
+
+function startGpsWatch(){
+  if(!gpsEnabled) return;
+  if(!navigator.geolocation){
+    showToast('GPS non supportato su questo dispositivo');
+    return;
+  }
+  if(gpsWatchId !== null) return;
+  try{
+    gpsWatchId = navigator.geolocation.watchPosition(function(pos){
+      gpsHandlePosition(pos);
+    }, function(err){
+      // se l'utente blocca il GPS, spengo il toggle
+      if(err && (err.code === 1)){
+        gpsEnabled = false;
+        saveGpsEnabled();
+        updateGpsToggleUI();
+        stopGpsWatch();
+        showToast('GPS disattivato (permesso negato)');
+      }
+    }, { enableHighAccuracy:true, maximumAge:30000, timeout:15000 });
+  }catch(e){}
+}
+
+function gpsHandlePosition(pos){
+  if(!gpsEnabled) return;
+  if(!gpsSession || !gpsSession.active) return;
+  if(!pos || !pos.coords) return;
+
+  var lat = pos.coords.latitude;
+  var lng = pos.coords.longitude;
+  var now = Date.now();
+
+  gpsSession.lastPos = { lat: lat, lng: lng, ts: now };
+
+  // session deve puntare ancora ad un cliente esistente
+  var ix = findClientIndexByUid(gpsSession.clientUid);
+  if(ix < 0){
+    clearGpsSession();
+    return;
+  }
+
+  if(!gpsSession.dest || typeof gpsSession.dest.lat !== 'number') {
+    saveGpsSession();
+    return;
+  }
+
+  var dist = haversineMeters(lat, lng, gpsSession.dest.lat, gpsSession.dest.lng);
+  gpsSession.lastDistanceM = Math.round(dist);
+
+  // vicino destinazione
+  if(dist <= GPS_NEAR_M){
+    gpsSession.lastNearAt = now;
+    gpsSession.pendingPrompt = false;
+    gpsSession.leftSince = 0;
+    saveGpsSession();
+    return;
+  }
+
+  // lontano: se ero stato vicino prima, parte timer lontananza
+  if(gpsSession.lastNearAt){
+    var awayFor = now - gpsSession.lastNearAt;
+    if(awayFor >= GPS_AWAY_MS){
+      // pronto a chiedere alla riapertura
+      gpsSession.pendingPrompt = true;
+    }
+  }
+
+  saveGpsSession();
+}
+
+function gpsCheckNowAndMaybePrompt(){
+  if(!gpsEnabled) return;
+  if(!gpsSession || !gpsSession.active) return;
+  if(!navigator.geolocation) return;
+
+  // evita spam: se ho già chiesto da poco
+  var now = Date.now();
+  if(gpsSession.lastPromptAt && (now - gpsSession.lastPromptAt) < GPS_MIN_PROMPT_GAP_MS) return;
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    gpsHandlePosition(pos);
+    gpsMaybePrompt();
+  }, function(err){
+    // ignoro
+  }, { enableHighAccuracy:true, maximumAge:20000, timeout:12000 });
+}
+
+function gpsMaybePrompt(){
+  if(!gpsEnabled) return;
+  if(!gpsSession || !gpsSession.active) return;
+  if(!gpsSession.pendingPrompt) return;
+
+  // devo ancora avere il cliente
+  var ix = findClientIndexByUid(gpsSession.clientUid);
+  if(ix < 0){
+    clearGpsSession();
+    return;
+  }
+  var c = clients[ix];
+  if(!c || (c.stato||'') !== 'uscita'){
+    clearGpsSession();
+    return;
+  }
+
+  gpsSession.lastPromptAt = Date.now();
+  saveGpsSession();
+
+  openModal(
+    'Hai terminato intervento di <b>'+escapeHtml(gpsSession.clientName||c.nome||'')+'</b>?',
+    [
+      {label:'NO', className:'btn-secondary', onClick:function(){
+        // reset richiesta ma tengo sessione
+        gpsSession.pendingPrompt = false;
+        saveGpsSession();
+        closeModal();
+      }},
+      {label:'SI', className:'btn-primary', onClick:function(){
+        closeModal();
+        // segno FATTO
+        try{
+          c.fatto = true;
+          c.fattoTs = Date.now();
+          if((c.giorno||0)===0) invalidateTodayClosure();
+          salvaDati();
+          render();
+          showToast('✅ FATTO (GPS)');
+        }catch(e){}
+        clearGpsSession();
+      }}
+    ]
+  );
+}
+
+function gpsGeocodeAddress(addr, onOk, onErr){
+  addr = safeTrim(addr||'');
+  if(!addr){ if(onErr) onErr('noaddr'); return; }
+  // OpenStreetMap Nominatim (senza API key)
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr);
+  fetch(url, {
+    method:'GET',
+    headers:{ 'Accept':'application/json' }
+  }).then(function(r){ return r.json(); }).then(function(js){
+    if(js && js[0] && js[0].lat && js[0].lon){
+      var lat = parseFloat(js[0].lat);
+      var lng = parseFloat(js[0].lon);
+      if(isFinite(lat) && isFinite(lng)){
+        onOk && onOk({lat:lat, lng:lng});
+        return;
+      }
+    }
+    onErr && onErr('nofound');
+  }).catch(function(){ onErr && onErr('fetch'); });
+}
+
+function gpsStartNavigationForClient(index, addr){
+  if(!gpsEnabled) return;
+  var c = clients[index];
+  if(!c) return;
+  if((c.stato||'') !== 'uscita') return;
+
+  // creo sessione
+  gpsSession = {
+    active:true,
+    clientUid: String(c.uid||''),
+    clientName: String(c.nome||''),
+    destAddr: String(addr||''),
+    dest: null,
+    startedAt: Date.now(),
+    lastNearAt: 0,
+    pendingPrompt: false,
+    lastPromptAt: 0,
+    leftSince: 0,
+    lastDistanceM: 0
+  };
+  saveGpsSession();
+
+  // geocode in background
+  gpsGeocodeAddress(addr, function(ll){
+    if(!gpsSession || !gpsSession.active) return;
+    gpsSession.dest = ll;
+    saveGpsSession();
+    startGpsWatch();
+    showToast('📍 GPS: destinazione agganciata');
+  }, function(){
+    showToast('⚠️ GPS: non riesco a trovare la destinazione');
+  });
+}
+
+
 // gestione vista cliente (compatta di default)
 function setClienteCompact(on){
   if(!clienteBox) return;
@@ -1033,8 +1657,6 @@ function updateToggleClienteLabel(){
   toggleCliente.classList.add("btn-secondary");
   toggleCliente.textContent = isClienteCompact() ? "👁️ Mostra cliente" : "🙈 Nascondi cliente";
 }
-
-
 
 var inboxPulseTs = 0;
 var presentPulseTs = 0;
@@ -1062,6 +1684,15 @@ function caricaDati(){
     var dati = localStorage.getItem("rapportiClienti");
     if(dati) clients = JSON.parse(dati) || [];
   }catch(e){ clients=[]; }
+
+  // ✅ default: compatibilità con vecchi dati
+  try{
+    for(var i=0;i<clients.length;i++){
+      if(typeof clients[i].fatto !== "boolean") clients[i].fatto = false;
+      if(typeof clients[i].giorno === "undefined") clients[i].giorno = 0; // 0=OGGI, 1=DOMANI
+    }
+  }catch(e){}
+
 }
 
 function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} touchUpdate(); }
@@ -1085,6 +1716,419 @@ function caricaPresent(){
 function salvaModo(){ try{ localStorage.setItem("rapportiManualMode", manualMode ? "1" : "0"); }catch(e){} }
 function caricaModo(){ try{ manualMode = (localStorage.getItem("rapportiManualMode")==="1"); }catch(e){ manualMode=false; } }
 
+function salvaDayTab(){
+  try{
+    localStorage.setItem("rapportiDayTab", JSON.stringify({
+      tab: (selectedDayTab||0),
+      past: (typeof selectedPastKey !== "undefined" ? (selectedPastKey||"") : "")
+    }));
+  }catch(e){}
+}
+function caricaDayTab(){
+  try{
+    var raw = localStorage.getItem("rapportiDayTab");
+    if(!raw){ selectedDayTab = 0; selectedPastKey = ""; return; }
+    raw = String(raw).trim();
+    if(raw && raw[0] === "{"){
+      var obj = JSON.parse(raw);
+      selectedDayTab = parseInt(obj.tab||0,10) || 0;
+      selectedPastKey = String(obj.past||"");
+    }else{
+      selectedDayTab = parseInt(raw||"0",10) || 0;
+      selectedPastKey = "";
+    }
+  }catch(e){
+    selectedDayTab = 0;
+    selectedPastKey = "";
+  }
+}
+
+/* =========================
+   CLIENTI: OGGI / DOMANI (+ GIORNATE PRECEDENTI)
+   ========================= */
+function dateKeyFromDate(d){
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+function parseDateKey(k){
+  try{
+    var a = String(k||"").split("-");
+    if(a.length!==3) return null;
+    var y = parseInt(a[0],10), m=parseInt(a[1],10)-1, dd=parseInt(a[2],10);
+    if(!y || m<0 || dd<1) return null;
+    return new Date(y,m,dd);
+  }catch(e){ return null; }
+}
+function addDaysKey(k, delta){
+  var d = parseDateKey(k);
+  if(!d) d = new Date();
+  d.setDate(d.getDate() + (delta||0));
+  return dateKeyFromDate(d);
+}
+function fmtDMFromKey(k){
+  var d = parseDateKey(k);
+  if(!d) return "--/--";
+  return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1);
+}
+function getTodayKey(){ return dateKeyFromDate(new Date()); }
+function getTomorrowKey(){ return addDaysKey(getTodayKey(), 1); }
+function getYesterdayKey(){ return addDaysKey(getTodayKey(), -1); }
+
+function deepClone(o){
+  try{ return JSON.parse(JSON.stringify(o)); }catch(e){ return o; }
+}
+
+function salvaDaySnapshots(){
+  try{ localStorage.setItem("rapportiDaySnapshots", JSON.stringify(daySnapshots||{})); }catch(e){}
+}
+function caricaDaySnapshots(){
+  try{
+    var raw = localStorage.getItem("rapportiDaySnapshots");
+    daySnapshots = raw ? (JSON.parse(raw) || {}) : {};
+  }catch(e){ daySnapshots = {}; }
+}
+function saveLastDateKey(k){
+  try{ localStorage.setItem("rapportiLastDateKey", String(k||"")); }catch(e){}
+}
+function loadLastDateKey(){
+  try{ return String(localStorage.getItem("rapportiLastDateKey")||""); }catch(e){ return ""; }
+}
+
+function isPastView(){ return (selectedDayTab===2 && !!selectedPastKey); }
+function getCurrentViewDateKey(){
+  if(selectedDayTab===0) return getTodayKey();
+  if(selectedDayTab===1) return getTomorrowKey();
+  return selectedPastKey || getTodayKey();
+}
+
+function computeDayHash(g){
+  try{
+    var rows = [];
+    for(var i=0;i<clients.length;i++){
+      var c = clients[i] || {};
+      if((c.giorno||0)!==g) continue;
+      ensureUid(c);
+      var k = clientKeyFromClientObj(c);
+      rows.push([
+        c.uid||"",
+        k,
+        c.ora||"",
+        c.nome||"",
+        c.via||"",
+        c.citta||"",
+        c.telefono||"",
+        c.modello||"",
+        c.idApparecchio||"",
+        c.matricola||"",
+        c.problema||"",
+        c.note||"",
+        c.stato||"",
+        c.fatto?1:0
+      ].join("§"));
+    }
+    rows.sort();
+    return rows.join("||");
+  } catch(e){
+    return "";
+  }
+}
+
+function computeTodayHash(){
+  return computeDayHash(0);
+}
+
+function isDayClosed(key){
+  key = String(key||"");
+  var snap = daySnapshots[key];
+  if(!snap || !snap.closed) return false;
+
+  // ✅ SOLO OGGI: se cambi la lista di OGGI dopo la chiusura, la giornata torna "da chiudere"
+  try{
+    if(key === getTodayKey() && snap.todayHash){
+      var curHash = computeTodayHash();
+      if(curHash !== snap.todayHash) return false;
+    }
+  }catch(e){}
+
+  return true;
+}
+
+function invalidateTodayClosure(){
+  // ✅ se la giornata di OGGI era stata chiusa, qualsiasi modifica la riapre
+  try{
+    var k = getTodayKey();
+    if(daySnapshots && daySnapshots[k] && daySnapshots[k].closed){
+      daySnapshots[k].closed = false;
+      daySnapshots[k].pdfSent = false;
+      daySnapshots[k].todayHash = "";
+      daySnapshots[k].totals = null;
+      salvaDaySnapshots();
+    }
+  }catch(e){}
+}
+
+function runDailyRollover(){
+  try{
+    var todayKey = getTodayKey();
+    var lastKeyRaw = loadLastDateKey();
+
+    // ✅ Prima installazione / storage vuoto: imposto la data di oggi per poter fare il rollover domani
+    if(!lastKeyRaw){
+      saveLastDateKey(todayKey);
+      return;
+    }
+
+    var lastKey = String(lastKeyRaw||"");
+    if(lastKey === todayKey) return;
+
+    var cur = lastKey;
+    var guard = 0;
+    while(cur < todayKey && guard < 40){
+      guard++;
+
+      // ✅ Snapshot della giornata che finisce (cur): SOLO ciò che era visibile in OGGI in quel momento
+      var endingToday = [];
+      for(var i=0;i<clients.length;i++){
+        if((clients[i].giorno||0)===0) endingToday.push(clients[i]);
+      }
+
+      if(endingToday.length){
+        var existing = [];
+        try{
+          if(daySnapshots[cur] && Array.isArray(daySnapshots[cur].items)) existing = daySnapshots[cur].items;
+        }catch(e){ existing = []; }
+
+        // ✅ Merge: se la giornata era già stata chiusa, dentro allo snapshot potrebbero esserci le USCITE spostate a DOMANI
+        var merged = mergeUniqueLists(existing, endingToday.map(function(x){ return deepClone(x); }));
+
+        var snap = daySnapshots[cur] || {
+          dateKey: cur,
+          items: [],
+          closed: false,
+          pdfSent: false,
+          auto: true,
+          createdAt: Date.now()
+        };
+
+        snap.dateKey = cur;
+        if(typeof snap.closed !== 'boolean') snap.closed = false;
+        if(typeof snap.pdfSent !== 'boolean') snap.pdfSent = false;
+        if(typeof snap.createdAt !== 'number') snap.createdAt = Date.now();
+        if(typeof snap.auto !== 'boolean') snap.auto = true;
+
+        snap.items = uniqueByUidOrKey(merged.map(function(x){ return deepClone(x); }));
+
+        // ✅ Nel PDF dei giorni passati: le USCITE non fatte diventano "USCITA DOMANI"
+        try{
+          (snap.items||[]).forEach(function(it){
+            if(!it) return;
+            if(!it.fatto && (it.stato||"")==="uscita") it.carryOver = true;
+          });
+        }catch(e){}
+
+        daySnapshots[cur] = snap;
+      }
+
+      // ✅ Nuovo giorno: svuoto OGGI (tutto passa a ieri) 
+      clients = clients.filter(function(c){
+        return (c.giorno||0)!==0;
+      });
+
+      // ✅ DOMANI -> OGGI
+      for(var j=0;j<clients.length;j++){
+        if((clients[j].giorno||0)===1) clients[j].giorno = 0;
+      }
+
+      cur = addDaysKey(cur, 1);
+    }
+
+    saveLastDateKey(todayKey);
+    salvaDaySnapshots();
+    salvaDati();
+  }catch(e){}
+}
+
+function getPastKeysPending(){
+  var todayKey = getTodayKey();
+  var out = [];
+  try{
+    for(var k in (daySnapshots||{})){
+      var snap = daySnapshots[k];
+      if(!snap) continue;
+      // solo giorni davvero passati
+      if(k >= todayKey) continue;
+      if(snap.pdfSent) continue;
+      if(!Array.isArray(snap.items) || snap.items.length===0) continue;
+      out.push(k);
+    }
+    // più recente prima (IERI in cima)
+    out.sort();
+    out.reverse();
+  }catch(e){}
+  return out;
+}
+
+
+
+function bindDayTabs(){
+  if(tabOggi){
+    tabOggi.onclick = function(){
+      selectedDayTab = 0;
+      selectedPastKey = "";
+      salvaDayTab();
+      refreshDayTabsUI();
+      render();
+      setScreen("clients");
+    };
+  }
+  if(tabDomani){
+    tabDomani.onclick = function(){
+      selectedDayTab = 1;
+      selectedPastKey = "";
+      salvaDayTab();
+      refreshDayTabsUI();
+      render();
+      setScreen("clients");
+    };
+  }
+}
+
+function refreshDayTabsUI(){
+  // labels OGGI/DOMANI
+  if(tabOggi){
+    tabOggi.classList.toggle("active", selectedDayTab===0);
+    tabOggi.innerHTML = 'OGGI<span class="subdate">'+fmtDMFromKey(getTodayKey())+'</span>';
+  }
+  if(tabDomani){
+    tabDomani.classList.toggle("active", selectedDayTab===1);
+    tabDomani.innerHTML = 'DOMANI<span class="subdate">'+fmtDMFromKey(getTomorrowKey())+'</span>';
+  }
+
+  // Giorni passati pendenti (uno per ogni giornata senza PDF)
+  var keys = getPastKeysPending();
+
+  // Se ero su un giorno passato ma non esiste più → torno a OGGI
+  if(selectedDayTab===2){
+    if(!selectedPastKey || keys.indexOf(selectedPastKey) < 0){
+      if(keys.length){
+        selectedPastKey = keys[0];
+      }else{
+        selectedDayTab = 0;
+        selectedPastKey = "";
+      }
+      salvaDayTab();
+    }
+  }
+
+  // Past tabs dinamiche (compaiono SOLO se servono)
+  if(pastTabs){
+    pastTabs.innerHTML = "";
+    if(keys.length){
+      pastTabs.classList.remove("hidden");
+      for(var i=0;i<keys.length;i++){
+        (function(key){
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "daytab" + ((selectedDayTab===2 && selectedPastKey===key) ? " active" : "");
+          var lbl = (key === getYesterdayKey()) ? "IERI" : fmtDMFromKey(key);
+          b.innerHTML = lbl + '<span class="subdate">'+key+'</span>';
+          b.onclick = function(){
+            selectedDayTab = 2;
+            selectedPastKey = key;
+            salvaDayTab();
+            refreshDayTabsUI();
+            render();
+            setScreen("clients");
+          };
+          pastTabs.appendChild(b);
+        })(keys[i]);
+      }
+    }else{
+      pastTabs.classList.add("hidden");
+    }
+  }
+
+  // reminder (solo quando stai guardando un giorno passato)
+  if(pastReminder){
+    pastReminder.classList.toggle("hidden", !(selectedDayTab===2 && !!selectedPastKey));
+  }
+
+  // Bottoni principali in base al tab
+  if(pdfBtn){
+    if(selectedDayTab===1){
+      pdfBtn.classList.add("hidden");
+    }else{
+      pdfBtn.classList.remove("hidden");
+      pdfBtn.textContent = (selectedDayTab===2) ? "📤 Chiudi + PDF" : "📤 PDF WhatsApp";
+    }
+  }
+  if(closeDayBtn){
+    if(selectedDayTab===0){
+      closeDayBtn.classList.remove("hidden");
+      var __closedToday = isDayClosed(getTodayKey());
+      closeDayBtn.textContent = __closedToday ? "✅ Giornata chiusa" : "✅ Chiudi giornata";
+      closeDayBtn.classList.remove("btn-secondary","btn-primary","btn-closed-day");
+      closeDayBtn.classList.add(__closedToday ? "btn-closed-day" : "btn-secondary");
+    }else{
+      closeDayBtn.classList.add("hidden");
+    }
+  }
+
+  // PDF click
+  if(pdfBtn){
+    pdfBtn.onclick = function(){
+      if(selectedDayTab===1) return; // DOMANI non ha PDF
+      var dayKey = getCurrentViewDateKey();
+
+      // ✅ OGGI: se non hai chiuso → chiusura + PDF senza secondo click
+      if(dayKey === getTodayKey()){
+        if(!isDayClosed(dayKey)){
+          openModal('Prima devi chiudere la giornata per poter inviare il PDF.', [
+            {label:'Annulla', cls:'btn', onClick: closeModal},
+            {label:'Chiudi giornata', cls:'btn btn-primary', onClick: function(){
+              closeModal();
+              chiudiGiornata(dayKey, function(){ generaPdfGiornata(dayKey); });
+            }}
+          ]);
+          return;
+        }
+        generaPdfGiornata(dayKey);
+        return;
+      }
+
+      // ✅ Giorni passati: bottone unico (chiude + PDF)
+      closeAndPdfPastDay(dayKey);
+    };
+  }
+
+  if(closeDayBtn){
+    closeDayBtn.onclick = function(){
+      if(selectedDayTab !== 0){
+        showToast("✅ Chiudi giornata solo in OGGI");
+        return;
+      }
+      var tk = getTodayKey();
+      if(isDayClosed(tk)){
+        openModal(
+          "Giornata già chiusa ✅<div class=\"small muted\" style=\"margin-top:6px\">Se non hai fatto modifiche puoi inviare subito il <b>PDF WhatsApp</b>.</div>",
+          [
+            {label:"Annulla", className:"btn-secondary", onClick: closeModal},
+            {label:"Aggiorna chiusura", className:"btn-primary", onClick: function(){ closeModal(); chiudiGiornata(tk); }}
+          ]
+        );
+        return;
+      }
+      chiudiGiornata(tk);
+    };
+  }
+
+
+  if(deleteDayBtn){
+    deleteDayBtn.onclick = function(){
+      cancellaGiornata();
+    };
+  }
+}
+
 /* =========================
    LABEL STATO
    ========================= */
@@ -1099,6 +2143,22 @@ function statoLabel(s){
   };
   return map[s] || "DA DECIDERE";
 }
+
+function computeDayTotals(list){
+  list = list || [];
+  var total = list.length;
+  var done = 0;
+  var notDone = 0;
+  for(var i=0;i<list.length;i++){
+    var it = list[i] || {};
+    if((it.stato||"") === "uscita"){
+      if(!!it.fatto) done++;
+      else notDone++;
+    }
+  }
+  return { total: total, done: done, notDone: notDone };
+}
+
 
 /* =========================
    PARSE SMS
@@ -1238,9 +2298,18 @@ function safeIdFromKey(key){
     return "card_" + s.replace(/[^a-z0-9]+/gi,"_").slice(0,80);
   }
 }
-function findClientIndexByKey(key){
-  for(var i=0;i<clients.length;i++){
-    if(clientKeyFromClientObj(clients[i]) === key) return i;
+function findClientIndexByKey(key, giornoPreferito){
+  if(!key) return -1;
+  // Preferisci cercare prima in un giorno specifico (es. OGGI)
+  if(typeof giornoPreferito === "number"){
+    for(var i=0;i<clients.length;i++){
+      var c = clients[i];
+      var g = (c.giorno||0);
+      if(g===giornoPreferito && clientKeyFromClientObj(c)===key) return i;
+    }
+  }
+  for(var j=0;j<clients.length;j++){
+    if(clientKeyFromClientObj(clients[j])===key) return j;
   }
   return -1;
 }
@@ -1422,7 +2491,7 @@ function addSmsToInbox(text){
     salvaInbox();
     renderInbox();
     updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+    updateToggleClienteLabel();
     showToast("📩 SMS già in attesa (x" + it.count + ")");
     return;
   }
@@ -1444,7 +2513,7 @@ function renderInbox(){
     if(inboxList) inboxList.innerHTML = "";
     if(inboxCount) inboxCount.textContent = "";
     updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+    updateToggleClienteLabel();
     return;
   }
 
@@ -1499,7 +2568,7 @@ function renderInbox(){
             salvaInbox();
             renderInbox();
             updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+            updateToggleClienteLabel();
             closeModal();
           };
         });
@@ -1530,7 +2599,7 @@ clearInboxBtn.onclick = function(){
       salvaInbox();
       renderInbox();
       updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+      updateToggleClienteLabel();
       closeModal();
     };
   });
@@ -1585,7 +2654,7 @@ function renderPresent(){
     if(presentList) presentList.innerHTML = "";
     if(presentCount) presentCount.textContent = "";
     updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+    updateToggleClienteLabel();
     return;
   }
 
@@ -1658,7 +2727,7 @@ clearPresentBtn.onclick = function(){
       renderPresent();
       render();
       updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+      updateToggleClienteLabel();
       closeModal();
     };
   });
@@ -1720,7 +2789,7 @@ function handleIncomingSmsFromUrl(){
 
     var parsed = parseSMS(smsText);
     var cKey = clientKeyFromParsed(parsed);
-    var existingIdx = findClientIndexByKey(cKey);
+    var existingIdx = findClientIndexByKey(cKey, 0);
 
     if(existingIdx >= 0){
       addPresentNotif(cKey, smsText);
@@ -1825,7 +2894,11 @@ addBtn.onclick=function(){
   if(problema.value === "ALTRO") problemaFinale = "ALTRO: " + safeTrim(problemaAltro.value);
 
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
-  if(findClientIndexByKey(newKey) >= 0){
+  if(findClientIndexByKey(newKey, 0) >= 0 && (function(){
+    // blocco duplicati SOLO in OGGI
+    var idxExist = findClientIndexByKey(newKey, 0);
+    return (idxExist>=0 && (clients[idxExist].giorno||0)===0);
+  })()){
     showToast("⚠️ Cliente già presente: non aggiunto");
     render();
     highlightOnceByKey(newKey);
@@ -1833,6 +2906,10 @@ addBtn.onclick=function(){
   }
 
   clients.push({
+    giorno:0,
+    uid: genUid(),
+    dataKey: getTodayKey(),
+    ora: nowHM(),
     nome:nome.value,
     via:via.value,
     citta:citta.value,
@@ -1842,8 +2919,14 @@ addBtn.onclick=function(){
     matricola:matricola.value,
     problema:problemaFinale,
     stato:stato.value,
-    note:note.value
+    note:note.value,
+
+    // ✅ v52: fatto di default
+    fatto:false,
+    fattoTs:0
   });
+
+  invalidateTodayClosure();
 
   if(selectedInboxIndex >= 0){
     inbox.splice(selectedInboxIndex, 1);
@@ -1898,6 +2981,126 @@ function closeModal(){
   unlockBodyScroll();
 }
 
+function openModal(a, b, c){
+  // Compatibilità chiamate:
+  // 1) openModal(htmlBody, buttons)
+  // 2) openModal(title, buttons, htmlBody)
+  // 3) openModal(title, htmlBody, buttons)
+  var title = "";
+  var body  = "";
+  var btns  = [];
+
+  if(Array.isArray(b) && typeof c === "string"){
+    // (title, buttons, body)
+    title = String(a || "");
+    body  = String(c || "");
+    btns  = b;
+  } else if(typeof b === "string" && Array.isArray(c)){
+    // (title, body, buttons)
+    title = String(a || "");
+    body  = String(b || "");
+    btns  = c;
+  } else if(Array.isArray(b) && typeof c === "undefined"){
+    // (body, buttons) vecchia
+    title = "";
+    body  = String(a || "");
+    btns  = b;
+  } else {
+    // fallback
+    title = "";
+    body  = String(a || "");
+    btns  = Array.isArray(b) ? b : [];
+  }
+
+  showModal(function(m){
+    var actions = (btns && btns.length) ? btns : [{label:'OK', className:'btn-primary', onClick: function(){ closeModal(); }}];
+
+    var h = '';
+    if(title){
+      h += '<div style="font-weight:1000;font-size:15px;margin-bottom:8px">' + escapeHtml(title) + '</div>';
+    }
+    h += '<div style="line-height:1.35">' + body + '</div>';
+
+    h += '<div class="btn-row" style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">';
+    for(var i=0;i<actions.length;i++){
+      var act = actions[i]||{};
+      var cls = (act.cls || act.className || 'btn-primary');
+      var lab = (act.label || 'OK');
+      h += '<button type="button" id="mAction'+i+'" class="'+cls+'">'+escapeHtml(lab)+'</button>';
+    }
+    h += '</div>';
+
+    m.innerHTML = h;
+
+    for(var j=0;j<actions.length;j++){
+      (function(ix){
+        var act = actions[ix]||{};
+        var el = m.querySelector('#mAction'+ix);
+        if(!el) return;
+        el.onclick = function(){
+          try{ if(typeof act.onClick==='function') act.onClick(); }catch(err){ console.error(err); }
+        };
+      })(j);
+    }
+  });
+}
+
+
+/* =========================
+   STATO PICKER (leggibile, no tendina)
+   ========================= */
+function openStatoPicker(i){
+  var c = clients[i];
+  if(!c) return;
+
+  var items = [
+    {v:"telefonica",   label:"📞 GESTITA AL TELEFONO"},
+    {v:"richiamare",   label:"🔁 RICHIAMANO LORO"},
+    {v:"da_richiamare",label:"⏳ DA RICHIAMARE"},
+    {v:"uscita",       label:"🚗 USCITA"},
+    {v:"rifiutato",    label:"⛔ RIFIUTATO"},
+    {v:"ripartita",    label:"✅ RIPARTITA"}
+  ];
+
+  showModal(function(modal){
+    var cur = c.stato || "";
+    var html = '<h3>Tipo gestione</h3>' +
+      '<div class="pick-hint">Tocca una voce per impostare lo stato.</div>' +
+      '<div class="pick-grid">';
+    for(var k=0;k<items.length;k++){
+      var it = items[k];
+      var active = (it.v === cur) ? " active" : "";
+      html += '<button type="button" class="pick-btn'+active+'" data-v="'+it.v+'">'+it.label+'</button>';
+    }
+    html += '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn-secondary" id="pickCancel">Chiudi</button>' +
+      '</div>';
+
+    modal.innerHTML = html;
+
+    modal.querySelectorAll(".pick-btn").forEach(function(b){
+      b.onclick = function(ev){
+        try{ ev.stopPropagation(); }catch(e){}
+        var v = b.getAttribute("data-v") || "";
+        c.stato = v;
+        // ✅ se esco da USCITA, tolgo FATTO (altrimenti rimane la card verde senza tasto)
+        if(v !== "uscita"){
+          c.fatto = false;
+          c.fattoTs = 0;
+        }
+        
+        if((c.giorno||0)===0) invalidateTodayClosure();
+        closeModal();
+        render();
+        salvaDati();
+      };
+    });
+
+    modal.querySelector("#pickCancel").onclick = closeModal;
+  });
+}
+
 /* =========================
    RENDER CLIENTI
    ========================= */
@@ -1912,33 +3115,76 @@ function isCompleteClient(c){
             safeTrim(c.telefono) && safeTrim(c.modello) &&
             safeTrim(c.idApparecchio) && safeTrim(c.matricola));
 }
-function buildCard(c, i){
+
+function toggleDoneClient(i){
+  try{
+    var c = clients[i];
+    if(!c) return;
+    c.fatto = !c.fatto;
+    c.fattoTs = c.fatto ? Date.now() : 0;
+    invalidateTodayClosure();
+    salvaDati();
+    render();
+    showToast(c.fatto ? "✅ Segnato come FATTO" : "↩️ FATTO annullato");
+  }catch(e){}
+}
+
+function buildCard(c, i, meta){
+  meta = meta || { src:"active" };
+  var isSnap = (meta.src === "snap");
+
   var d=document.createElement("div");
   d.className="gc-card gc-"+(c.stato||"none");
   if(isCompleteClient(c)) d.classList.add("gc-complete");
 
-  var cKey = clientKeyFromClientObj(c);
-  d.id = safeIdFromKey(cKey);
+  // stile FATTO
+  if(!!c.fatto) d.classList.add("gc-done");
 
-  if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
+  // id per highlight (solo per lista attiva)
+  if(!isSnap){
+    var cKey = clientKeyFromClientObj(c);
+    d.id = safeIdFromKey(cKey);
+    if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
+  }
 
+  // badge stato (clickabile SOLO se non in giornata precedente)
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
   stEl.textContent=statoLabel(c.stato);
-  stEl.onclick=function(){
-    var s=document.createElement("select");
-    s.innerHTML=stato.innerHTML;
-    s.value=c.stato||"";
-    stEl.parentNode.replaceChild(s, stEl);
-    try{ s.focus(); }catch(e){}
-    s.onchange=function(){ c.stato=s.value; render(); salvaDati(); };
-  };
+  if(!isSnap){
+    stEl.onclick=function(ev){
+      try{ ev.stopPropagation(); }catch(e){}
+      openStatoPicker(i);
+    };
+  }else{
+    stEl.style.opacity = "0.75";
+    stEl.style.cursor = "default";
+  }
   d.appendChild(stEl);
 
+  // titolo
   var title=document.createElement("div");
   title.className="gc-title";
   title.textContent=c.nome||"";
   d.appendChild(title);
+
+  // orario + data arrivo
+  try{
+    var dateKeyForLabel = (c && c.dataKey) ? String(c.dataKey) : '';
+    if(!dateKeyForLabel){
+      if(meta && meta.src === 'snap' && meta.dayKey) dateKeyForLabel = String(meta.dayKey);
+      else if((c.giorno||0)===1) dateKeyForLabel = getTomorrowKey();
+      else dateKeyForLabel = getTodayKey();
+    }
+    var dateLbl = dateKeyForLabel ? fmtDMFromKey(dateKeyForLabel) : '';
+    var hm = c.ora || '';
+    if(hm || dateLbl){
+      var line = '⏰ Arrivo: ' + (dateLbl ? (dateLbl + ' ') : '') + (hm || '');
+      d.appendChild(row(line.trim()));
+    }
+  }catch(e){
+    if(c.ora) d.appendChild(row('⏰ Orario: ' + c.ora));
+  }
 
   var addr = "";
   if(c.via) addr += c.via;
@@ -1948,7 +3194,10 @@ function buildCard(c, i){
     var a=document.createElement("div");
     a.className="gc-big gc-link";
     a.textContent="📍 "+addr;
-    a.onclick=function(){
+    a.onclick=function(ev){
+      try{ ev.stopPropagation(); }catch(e){}
+      // GPS: se attivo e questa card e' USCITA, aggancio la destinazione
+      try{ if(!isSnap) gpsStartNavigationForClient(i, addr); }catch(e2){}
       window.open("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(addr));
     };
     d.appendChild(a);
@@ -1960,6 +3209,7 @@ function buildCard(c, i){
     t.className="gc-big gc-link";
     t.textContent="📞 "+clean;
     t.href="tel:%2331%23"+clean;
+    t.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} };
     d.appendChild(t);
   }
 
@@ -1969,62 +3219,194 @@ function buildCard(c, i){
   if(c.problema) d.appendChild(row("❗ Problema: "+c.problema));
   if(c.note) d.appendChild(row("📝 Note: "+c.note));
 
+  // ===== BOTTONI =====
   var act=document.createElement("div");
   act.className="gc-actions";
 
-  var ed=document.createElement("button");
-  ed.className="btn-secondary";
-  ed.textContent="✏️ Modifica";
-  ed.onclick=function(){ openEdit(i); };
+  var viewIsToday = (selectedDayTab===0);
+  var viewIsTomorrow = (selectedDayTab===1);
 
-  var del=document.createElement("button");
-  del.className="btn-danger";
-  del.textContent="🗑️ Elimina";
-  del.onclick=function(){ openDelete(i); };
+  // 1) GIORNATA PRECEDENTE: solo elimina (no fatto/sposta/modifica)
+  if(isSnap){
+    var delS=document.createElement("button");
+    delS.className="btn-danger";
+    delS.textContent="🗑️ Elimina";
+    delS.onclick=function(ev){
+      try{ ev.stopPropagation(); }catch(e){}
+      openDeleteSnapshot(meta.dayKey, meta.snapIndex);
+    };
+    act.appendChild(delS);
+    d.appendChild(act);
+    return d;
+  }
 
-  act.appendChild(ed);
-  act.appendChild(del);
+  // 2) DOMANI: solo sposta a oggi + elimina
+  if(viewIsTomorrow){
+    var mv2=document.createElement("button");
+    mv2.className="btn-soft";
+    mv2.textContent="📅 Sposta a oggi";
+    mv2.onclick=function(ev){
+      try{ ev.stopPropagation(); }catch(e){}
+      c.giorno = 0;
+      invalidateTodayClosure();
+      salvaDati();
+      showToast("📅 Spostato a OGGI");
+      render();
+    };
+    act.appendChild(mv2);
+
+    var del2=document.createElement("button");
+    del2.className="btn-danger";
+    del2.textContent="🗑️ Elimina";
+    del2.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openDelete(i); };
+    act.appendChild(del2);
+
+    d.appendChild(act);
+    return d;
+  }
+
+
+  // 3) OGGI: extra bottoni SEMPRE quando stato USCITA
+  // (anche se la giornata era stata chiusa: le modifiche riaprono la giornata e richiedono nuova chiusura prima del PDF)
+  var canExtra = ((c.stato||"") === "uscita") && viewIsToday;
+
+  if(canExtra){
+    // ✅ quando è FATTO: rimangono SOLO ANNULLA + ELIMINA
+    if(!!c.fatto){
+      var und=document.createElement("button");
+      und.className="btn-undone";
+      und.textContent="↩️ ANNULLA";
+      und.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} toggleDoneClient(i); };
+      act.appendChild(und);
+
+      var delD=document.createElement("button");
+      delD.className="btn-danger";
+      delD.textContent="🗑️ Elimina";
+      delD.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openDelete(i); };
+      act.appendChild(delD);
+
+      d.appendChild(act);
+      return d;
+    }
+
+    // ✅ quando NON è fatto: bottoni completi
+    var doneBtn=document.createElement("button");
+    doneBtn.className="btn-done";
+    doneBtn.textContent="✅ FATTO";
+    doneBtn.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} toggleDoneClient(i); };
+    act.appendChild(doneBtn);
+
+    var mv=document.createElement("button");
+    mv.className="btn-soft";
+    mv.textContent="📅 Sposta a domani";
+    mv.onclick=function(ev){
+      try{ ev.stopPropagation(); }catch(e){}
+      c.giorno = 1;
+      salvaDati();
+      showToast("📅 Spostato a DOMANI");
+      render();
+    };
+    act.appendChild(mv);
+
+    var ed=document.createElement("button");
+    ed.className="btn-secondary";
+    ed.textContent="✏️ Modifica";
+    ed.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openEdit(i); };
+    act.appendChild(ed);
+
+    var del=document.createElement("button");
+    del.className="btn-danger";
+    del.textContent="🗑️ Elimina";
+    del.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openDelete(i); };
+    act.appendChild(del);
+
+    d.appendChild(act);
+    return d;
+  }
+
+  // default (nessun filtro): solo modifica + elimina
+  var ed2=document.createElement("button");
+  ed2.className="btn-secondary";
+  ed2.textContent="✏️ Modifica";
+  ed2.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openEdit(i); };
+
+  var del3=document.createElement("button");
+  del3.className="btn-danger";
+  del3.textContent="🗑️ Elimina";
+  del3.onclick=function(ev){ try{ ev.stopPropagation(); }catch(e){} openDelete(i); };
+
+  act.appendChild(ed2);
+  act.appendChild(del3);
   d.appendChild(act);
-
   return d;
 }
+
 function render(){
   cards.innerHTML="";
 
-  // aggiorna pulsante filtro (se presente)
+  // aggiorna pulsante filtro
   if(filterUsciteBtn){
     filterUsciteBtn.textContent = showOnlyUscite ? "Mostra tutti" : "Solo uscite";
     filterUsciteBtn.classList.toggle("active", showOnlyUscite);
   }
 
+  refreshDayTabsUI();
+
+  var items = [];
+
+  if(isPastView()){
+    var snap = daySnapshots[selectedPastKey];
+    var arr = (snap && snap.items) ? snap.items : [];
+    for(var si=0; si<arr.length; si++){
+      var c = arr[si];
+      if(showOnlyUscite && (c.stato||"") !== "uscita") continue;
+      items.push({ c:c, idx:si, meta:{ src:"snap", dayKey:selectedPastKey, snapIndex:si } });
+    }
+  }else{
+    var g = (selectedDayTab===1) ? 1 : 0;
+    for(var idx=0; idx<clients.length; idx++){
+      var c = clients[idx];
+      if((c.giorno||0) !== g) continue;
+      if(showOnlyUscite && (c.stato||"") !== "uscita") continue;
+      items.push({ c:c, idx:idx, meta:{ src:"active" } });
+    }
+  }
+
+  if(!items.length){
+    var empty = document.createElement('div');
+    empty.className = 'box-soft box-light';
+    empty.style.background = 'rgba(255,255,255,.62)';
+    empty.innerHTML = '<div style="font-weight:1000">Nessun intervento</div>';
+    cards.appendChild(empty);
+    return;
+  }
+
+  // raggruppo per comune
   var order = [];
   var groups = {};
-
-  for(var idx=0; idx<clients.length; idx++){
-    var c = clients[idx];
-    if(showOnlyUscite && (c.stato||"") !== "uscita") continue;
-
-    var raw = safeTrim(c.citta);
-    var key = raw ? raw.toLowerCase() : "__no_city__";
-
+  for(var ii=0; ii<items.length; ii++){
+    var c0 = items[ii].c;
+    var raw = safeTrim(c0.citta);
+    var key = raw ? raw.toLowerCase() : '__no_city__';
     if(!groups[key]){
-      groups[key] = { label: raw || "SENZA COMUNE", items: [] };
+      groups[key] = { label: raw || 'SENZA COMUNE', items: [] };
       order.push(key);
     }
-    groups[key].items.push({ c:c, idx:idx });
+    groups[key].items.push(items[ii]);
   }
 
   for(var k=0; k<order.length; k++){
     var key2 = order[k];
-    var g = groups[key2];
+    var g2 = groups[key2];
 
-    var header = document.createElement("div");
-    header.className="group-title";
-    header.textContent="🏘️ " + g.label;
+    var header = document.createElement('div');
+    header.className = 'group-title';
+    header.textContent = '🏘️ ' + g2.label;
     cards.appendChild(header);
 
-    for(var j=0; j<g.items.length; j++){
-      cards.appendChild(buildCard(g.items[j].c, g.items[j].idx));
+    for(var j=0; j<g2.items.length; j++){
+      var it = g2.items[j];
+      cards.appendChild(buildCard(it.c, it.idx, it.meta));
     }
   }
 }
@@ -2140,8 +3522,14 @@ function openEdit(i){
       }
 
       c.stato = modal.querySelector("#e_stato").value;
+      // ✅ se non è USCITA, azzero eventuale FATTO
+      if(c.stato !== "uscita"){
+        c.fatto = false;
+        c.fattoTs = 0;
+      }
       c.note = modal.querySelector("#e_note").value;
 
+      if((c.giorno||0)===0) invalidateTodayClosure();
       closeModal();
       render();
       salvaDati();
@@ -2152,6 +3540,28 @@ function openEdit(i){
 /* =========================
    ELIMINA
    ========================= */
+function openDeleteSnapshot(dayKey, snapIndex){
+  dayKey = String(dayKey||"");
+  if(!dayKey || !daySnapshots[dayKey] || !daySnapshots[dayKey].items) return;
+
+  showModal(function(m){
+    m.innerHTML=
+      '<h3>Eliminare intervento dalla giornata '+escapeHtml(dayKey)+'?</h3>'+
+      '<div class="btn-row">'+
+        '<button class="btn-secondary" id="noDelS">NO</button>'+
+        '<button class="btn-danger" id="siDelS">SI</button>'+
+      '</div>';
+    m.querySelector('#noDelS').onclick = closeModal;
+    m.querySelector('#siDelS').onclick = function(){
+      daySnapshots[dayKey].items.splice(snapIndex,1);
+      salvaDaySnapshots();
+      closeModal();
+      render();
+      refreshDayTabsUI();
+    };
+  });
+}
+
 function openDelete(i){
   showModal(function(m){
     m.innerHTML=
@@ -2169,47 +3579,277 @@ function openDelete(i){
         salvaPresent();
         renderPresent();
       }
+            try{ if((clients[i]||{}).giorno===0) invalidateTodayClosure(); }catch(e){}
       clients.splice(i,1);
       closeModal();
       render();
       salvaDati();
       updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+      updateToggleClienteLabel();
     };
   });
 }
-function cancellaTutto(){
+function cancellaGiornata(){
+  var viewKey = getCurrentViewDateKey();
+  var label = (selectedDayTab===0) ? ("OGGI " + fmtDMFromKey(viewKey)) : (selectedDayTab===1 ? ("DOMANI " + fmtDMFromKey(viewKey)) : (""+viewKey));
+
   showModal(function(m){
     m.innerHTML=
-      '<h3>Eliminare TUTTI i clienti?</h3>'+
+      '<h3>Eliminare questa giornata?</h3>'+
+      '<div class="small muted" style="margin-bottom:10px">'+escapeHtml(label)+'</div>'+
       '<div class="btn-row">'+
         '<button class="btn-secondary" id="noAll">NO</button>'+
         '<button class="btn-danger" id="siAll">SI</button>'+
       '</div>';
-    m.querySelector("#noAll").onclick = closeModal;
-    m.querySelector("#siAll").onclick = function(){
-      clients=[];
-      presentNotifs=[];
-      inbox=[];
-      salvaDati(); salvaPresent(); salvaInbox();
+    m.querySelector('#noAll').onclick = closeModal;
+    m.querySelector('#siAll').onclick = function(){
+      if(selectedDayTab===2 && selectedPastKey){
+        // cancello snapshot
+        delete daySnapshots[selectedPastKey];
+        salvaDaySnapshots();
+        selectedDayTab = 0;
+        selectedPastKey = '';
+        salvaDayTab();
+      }else{
+        // cancello clienti della tab corrente
+        var g = (selectedDayTab===1) ? 1 : 0;
+        clients = clients.filter(function(c){ return (c.giorno||0)!==g; });
+        salvaDati();
+      }
       closeModal();
+      refreshDayTabsUI();
       render();
-      renderInbox();
-      renderPresent();
       updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+      updateToggleClienteLabel();
+      showToast('🗑️ Giornata eliminata');
     };
   });
 }
 
-/* =========================
-   PDF
-   ========================= */
-function generaPdfWhatsapp(){
-  if(!clients.length){
-    alert("Nessun cliente");
+function getClientsForDayTab(){
+  if(isPastView()){
+    var snap = daySnapshots[selectedPastKey];
+    return snap && snap.items ? snap.items : [];
+  }
+  var g = (selectedDayTab===1) ? 1 : 0;
+  return clients.filter(function(c){ return (c.giorno||0)===g; });
+}
+
+function chiudiGiornata(dayKey, afterCloseCb){
+  dayKey = String(dayKey || getTodayKey());
+  const todayKey = getTodayKey();
+
+  // Per sicurezza: chiusura guidata SOLO per OGGI. Per i giorni passati usa il flusso dedicato.
+  if(dayKey !== todayKey){
+    closeAndPdfPastDay(dayKey);
+    if(typeof afterCloseCb === "function") afterCloseCb();
     return;
   }
+
+  // Prendo SOLO gli interventi attualmente presenti in OGGI (senza includere cose vecchie/snapshot)
+  const listNow = clients.filter(c => (c.giorno || 0) === 0);
+  if(!listNow.length){
+    showToast("Nessun intervento da chiudere");
+    if(typeof afterCloseCb === "function") afterCloseCb();
+    return;
+  }
+
+  const tot = computeDayTotals(listNow);
+
+  // Conteggio per ogni tipo gestione (serve per la finestra di chiusura giornata)
+  const br = { telefonica:0, richiamare:0, da_richiamare:0, uscita:0, rifiutato:0, ripartita:0, none:0 };
+  listNow.forEach(it => {
+    const s = (it && it.stato) ? String(it.stato) : "";
+    if(s && Object.prototype.hasOwnProperty.call(br, s)) br[s]++;
+    else if(!s) br.none++;
+    else br.none++;
+  });
+
+  const msg = `
+    <div style="line-height:1.55">
+      <div><b>Interventi totali:</b> ${tot.total}</div>
+      <div><b>USCITE fatte:</b> ${tot.done}</div>
+      <div><b>USCITE non fatte:</b> ${tot.notDone}</div>
+      <div class="muted" style="margin-top:10px">Le <b>USCITE</b> non fatte vengono spostate a <b>DOMANI</b>. Tutto il resto viene chiuso.</div>
+
+      <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,.16)">
+        <div style="font-weight:1000;margin-bottom:6px">Dettaglio gestione</div>
+        <div class="small muted" style="line-height:1.65">
+          📞 Telefonica: <b>${br.telefonica}</b><br>
+          🔁 Richiamano loro: <b>${br.richiamare}</b><br>
+          ⏳ Da richiamare: <b>${br.da_richiamare}</b><br>
+          🚗 Uscite: <b>${br.uscita}</b><br>
+          ✅ Ripartite: <b>${br.ripartita}</b><br>
+          ⛔ Rifiutati: <b>${br.rifiutato}</b><br>
+          ❓ Da decidere: <b>${br.none}</b>
+        </div>
+      </div>
+    </div>
+  `;
+
+  openModal(msg, [
+    {label: "Annulla", className: "btn-secondary", onClick: closeModal},
+    {label:"Chiudi", className:"btn-primary", onClick: () => { closeModal(); doClose(); }}
+  ]);
+
+  function doClose(){
+    // Snapshot di OGGI: SOLO quello che esiste adesso (Niente somma con vecchi interventi)
+    daySnapshots[dayKey] = {
+      closed: true,
+      pdfSent: false,
+      closedAt: Date.now(),
+      items: deepClone(listNow),
+      totals: tot,
+      todayHash: ""
+    };
+
+    // PDF: mark carryOver for not-done USCITA
+    try{
+      (daySnapshots[dayKey].items||[]).forEach(function(it){
+        it.carryOver = ((it.stato||"" ) === "uscita" && !it.fatto);
+      });
+    }catch(e){}
+
+
+    // Regola: sposto a DOMANI solo le USCITE non fatte.
+    // ✅ IMPORTANTE: gli altri interventi RESTANO visibili in OGGI fino al cambio giorno (mezzanotte).
+    const now = Date.now();
+    for (let k=0; k<clients.length; k++){
+      const c = clients[k];
+      const g = (c && (c.giorno||0)) || 0;
+      if(g !== 0) continue;
+      if(c && c.stato === 'uscita' && !c.fatto){
+        c.giorno = 1;
+        c._movedAt = now;
+      }
+    }
+
+    // Hash dell'OGGI dopo la chiusura (serve per capire se la giornata è stata modificata)
+    daySnapshots[dayKey].todayHash = computeTodayHash();
+
+    salvaDaySnapshots();
+    salvaDati();
+    render();
+
+    if(typeof afterCloseCb === "function") afterCloseCb();
+  }
+}
+
+function closeAndPdfPastDay(dayKey){
+      dayKey = String(dayKey||"");
+      if(!dayKey) return;
+      var snap = daySnapshots[dayKey];
+      if(!snap || !Array.isArray(snap.items) || snap.items.length===0){
+        showToast('Nessuna giornata salvata per ' + formatDayLabel(dayKey));
+        return;
+      }
+
+      if(!isDayClosed(dayKey)){
+        // chiusura silenziosa per i giorni passati
+        var list = snap.items || [];
+        var tot = computeDayTotals(list);
+        for(var i=0;i<list.length;i++){
+          var it = list[i] || {};
+          if(((it.stato||"")==="uscita") && !it.fatto) it.carryOver = true;
+        }
+        snap.closed = true;
+        snap.pdfSent = false;
+        snap.totals = tot;
+        salvaDaySnapshots();
+      }
+
+      // genera subito
+      generaPdfGiornata(dayKey);
+    }
+
+function markPdfSent(dateKey){
+      dateKey = String(dateKey||"");
+      if(!dateKey) return;
+      var todayKey = getTodayKey();
+
+      if(daySnapshots[dateKey]){
+        daySnapshots[dateKey].pdfSent = true;
+      }
+
+      if(dateKey !== todayKey){
+        // Giorni passati: dopo invio PDF posso eliminare lo snapshot per non farlo riapparire
+        delete daySnapshots[dateKey];
+        salvaDaySnapshots();
+        showToast('PDF inviato ✔️');
+        render();
+        return;
+      }
+
+      // ✅ OGGI: NON cancello gli interventi.
+      // Restano visibili fino al cambio giorno; poi verranno archiviati nella giornata precedente.
+
+      // aggiorno hash di oggi (lista ora pulita)
+      try{
+        if(daySnapshots[todayKey]){
+          daySnapshots[todayKey].todayHash = computeTodayHash();
+          salvaDaySnapshots();
+        }
+      }catch(e){}
+
+      showToast('PDF inviato ✔️');
+      render();
+    }
+
+
+
+/* =========================
+   PDF HELPERS (fix v79)
+   ========================= */
+function formatDayLabel(dateKey){
+  try{
+    var d = parseDateKey(dateKey);
+    if(!d) return String(dateKey||'');
+    return pad2(d.getDate()) + '/' + pad2(d.getMonth()+1) + '/' + String(d.getFullYear()).slice(-2);
+  }catch(e){
+    return String(dateKey||'');
+  }
+}
+
+function pdfStatoLabelForItem(c){
+  try{
+    if(!c) return 'DA DECIDERE';
+    var s = (c.stato||'');
+    if(s === 'uscita' && c.carryOver){
+      return 'USCITA DOMANI';
+    }
+    return statoLabel(s);
+  }catch(e){
+    return statoLabel((c && c.stato) || '');
+  }
+}
+
+function getPdfListForDay(dateKey){
+  dateKey = String(dateKey||getTodayKey());
+  try{
+    var snap = daySnapshots[dateKey];
+    if(snap && Array.isArray(snap.items) && snap.items.length){
+      return snap.items;
+    }
+  }catch(e){}
+
+  // fallback (solo oggi)
+  try{
+    if(dateKey === getTodayKey()){
+      return clients.filter(function(c){ return (c.giorno||0)===0; });
+    }
+  }catch(e){}
+
+  return [];
+}
+function generaPdfGiornata(dateKey){
+  dateKey = String(dateKey||getTodayKey());
+
+  var list = getPdfListForDay(dateKey);
+  if(!list.length){
+    alert("Nessun intervento in questa giornata");
+    return;
+  }
+
   if(!window.jspdf || !window.jspdf.jsPDF){
     alert("PDF non disponibile: jsPDF non caricato. Apri in Safari/Chrome con internet.");
     return;
@@ -2221,18 +3861,19 @@ function generaPdfWhatsapp(){
     return;
   }
 
+  // data stampa basata su dateKey
+  var d = parseDateKey(dateKey) || new Date();
   var giorni = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
-  var now = new Date();
-  var dataLabel = giorni[now.getDay()] + " " + pad2(now.getDate()) + "/" + pad2(now.getMonth()+1) + "/" + String(now.getFullYear()).slice(-2);
+  var dataLabel = giorni[d.getDay()] + " " + pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "/" + String(d.getFullYear()).slice(-2);
 
   function statoColor(s){
     var map = {
-      telefonica:   [220,252,231],
-      richiamare:   [255,237,213],
-      da_richiamare:[254,249,195],
+      telefonica:   [204,251,241],
+      richiamare:   [252,231,243],
+      da_richiamare:[254,243,199],
       uscita:       [219,234,254],
       rifiutato:    [254,226,226],
-      ripartita:    [237,233,254],
+      ripartita:    [233,213,255],
       "":           [229,231,235],
       none:         [229,231,235]
     };
@@ -2244,15 +3885,74 @@ function generaPdfWhatsapp(){
   pdf.setFontSize(11);
   pdf.text("Data: " + dataLabel + " • Versione: " + APP_VERSION, 14, 20);
 
-  var head = [[ "NOME","INDIRIZZO","TELEFONO","MODELLO","ID APP","MATRICOLA","PROBLEMA","GESTIONE","NOTE" ]];
+  // Totali giornata (in PDF)
+  var snap = daySnapshots[String(dateKey)] || null;
+  var totals = (snap && snap.totals) ? snap.totals : computeDayTotals(list);
+  pdf.setFontSize(11);
+  pdf.text("Totali: Interventi " + totals.total + " • USCITE fatte " + totals.done + " • USCITE non fatte " + totals.notDone, 14, 26);
+
+
+  // Dettaglio per tipo gestione (in PDF)
+  function computePdfBreakdown(list){
+    var b = { telefonica:0, richiamare:0, da_richiamare:0, rifiutato:0, ripartita:0, uscitaDone:0, uscitaNotDone:0, uscitaTotal:0 };
+    for(var i=0;i<(list||[]).length;i++){
+      var it = list[i] || {};
+      var s = it.stato || '';
+      if(s === 'uscita'){
+        b.uscitaTotal++;
+        if(!!it.carryOver) b.uscitaNotDone++;
+        else b.uscitaDone++;
+      }else if(s === 'telefonica'){
+        b.telefonica++;
+      }else if(s === 'richiamare'){
+        b.richiamare++;
+      }else if(s === 'da_richiamare'){
+        b.da_richiamare++;
+      }else if(s === 'rifiutato'){
+        b.rifiutato++;
+      }else if(s === 'ripartita'){
+        b.ripartita++;
+      }
+    }
+    return b;
+  }
+
+  var br = computePdfBreakdown(list);
+  pdf.setFontSize(10);
+  var detail1 = 'Dettaglio: Telefonica ' + br.telefonica + ' • Richiamano ' + br.richiamare + ' • Da richiamare ' + br.da_richiamare + ' • Ripartite ' + br.ripartita + ' • Rifiutati ' + br.rifiutato;
+  var detail2 = 'Uscite: ' + br.uscitaTotal + ' (fatte ' + br.uscitaDone + ' • domani ' + br.uscitaNotDone + ')';
+
+  var y = 31;
+  try{
+    var l1 = pdf.splitTextToSize(detail1, 270);
+    pdf.text(l1, 14, y);
+    y += (l1.length * 4.2);
+  }catch(e){
+    pdf.text(detail1, 14, y);
+    y += 5;
+  }
+  try{
+    var l2 = pdf.splitTextToSize(detail2, 270);
+    pdf.text(l2, 14, y);
+    y += (l2.length * 4.2);
+  }catch(e){
+    pdf.text(detail2, 14, y);
+    y += 5;
+  }
+
+  var startY = Math.max(38, y + 3);
+
+  var head = [[ "ORARIO","NOME","INDIRIZZO","TELEFONO","MODELLO","ID APP","MATRICOLA","PROBLEMA","GESTIONE","NOTE" ]];
   var body = [];
-  for(var i=0;i<clients.length;i++){
-    var c = clients[i];
+
+  for(var i=0;i<list.length;i++){
+    var c = list[i];
     var indirizzo = "";
     if(c.via) indirizzo += c.via;
     if(c.citta) indirizzo += (indirizzo ? " - " : "") + c.citta;
 
     body.push([
+      c.ora || "",
       c.nome || "",
       indirizzo,
       c.telefono || "",
@@ -2260,7 +3960,7 @@ function generaPdfWhatsapp(){
       c.idApparecchio || "",
       c.matricola || "",
       c.problema || "",
-      statoLabel(c.stato),
+      pdfStatoLabelForItem(c),
       c.note || ""
     ]);
   }
@@ -2268,14 +3968,14 @@ function generaPdfWhatsapp(){
   pdf.autoTable({
     head: head,
     body: body,
-    startY: 24,
+    startY: startY,
     styles: { fontSize: 9, cellPadding: 3, valign: "middle" },
     headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: "bold" },
     margin: { left: 10, right: 10 },
     didParseCell: function (data) {
       if (data.section === "body") {
         var rowIndex = data.row.index;
-        var c = clients[rowIndex];
+        var c = list[rowIndex];
         var s = c ? c.stato : "";
         data.cell.styles.fillColor = statoColor(s);
         data.cell.styles.textColor = [0,0,0];
@@ -2285,12 +3985,18 @@ function generaPdfWhatsapp(){
 
   var blob = pdf.output("blob");
   var file = null;
-  try { file = new File([blob], "rapporti-clienti.pdf", { type: "application/pdf" }); } catch(e){ file=null; }
+  try { file = new File([blob], "rapporti-clienti-"+dateKey+".pdf", { type: "application/pdf" }); } catch(e){ file=null; }
+
+  function afterOk(){
+    markPdfSent(dateKey);
+    showToast("📤 PDF generato");
+  }
 
   if(file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
-    navigator.share({ files: [file] }).catch(function(){ openPdfFallback(pdf, blob); });
+    navigator.share({ files: [file] }).then(afterOk).catch(function(){ openPdfFallback(pdf, blob); afterOk(); });
   } else {
     openPdfFallback(pdf, blob);
+    afterOk();
   }
 }
 function openPdfFallback(pdf, blob){
@@ -2305,19 +4011,6 @@ function openPdfFallback(pdf, blob){
     window.location.href = dataUri;
   }catch(e2){
     try{ pdf.save("rapporti-clienti.pdf"); }catch(e3){ alert("Impossibile aprire il PDF su questo browser."); }
-  }
-}
-
-/* =========================
-   FULLSCREEN
-   ========================= */
-function toggleCardsFullscreen(){
-  if(fase3.classList.contains("cards-fullscreen")){
-    fase3.classList.remove("cards-fullscreen");
-    $("fsBtn").textContent = "🖥️ Schermo intero";
-  } else {
-    fase3.classList.add("cards-fullscreen");
-    $("fsBtn").textContent = "❌ Esci";
   }
 }
 
@@ -2356,6 +4049,74 @@ caricaDati();
 caricaInbox();
 caricaPresent();
 caricaModo();
+caricaDayTab();
+caricaDaySnapshots();
+
+// GPS state init
+loadGpsEnabled();
+loadGpsSession();
+updateGpsToggleUI();
+
+if(gpsToggle){
+  gpsToggle.addEventListener('change', function(){
+    var wantOn = !!gpsToggle.checked;
+    if(wantOn){
+      // chiedo permesso subito
+      if(!navigator.geolocation){
+        gpsEnabled = false;
+        updateGpsToggleUI();
+        showToast('GPS non supportato');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(function(pos){
+        gpsEnabled = true;
+        saveGpsEnabled();
+        updateGpsToggleUI();
+        startGpsWatch();
+        showToast('📍 GPS attivato');
+        // check immediato
+        gpsHandlePosition(pos);
+        gpsMaybePrompt();
+      }, function(err){
+        gpsEnabled = false;
+        saveGpsEnabled();
+        updateGpsToggleUI();
+        showToast('GPS non attivo (permesso negato)');
+      }, { enableHighAccuracy:true, maximumAge:0, timeout:12000 });
+    }else{
+      gpsEnabled = false;
+      saveGpsEnabled();
+      updateGpsToggleUI();
+      stopGpsWatch();
+      clearGpsSession();
+      showToast('GPS disattivato');
+    }
+  });
+}
+
+ensureUidsEverywhere();
+runDailyRollover();
+
+// ✅ Controllo cambio giorno (anche se cambi la data manualmente sul telefono)
+var __todayKeyCache = getTodayKey();
+function checkDateRollover(){
+  try{
+    var k = getTodayKey();
+    if(k !== __todayKeyCache){
+      __todayKeyCache = k;
+      runDailyRollover();
+      try{ refreshDayTabsUI(); }catch(e){}
+      try{ render(); }catch(e){}
+      try{ updateAutoBoxVisibility(); }catch(e){}
+    }
+  }catch(e){}
+}
+setInterval(checkDateRollover, 15000);
+window.addEventListener('focus', checkDateRollover);
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) checkDateRollover();
+});
+
 
 if(localStorage.getItem("rapportiManualMode") === null){
   manualMode = false;
@@ -2368,7 +4129,7 @@ renderInbox();
 renderPresent();
 applyMode();
 updateAutoBoxVisibility();
-  updateToggleClienteLabel();
+updateToggleClienteLabel();
 
 // filtro uscite
 if(filterUsciteBtn){
@@ -2382,6 +4143,8 @@ if(filterUsciteBtn){
 // cliente compatto di default
 setClienteCompact(true);
 updateToggleClienteLabel();
+bindDayTabs();
+refreshDayTabsUI();
 
 // schermo iniziale
 if(inbox.length || presentNotifs.length) setScreen("auto");
@@ -2390,13 +4153,15 @@ else setScreen("manage");
 
 // 1) prova subito all’avvio
 handleIncomingSmsFromUrl();
+// GPS check
+try{ gpsCheckNowAndMaybePrompt(); }catch(e){}
 
 // 2) riprova quando cambia hash o l’app torna attiva
 window.addEventListener("hashchange", handleIncomingSmsFromUrl);
-window.addEventListener("pageshow", handleIncomingSmsFromUrl);
-window.addEventListener("focus", handleIncomingSmsFromUrl);
+window.addEventListener("pageshow", function(){ handleIncomingSmsFromUrl(); try{ gpsCheckNowAndMaybePrompt(); }catch(e){} });
+window.addEventListener("focus", function(){ handleIncomingSmsFromUrl(); try{ gpsCheckNowAndMaybePrompt(); }catch(e){} });
 document.addEventListener("visibilitychange", function(){
-  if(!document.hidden) handleIncomingSmsFromUrl();
+  if(!document.hidden){ handleIncomingSmsFromUrl(); try{ gpsCheckNowAndMaybePrompt(); }catch(e){} }
 });
 
 /* =========================
