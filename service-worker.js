@@ -5,7 +5,7 @@
    - Assets: Cache-first (veloce + offline)
    ========================= */
 
-const CACHE_VERSION = "v108"; // 👈 cambia numero quando aggiorni app/icone
+const CACHE_VERSION = "v109"; // 👈 cambia numero quando aggiorni app/icone
 const CACHE_NAME = `rapporti-clienti-${CACHE_VERSION}`;
 
 // ✅ Metti qui TUTTI i file importanti da tenere offline
