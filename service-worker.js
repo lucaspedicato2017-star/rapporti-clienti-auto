@@ -13,6 +13,7 @@ const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./service-worker.js",
 
   // ✅ Icone Android
   "./icons/icon-192.png",
@@ -20,10 +21,11 @@ const ASSETS = [
   "./icons/icon-192-maskable.png",
   "./icons/icon-512-maskable.png",
 
-  // ✅ Icone iPhone + favicon (se le hai)
+  // ✅ Icone iPhone + favicon
   "./apple-touch-icon.png",
-  "./favicon-32.png",
-  "./favicon.ico"
+  "./favicon.ico",
+  "./favicon-32x32.png",
+  "./favicon-16x16.png"
 ];
 
 // ✅ INSTALL: pre-cache
@@ -31,7 +33,16 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(ASSETS);
+
+      // ✅ Se manca un file non deve bloccare tutto l'install
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (e) {
+          // ignora file mancanti
+        }
+      }
+
       await self.skipWaiting();
     })()
   );
@@ -42,12 +53,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys.map((k) => {
-          if (k !== CACHE_NAME) return caches.delete(k);
-          return Promise.resolve(true);
-        })
-      );
+      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
       await self.clients.claim();
     })()
   );
@@ -65,19 +71,28 @@ self.addEventListener("fetch", (event) => {
   // Solo stesso dominio
   if (url.origin !== self.location.origin) return;
 
-  // ✅ 1) Navigazione / apertura pagina (HTML): NETWORK FIRST
-  if (req.mode === "navigate") {
+  const accept = req.headers.get("accept") || "";
+
+  // ✅ 1) HTML / navigazione: NETWORK FIRST
+  if (req.mode === "navigate" || accept.includes("text/html")) {
     event.respondWith(
       (async () => {
         try {
-          // Prova sempre internet per avere aggiornamenti
           const fresh = await fetch(req);
           const cache = await caches.open(CACHE_NAME);
+
+          // ✅ aggiorno sia la URL reale che index.html
+          cache.put(req, fresh.clone());
           cache.put("./index.html", fresh.clone());
+
           return fresh;
         } catch (e) {
-          // Se offline, torna alla cache
-          const cached = await caches.match("./index.html");
+          // ✅ offline: torno alla cache
+          const cached =
+            (await caches.match(req, { ignoreSearch: true })) ||
+            (await caches.match("./index.html")) ||
+            (await caches.match("./"));
+
           return cached || new Response("Offline", { status: 503, statusText: "Offline" });
         }
       })()
@@ -85,16 +100,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ✅ 2) File statici (icone, css, js): CACHE FIRST
+  // ✅ 2) Assets statici: CACHE FIRST
   event.respondWith(
     (async () => {
-      const cached = await caches.match(req);
+      const cached = await caches.match(req, { ignoreSearch: true });
       if (cached) return cached;
 
       try {
         const resp = await fetch(req);
-
-        // non cacheare risposte strane
         if (!resp || resp.status !== 200 || resp.type === "opaque") return resp;
 
         const cache = await caches.open(CACHE_NAME);
@@ -107,8 +120,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// ✅ (OPZIONALE) Se vuoi forzare update manuale dalla pagina:
-// navigator.serviceWorker.controller.postMessage("SKIP_WAITING");
+// ✅ Forza update manuale dalla pagina (se vuoi)
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
