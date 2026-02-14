@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
@@ -219,6 +219,7 @@ textarea:focus,input:focus,select:focus{
   box-shadow:0 0 0 4px rgba(37,99,235,.10);
 }
 
+
 /* Note: textarea espandibile (si apre "a tendina" quando tocchi) */
 .noteExp{
   height:46px;
@@ -236,6 +237,8 @@ textarea:focus,input:focus,select:focus{
 .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
 .day-actions{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .day-actions::-webkit-scrollbar{display:none}
+
+
 
 /* Stato picker (modal) */
 .pick-grid{display:flex;flex-direction:column;gap:10px;margin-top:10px}
@@ -413,14 +416,6 @@ button:active{transform:scale(.99)}
   border-color:rgba(59,130,246,.72);
   border-left:6px solid rgba(59,130,246,.98);
   box-shadow:0 20px 42px rgba(59,130,246,.16);
-}
-
-/* 🧰 COLLEGATO SERBATOIO (nuovo stato - come USCITA sul posto) */
-.gc-serbatoio{
-  background:linear-gradient(135deg, rgba(132,204,22,.58), rgba(2,6,23,.28));
-  border-color:rgba(132,204,22,.72);
-  border-left:6px solid rgba(132,204,22,.98);
-  box-shadow:0 20px 42px rgba(132,204,22,.16);
 }
 
 /* ⛔ Rifiutato (rosso intenso) */
@@ -693,6 +688,7 @@ button:active{transform:scale(.99)}
   box-shadow:0 16px 34px rgba(59,130,246,.18);
 }
 
+
 /* ---- Extra UX (v47.1) ---- */
 
 /* Bottom nav: testo più leggibile */
@@ -711,6 +707,8 @@ button:active{transform:scale(.99)}
   box-shadow:0 0 0 8px rgba(34,197,94,.16), 0 22px 50px rgba(34,197,94,.12) !important;
 }
 
+
+
 /* ---- Gestione: Cliente compatto (default) ---- */
 #clienteBox.cliente-compact #via,
 #clienteBox.cliente-compact #citta,
@@ -726,12 +724,16 @@ button:active{transform:scale(.99)}
 
 /* =========================
    FIX NAV OVERLAY
+   - la bottom nav prima era più "alta" del suo height (i bottoni sbordavano)
+   - la porto ad altezza reale (auto) e uso quella per il padding dello scroll
    ========================= */
 .bottomnav{
   height:auto !important;
 }
 /* =========================
    FIX SOLO AUTOMATICO + GESTIONE (NON TOCCA CLIENTI)
+   - Evita il bug "non scrolla nulla" quando .screens è flex-container
+   - Aggiunge spazio finale così la bottom-nav non copre gli ultimi elementi
    ========================= */
 html:not([data-screen="clients"]) .screens{
   display:block;
@@ -743,6 +745,7 @@ html:not([data-screen="clients"]) .screen{
   flex:none !important;
   min-height:auto !important;
 }
+
 
 /* ---- Clienti: Tabs Oggi/Domani ---- */
 .daytabs{
@@ -769,6 +772,8 @@ html:not([data-screen="clients"]) .screen{
 }
 .daytab.disabled{opacity:.55; pointer-events:none; filter:saturate(.8);}
 .daytab .subdate{display:block;font-size:12px;color:var(--muted);font-weight:900;margin-top:2px}
+
+
 
 /* Day actions (Clienti): sempre visibili, scroll orizzontale se spazio poco */
 .day-actions{
@@ -901,11 +906,11 @@ html:not([data-screen="clients"]) .screen{
           </div>
 
           <div id="autoEmpty" class="box-soft box-light" style="margin-top:0;background:rgba(255,255,255,.62)">
-            <div style="font-weight:1000">Nessun SMS da gestire</div>
-            <div class="small muted" style="margin-top:6px">
+            <div style="font-weight:1000">Nessun SMS da gestire</div>            <div class="small muted" style="margin-top:6px">
               Quando arriva un SMS dall’automazione, lo troverai qui in <b>SMS in attesa</b> oppure in <b>Scheda presente</b>.
             </div>
           </div>
+
 
         </div>
       </div>
@@ -995,10 +1000,6 @@ html:not([data-screen="clients"]) .screen{
             <option value="richiamare">RICHIAMANO LORO</option>
             <option value="da_richiamare">DA RICHIAMARE</option>
             <option value="uscita">USCITA</option>
-
-            <!-- ✅ NUOVO -->
-            <option value="serbatoio">COLLEGATO SERBATOIO</option>
-
             <option value="rifiutato">RIFIUTATO</option>
             <option value="ripartita">RIPARTITA</option>
           </select>
@@ -1028,7 +1029,7 @@ html:not([data-screen="clients"]) .screen{
           </div>
 
           <div class="cardhead-right">
-            <div class="gpsToggleWrap" title="Attiva/Disattiva GPS automatico per interventi sul posto (USCITA / SERBATOIO)">
+            <div class="gpsToggleWrap" title="Attiva/Disattiva GPS automatico per interventi USCITA">
               <span class="gpsLblTxt" id="gpsLblTxt">GPS OFF</span>
               <label class="switch">
                 <input type="checkbox" id="gpsToggle">
@@ -1042,21 +1043,20 @@ html:not([data-screen="clients"]) .screen{
           <div class="daytabs" id="dayTabs">
             <button class="daytab active" id="tabOggi" type="button">OGGI</button>
             <button class="daytab" id="tabDomani" type="button">DOMANI</button>
-          </div>
+</div>
 
-          <div class="daytabs hidden" id="pastTabs"></div>
-          <div id="pastReminder" class="hidden box-soft box-light" style="margin:0 0 10px;background:rgba(255,255,255,.62)">
-            <div style="font-weight:1000">⚠️ Giornata non chiusa</div>
-            <div class="small muted" style="margin-top:6px">Apri la data qui sopra e premi <b>Chiudi + PDF</b>.</div>
-          </div>
+<div class="daytabs hidden" id="pastTabs"></div>
+<div id="pastReminder" class="hidden box-soft box-light" style="margin:0 0 10px;background:rgba(255,255,255,.62)">
+  <div style="font-weight:1000">⚠️ Giornata non chiusa</div>
+  <div class="small muted" style="margin-top:6px">Apri la data qui sopra e premi <b>Chiudi + PDF</b>.</div>
+</div>
 
           <div class="actions" style="margin-bottom:10px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-            <button class="btn-secondary" id="closeDayBtn" type="button">✅ Chiudi giornata</button>
-            <button class="btn-primary" id="pdfBtn" type="button">📤 PDF WhatsApp</button>
-            <button class="btn-secondary" id="filterUsciteBtn" type="button">🚗 Solo uscite</button>
-            <button class="btn-danger" id="deleteDayBtn" type="button">🗑️ Elimina giornata</button>
-          </div>
-
+  <button class="btn-secondary" id="closeDayBtn" type="button">✅ Chiudi giornata</button>
+  <button class="btn-primary" id="pdfBtn" type="button">📤 PDF WhatsApp</button>
+  <button class="btn-secondary" id="filterUsciteBtn" type="button">🚗 Solo uscite</button>
+  <button class="btn-danger" id="deleteDayBtn" type="button">🗑️ Elimina giornata</button>
+</div>
           <div id="cards"></div>
         </div>
       </div>
@@ -1092,20 +1092,25 @@ html:not([data-screen="clients"]) .screen{
 /* =========================
    VERSIONE
    ========================= */
-var APP_VERSION = "2026-02-14.v109";
-var BUILD_LABEL = "2026-02-14";
-var SW_VER = 109;
+var APP_VERSION = "2026-01-18.v108";
+var BUILD_LABEL = "2026-01-18";
+var SW_VER = 108;
 
 /* =========================
    HELPERS
    ========================= */
 function $(id){ return document.getElementById(id); }
 
+
+/* =========================
+   NAV HEIGHT SYNC (evita che la bottom bar copra il fondo)
+   ========================= */
 function syncNavRealHeight(){
   try{
     var nav = document.querySelector(".bottomnav");
     if(!nav) return;
     var h = (nav.getBoundingClientRect ? nav.getBoundingClientRect().height : nav.offsetHeight) || 0;
+    // margine extra per ombre/spazi e differenze browser
     h = Math.ceil(h + 10);
     document.documentElement.style.setProperty("--navRealH", h + "px");
   }catch(e){}
@@ -1121,8 +1126,6 @@ window.addEventListener("orientationchange", syncNavRealHeight);
 function safeTrim(s){ return (s||"").replace(/^\s+|\s+$/g,""); }
 function pad2(n){ n=parseInt(n,10); return (n<10 ? "0"+n : ""+n); }
 function nowHM(){ var d=new Date(); return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
-function hmFromTs(ts){ var d=new Date(ts||0); return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
-
 function cleanPhone(p){ return String(p||"").replace(/[^0-9+]/g,""); }
 function normKey(s){ return safeTrim(String(s||"")).toLowerCase().replace(/\s+/g," "); }
 function escapeHtml(s){
@@ -1146,23 +1149,6 @@ function insertAtCursor(input, text){
   }
 }
 
-/* ✅ Stati “sul posto” (come USCITA) */
-function isOnSiteState(s){
-  s = String(s||"");
-  return (s === "uscita" || s === "serbatoio");
-}
-
-/* ✅ ORARIO ARRIVO:
-   - se arriva da "SMS in attesa" => arrivoTs (timestamp inbox)
-   - se è nuovo cliente => createdTs (o ora fallback) */
-function getArrivoHM(c){
-  try{
-    if(c && typeof c.arrivoTs === "number" && c.arrivoTs > 0) return hmFromTs(c.arrivoTs);
-    if(c && typeof c.createdTs === "number" && c.createdTs > 0) return hmFromTs(c.createdTs);
-  }catch(e){}
-  return (c && c.ora) ? String(c.ora) : "";
-}
-
 /* =========================
    UID (dedupe e conteggi corretti)
    ========================= */
@@ -1174,6 +1160,7 @@ function ensureUid(it){
   if(!it.uid) it.uid = genUid();
 }
 function fallbackUniqKey(it){
+  // fallback stabile anche per dati vecchi (senza uid)
   var tel = cleanPhone(it && it.telefono);
   var base = tel ? ('tel:' + tel) : ('addr:' + normKey(it && it.nome) + '|' + normKey(it && it.via) + '|' + normKey(it && it.citta));
   return base + '|' + (it && it.ora || '') + '|' + (it && it.stato || '') + '|' + (it && it.problema || '') + '|' + (it && it.note || '');
@@ -1188,6 +1175,8 @@ function stableDedupKey(it){
   base += "|ora:" + safeTrim(it.ora||"");
   return base;
 }
+
+// ✅ dedupe "morbido": se lo stesso intervento finisce due volte nello snapshot, tengo l’ultima versione
 function uniqueByUidOrKey(arr){
   arr = arr || [];
   var map = {};
@@ -1198,7 +1187,7 @@ function uniqueByUidOrKey(arr){
     var k = stableDedupKey(it);
     if(!k) continue;
     if(!map[k]) order.push(k);
-    map[k] = it;
+    map[k] = it; // override
   }
   var out = [];
   for(var j=0;j<order.length;j++){
@@ -1209,6 +1198,7 @@ function uniqueByUidOrKey(arr){
   }
   return out;
 }
+
 function mergeUniqueLists(listA, listB){
   return uniqueByUidOrKey([].concat(listA||[], listB||[]));
 }
@@ -1220,10 +1210,6 @@ function ensureUidsEverywhere(){
       ensureUid(c);
       if(typeof c.fatto !== 'boolean') c.fatto = false;
       if(typeof c.giorno === 'undefined') c.giorno = 0;
-
-      // ✅ compatibilità nuovi campi orario
-      if(typeof c.createdTs !== 'number') c.createdTs = 0;
-      if(typeof c.arrivoTs !== 'number') c.arrivoTs = 0;
     }
   }catch(e){}
   try{
@@ -1236,15 +1222,12 @@ function ensureUidsEverywhere(){
         ensureUid(it);
         if(typeof it.fatto !== 'boolean') it.fatto = false;
         if(typeof it.giorno === 'undefined') it.giorno = 0;
-
-        // ✅ compatibilità nuovi campi orario
-        if(typeof it.createdTs !== 'number') it.createdTs = 0;
-        if(typeof it.arrivoTs !== 'number') it.arrivoTs = 0;
       }
       snap.items = uniqueByUidOrKey(snap.items);
     }
   }catch(e){}
 }
+
 
 /* =========================
    DOM refs
@@ -1303,6 +1286,7 @@ var filterUsciteBtn = $("filterUsciteBtn");
 
 var tabOggi = $("tabOggi");
 var tabDomani = $("tabDomani");
+var tabIeri = $("tabIeri");
 var pdfBtn = $("pdfBtn");
 
 var closeDayBtn = $("closeDayBtn");
@@ -1338,6 +1322,8 @@ function setScreen(name){
   $("nav_manage").classList.toggle("active", name === "manage");
   $("nav_clients").classList.toggle("active", name === "clients");
 
+
+  // ✅ Ogni volta che apri CLIENTI aggiorno tabs e lista (anche se OGGI è vuoto)
   if(name === "clients"){
     try{ refreshDayTabsUI(); }catch(e){}
     try{ render(); }catch(e){}
@@ -1345,9 +1331,12 @@ function setScreen(name){
 
   function hardTop(){
     try{
+      // NON tocco lo scroll della pagina (html/body): lo scroll è interno
       var wrap = document.querySelector("main.screens") || document.querySelector(".screens");
       if(wrap && name !== "clients") wrap.scrollTop = 0;
 
+      // In Clienti porto la lista in alto SOLO quando apro Clienti dal menu
+      // (quando apro da "Mostra cliente", ci pensa scrollToClientByKey)
       if(name === "clients" && !window.__gotoClientKey){
         var cwrap = $("cards");
         if(cwrap) cwrap.scrollTop = 0;
@@ -1358,6 +1347,8 @@ function setScreen(name){
   hardTop();
   requestAnimationFrame(hardTop);
 
+  // Per Safari: il "ritardo" serve spesso nelle schermate con scroll generale,
+  // ma in Clienti darebbe fastidio (fa risaltare lo scroll dopo un attimo).
   if(name !== "clients"){
     setTimeout(hardTop, 120);
   }
@@ -1381,17 +1372,25 @@ var presentNotifs = [];
 var selectedInboxIndex = -1;
 
 var manualMode = false;
-var newClientMode = false;
+var newClientMode = false; // modalità inserimento cliente manuale (campi completi)
+
+// filtro lista clienti ("Solo uscite")
 var showOnlyUscite = false;
 
+// tab Clienti: 0=OGGI, 1=DOMANI, 2=GIORNATA PRECEDENTE
 var selectedDayTab = 0;
 var selectedPastKey = "";
 
+// giornate chiuse / snapshot per PDF e per "ieri"
 var daySnapshots = {};
 var lastDateKey = "";
 
 /* =========================
-   GPS (Auto chiusura interventi sul posto)
+   GPS (Auto chiusura USCITA)
+   - Toggle ON/OFF
+   - Funziona SOLO se hai aperto il navigatore da una card USCITA
+   - Quando sei a <100m dalla destinazione e poi ti allontani >100m per >3 minuti
+     alla riapertura dell'app chiede conferma per segnare FATTO
    ========================= */
 var gpsEnabled = false;
 var gpsWatchId = null;
@@ -1419,10 +1418,12 @@ function clearGpsSession(){
   gpsSession = null;
   saveGpsSession();
 }
+
 function updateGpsToggleUI(){
   if(gpsToggle) gpsToggle.checked = !!gpsEnabled;
   if(gpsLblTxt) gpsLblTxt.textContent = gpsEnabled ? 'GPS ON' : 'GPS OFF';
 }
+
 function haversineMeters(lat1, lon1, lat2, lon2){
   function toRad(x){ return x * Math.PI / 180; }
   var R = 6371000;
@@ -1433,6 +1434,7 @@ function haversineMeters(lat1, lon1, lat2, lon2){
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
+
 function findClientIndexByUid(uid){
   uid = String(uid||'');
   if(!uid) return -1;
@@ -1441,6 +1443,7 @@ function findClientIndexByUid(uid){
   }
   return -1;
 }
+
 function stopGpsWatch(){
   try{
     if(gpsWatchId !== null && navigator.geolocation && navigator.geolocation.clearWatch){
@@ -1449,6 +1452,7 @@ function stopGpsWatch(){
   }catch(e){}
   gpsWatchId = null;
 }
+
 function startGpsWatch(){
   if(!gpsEnabled) return;
   if(!navigator.geolocation){
@@ -1460,6 +1464,7 @@ function startGpsWatch(){
     gpsWatchId = navigator.geolocation.watchPosition(function(pos){
       gpsHandlePosition(pos);
     }, function(err){
+      // se l'utente blocca il GPS, spengo il toggle
       if(err && (err.code === 1)){
         gpsEnabled = false;
         saveGpsEnabled();
@@ -1470,6 +1475,7 @@ function startGpsWatch(){
     }, { enableHighAccuracy:true, maximumAge:30000, timeout:15000 });
   }catch(e){}
 }
+
 function gpsHandlePosition(pos){
   if(!gpsEnabled) return;
   if(!gpsSession || !gpsSession.active) return;
@@ -1481,6 +1487,7 @@ function gpsHandlePosition(pos){
 
   gpsSession.lastPos = { lat: lat, lng: lng, ts: now };
 
+  // session deve puntare ancora ad un cliente esistente
   var ix = findClientIndexByUid(gpsSession.clientUid);
   if(ix < 0){
     clearGpsSession();
@@ -1495,6 +1502,7 @@ function gpsHandlePosition(pos){
   var dist = haversineMeters(lat, lng, gpsSession.dest.lat, gpsSession.dest.lng);
   gpsSession.lastDistanceM = Math.round(dist);
 
+  // vicino destinazione
   if(dist <= GPS_NEAR_M){
     gpsSession.lastNearAt = now;
     gpsSession.pendingPrompt = false;
@@ -1503,20 +1511,24 @@ function gpsHandlePosition(pos){
     return;
   }
 
+  // lontano: se ero stato vicino prima, parte timer lontananza
   if(gpsSession.lastNearAt){
     var awayFor = now - gpsSession.lastNearAt;
     if(awayFor >= GPS_AWAY_MS){
+      // pronto a chiedere alla riapertura
       gpsSession.pendingPrompt = true;
     }
   }
 
   saveGpsSession();
 }
+
 function gpsCheckNowAndMaybePrompt(){
   if(!gpsEnabled) return;
   if(!gpsSession || !gpsSession.active) return;
   if(!navigator.geolocation) return;
 
+  // evita spam: se ho già chiesto da poco
   var now = Date.now();
   if(gpsSession.lastPromptAt && (now - gpsSession.lastPromptAt) < GPS_MIN_PROMPT_GAP_MS) return;
 
@@ -1524,20 +1536,23 @@ function gpsCheckNowAndMaybePrompt(){
     gpsHandlePosition(pos);
     gpsMaybePrompt();
   }, function(err){
+    // ignoro
   }, { enableHighAccuracy:true, maximumAge:20000, timeout:12000 });
 }
+
 function gpsMaybePrompt(){
   if(!gpsEnabled) return;
   if(!gpsSession || !gpsSession.active) return;
   if(!gpsSession.pendingPrompt) return;
 
+  // devo ancora avere il cliente
   var ix = findClientIndexByUid(gpsSession.clientUid);
   if(ix < 0){
     clearGpsSession();
     return;
   }
   var c = clients[ix];
-  if(!c || !isOnSiteState((c.stato||''))){
+  if(!c || (c.stato||'') !== 'uscita'){
     clearGpsSession();
     return;
   }
@@ -1549,12 +1564,14 @@ function gpsMaybePrompt(){
     'Hai terminato intervento di <b>'+escapeHtml(gpsSession.clientName||c.nome||'')+'</b>?',
     [
       {label:'NO', className:'btn-secondary', onClick:function(){
+        // reset richiesta ma tengo sessione
         gpsSession.pendingPrompt = false;
         saveGpsSession();
         closeModal();
       }},
       {label:'SI', className:'btn-primary', onClick:function(){
         closeModal();
+        // segno FATTO
         try{
           c.fatto = true;
           c.fattoTs = Date.now();
@@ -1568,9 +1585,11 @@ function gpsMaybePrompt(){
     ]
   );
 }
+
 function gpsGeocodeAddress(addr, onOk, onErr){
   addr = safeTrim(addr||'');
   if(!addr){ if(onErr) onErr('noaddr'); return; }
+  // OpenStreetMap Nominatim (senza API key)
   var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr);
   fetch(url, {
     method:'GET',
@@ -1587,12 +1606,14 @@ function gpsGeocodeAddress(addr, onOk, onErr){
     onErr && onErr('nofound');
   }).catch(function(){ onErr && onErr('fetch'); });
 }
+
 function gpsStartNavigationForClient(index, addr){
   if(!gpsEnabled) return;
   var c = clients[index];
   if(!c) return;
-  if(!isOnSiteState((c.stato||''))) return;
+  if((c.stato||'') !== 'uscita') return;
 
+  // creo sessione
   gpsSession = {
     active:true,
     clientUid: String(c.uid||''),
@@ -1608,6 +1629,7 @@ function gpsStartNavigationForClient(index, addr){
   };
   saveGpsSession();
 
+  // geocode in background
   gpsGeocodeAddress(addr, function(ll){
     if(!gpsSession || !gpsSession.active) return;
     gpsSession.dest = ll;
@@ -1619,9 +1641,8 @@ function gpsStartNavigationForClient(index, addr){
   });
 }
 
-/* =========================
-   Gestione vista cliente (compatta)
-   ========================= */
+
+// gestione vista cliente (compatta di default)
 function setClienteCompact(on){
   if(!clienteBox) return;
   clienteBox.classList.remove("hidden");
@@ -1674,16 +1695,14 @@ function caricaDati(){
     if(dati) clients = JSON.parse(dati) || [];
   }catch(e){ clients=[]; }
 
+  // ✅ default: compatibilità con vecchi dati
   try{
     for(var i=0;i<clients.length;i++){
       if(typeof clients[i].fatto !== "boolean") clients[i].fatto = false;
-      if(typeof clients[i].giorno === "undefined") clients[i].giorno = 0;
-
-      // ✅ compatibilità nuovi campi orario
-      if(typeof clients[i].createdTs !== "number") clients[i].createdTs = 0;
-      if(typeof clients[i].arrivoTs !== "number") clients[i].arrivoTs = 0;
+      if(typeof clients[i].giorno === "undefined") clients[i].giorno = 0; // 0=OGGI, 1=DOMANI
     }
   }catch(e){}
+
 }
 
 function salvaInbox(){ try{ localStorage.setItem("rapportiInbox", JSON.stringify(inbox)); }catch(e){} touchUpdate(); }
@@ -1813,9 +1832,7 @@ function computeDayHash(g){
         c.problema||"",
         c.note||"",
         c.stato||"",
-        c.fatto?1:0,
-        c.arrivoTs||0,
-        c.createdTs||0
+        c.fatto?1:0
       ].join("§"));
     }
     rows.sort();
@@ -1824,6 +1841,7 @@ function computeDayHash(g){
     return "";
   }
 }
+
 function computeTodayHash(){
   return computeDayHash(0);
 }
@@ -1833,15 +1851,19 @@ function isDayClosed(key){
   var snap = daySnapshots[key];
   if(!snap || !snap.closed) return false;
 
+  // ✅ SOLO OGGI: se cambi la lista di OGGI dopo la chiusura, la giornata torna "da chiudere"
   try{
     if(key === getTodayKey() && snap.todayHash){
       var curHash = computeTodayHash();
       if(curHash !== snap.todayHash) return false;
     }
   }catch(e){}
+
   return true;
 }
+
 function invalidateTodayClosure(){
+  // ✅ se la giornata di OGGI era stata chiusa, qualsiasi modifica la riapre
   try{
     var k = getTodayKey();
     if(daySnapshots && daySnapshots[k] && daySnapshots[k].closed){
@@ -1859,6 +1881,7 @@ function runDailyRollover(){
     var todayKey = getTodayKey();
     var lastKeyRaw = loadLastDateKey();
 
+    // ✅ Prima installazione / storage vuoto: imposto la data di oggi per poter fare il rollover domani
     if(!lastKeyRaw){
       saveLastDateKey(todayKey);
       return;
@@ -1872,6 +1895,7 @@ function runDailyRollover(){
     while(cur < todayKey && guard < 40){
       guard++;
 
+      // ✅ Snapshot della giornata che finisce (cur): SOLO ciò che era visibile in OGGI in quel momento
       var endingToday = [];
       for(var i=0;i<clients.length;i++){
         if((clients[i].giorno||0)===0) endingToday.push(clients[i]);
@@ -1883,6 +1907,7 @@ function runDailyRollover(){
           if(daySnapshots[cur] && Array.isArray(daySnapshots[cur].items)) existing = daySnapshots[cur].items;
         }catch(e){ existing = []; }
 
+        // ✅ Merge: se la giornata era già stata chiusa, dentro allo snapshot potrebbero esserci le USCITE spostate a DOMANI
         var merged = mergeUniqueLists(existing, endingToday.map(function(x){ return deepClone(x); }));
 
         var snap = daySnapshots[cur] || {
@@ -1902,20 +1927,23 @@ function runDailyRollover(){
 
         snap.items = uniqueByUidOrKey(merged.map(function(x){ return deepClone(x); }));
 
+        // ✅ Nel PDF dei giorni passati: le USCITE non fatte diventano "USCITA DOMANI"
         try{
           (snap.items||[]).forEach(function(it){
             if(!it) return;
-            if(!it.fatto && isOnSiteState((it.stato||""))) it.carryOver = true;
+            if(!it.fatto && (it.stato||"")==="uscita") it.carryOver = true;
           });
         }catch(e){}
 
         daySnapshots[cur] = snap;
       }
 
+      // ✅ Nuovo giorno: svuoto OGGI (tutto passa a ieri) 
       clients = clients.filter(function(c){
         return (c.giorno||0)!==0;
       });
 
+      // ✅ DOMANI -> OGGI
       for(var j=0;j<clients.length;j++){
         if((clients[j].giorno||0)===1) clients[j].giorno = 0;
       }
@@ -1936,16 +1964,20 @@ function getPastKeysPending(){
     for(var k in (daySnapshots||{})){
       var snap = daySnapshots[k];
       if(!snap) continue;
+      // solo giorni davvero passati
       if(k >= todayKey) continue;
       if(snap.pdfSent) continue;
       if(!Array.isArray(snap.items) || snap.items.length===0) continue;
       out.push(k);
     }
+    // più recente prima (IERI in cima)
     out.sort();
     out.reverse();
   }catch(e){}
   return out;
 }
+
+
 
 function bindDayTabs(){
   if(tabOggi){
@@ -1971,6 +2003,7 @@ function bindDayTabs(){
 }
 
 function refreshDayTabsUI(){
+  // labels OGGI/DOMANI
   if(tabOggi){
     tabOggi.classList.toggle("active", selectedDayTab===0);
     tabOggi.innerHTML = 'OGGI<span class="subdate">'+fmtDMFromKey(getTodayKey())+'</span>';
@@ -1980,8 +2013,10 @@ function refreshDayTabsUI(){
     tabDomani.innerHTML = 'DOMANI<span class="subdate">'+fmtDMFromKey(getTomorrowKey())+'</span>';
   }
 
+  // Giorni passati pendenti (uno per ogni giornata senza PDF)
   var keys = getPastKeysPending();
 
+  // Se ero su un giorno passato ma non esiste più → torno a OGGI
   if(selectedDayTab===2){
     if(!selectedPastKey || keys.indexOf(selectedPastKey) < 0){
       if(keys.length){
@@ -1994,6 +2029,7 @@ function refreshDayTabsUI(){
     }
   }
 
+  // Past tabs dinamiche (compaiono SOLO se servono)
   if(pastTabs){
     pastTabs.innerHTML = "";
     if(keys.length){
@@ -2021,10 +2057,12 @@ function refreshDayTabsUI(){
     }
   }
 
+  // reminder (solo quando stai guardando un giorno passato)
   if(pastReminder){
     pastReminder.classList.toggle("hidden", !(selectedDayTab===2 && !!selectedPastKey));
   }
 
+  // Bottoni principali in base al tab
   if(pdfBtn){
     if(selectedDayTab===1){
       pdfBtn.classList.add("hidden");
@@ -2045,16 +2083,18 @@ function refreshDayTabsUI(){
     }
   }
 
+  // PDF click
   if(pdfBtn){
     pdfBtn.onclick = function(){
-      if(selectedDayTab===1) return;
+      if(selectedDayTab===1) return; // DOMANI non ha PDF
       var dayKey = getCurrentViewDateKey();
 
+      // ✅ OGGI: se non hai chiuso → chiusura + PDF senza secondo click
       if(dayKey === getTodayKey()){
         if(!isDayClosed(dayKey)){
           openModal('Prima devi chiudere la giornata per poter inviare il PDF.', [
-            {label:'Annulla', cls:'btn-secondary', onClick: closeModal},
-            {label:'Chiudi giornata', cls:'btn-primary', onClick: function(){
+            {label:'Annulla', cls:'btn', onClick: closeModal},
+            {label:'Chiudi giornata', cls:'btn btn-primary', onClick: function(){
               closeModal();
               chiudiGiornata(dayKey, function(){ generaPdfGiornata(dayKey); });
             }}
@@ -2065,6 +2105,7 @@ function refreshDayTabsUI(){
         return;
       }
 
+      // ✅ Giorni passati: bottone unico (chiude + PDF)
       closeAndPdfPastDay(dayKey);
     };
   }
@@ -2090,6 +2131,7 @@ function refreshDayTabsUI(){
     };
   }
 
+
   if(deleteDayBtn){
     deleteDayBtn.onclick = function(){
       cancellaGiornata();
@@ -2106,7 +2148,6 @@ function statoLabel(s){
     richiamare:"RICHIAMANO LORO",
     da_richiamare:"DA RICHIAMARE",
     uscita:"USCITA",
-    serbatoio:"COLLEGATO SERBATOIO",
     rifiutato:"RIFIUTATO",
     ripartita:"RIPARTITA"
   };
@@ -2120,13 +2161,14 @@ function computeDayTotals(list){
   var notDone = 0;
   for(var i=0;i<list.length;i++){
     var it = list[i] || {};
-    if(isOnSiteState((it.stato||""))){
+    if((it.stato||"") === "uscita"){
       if(!!it.fatto) done++;
       else notDone++;
     }
   }
   return { total: total, done: done, notDone: notDone };
 }
+
 
 /* =========================
    PARSE SMS
@@ -2152,6 +2194,7 @@ function parseSMS(t){
   var idPos  = findPos(/\bID\s*Apparecchio\b/i);
   var matPos = findPos(/\bMatricola\b/i);
 
+  // TELEFONO
   if(telPos >= 0){
     var tail = t.slice(telPos);
     var mTel = tail.match(/\bTel\.?\s*[:\-]?\s*([+]?[\d\s]+)/i);
@@ -2161,6 +2204,7 @@ function parseSMS(t){
     if(mMob) r.telefono = mMob[1];
   }
 
+  // ID APPARECCHIO (lettere + numeri)
   if(idPos >= 0){
     var tailId = t.slice(idPos);
     var mId = tailId.match(/\bID\s*Apparecchio\b\s*[:\-]?\s*([0-9A-Za-z\/\-]+)/i);
@@ -2169,12 +2213,14 @@ function parseSMS(t){
     }
   }
 
+  // MATRICOLA
   if(matPos >= 0){
     var tailMat = t.slice(matPos);
     var mMat = tailMat.match(/\bMatricola\b\s*[:\-]?\s*([0-9A-Za-z\-\/]+)/i);
     if(mMat) r.matricola = safeTrim(mMat[1]);
   }
 
+  // MODELLO
   if(modPos >= 0){
     var end = t.length;
     var candidates = [];
@@ -2191,6 +2237,7 @@ function parseSMS(t){
     if(mMod) r.modello = safeTrim(mMod[1].replace(/\s*-\s*$/,"").trim());
   }
 
+  // NOME + INDIRIZZO
   var pre = t;
   if(telPos > 0) pre = t.slice(0, telPos).trim();
   else if(modPos > 0) pre = t.slice(0, modPos).trim();
@@ -2263,6 +2310,7 @@ function safeIdFromKey(key){
 }
 function findClientIndexByKey(key, giornoPreferito){
   if(!key) return -1;
+  // Preferisci cercare prima in un giorno specifico (es. OGGI)
   if(typeof giornoPreferito === "number"){
     for(var i=0;i<clients.length;i++){
       var c = clients[i];
@@ -2288,6 +2336,10 @@ function updateAutoBadge(){
   if(kpi_inbox) kpi_inbox.textContent = "📩 " + (inbox.length || 0) + " in attesa";
   if(kpi_present) kpi_present.textContent = "⚠️ " + (presentNotifs.length || 0) + " avvisi";
 }
+
+/* =========================
+   AUTOBOX VISIBILITY
+   ========================= */
 function updateAutoBoxVisibility(){
   if((presentNotifs.length || 0) === 0 && presentWrap) presentWrap.classList.add("hidden");
   if((inbox.length || 0) === 0 && inboxWrap) inboxWrap.classList.add("hidden");
@@ -2315,11 +2367,13 @@ function scrollToClientByKey(key){
     var rW  = wrap.getBoundingClientRect();
     var top = (rEl.top - rW.top) + wrap.scrollTop;
 
+    // centro l'elemento nel viewport dello scroller
     var target = top - (wrap.clientHeight/2) + (el.offsetHeight/2);
     if(target < 0) target = 0;
 
     wrap.scrollTo({ top: target, behavior: "smooth" });
   }catch(e){
+    // fallback
     try{ el.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e2){}
   }
 }
@@ -2361,15 +2415,17 @@ function setLedOk(on){
 /* =========================
    MODALITÀ
    ========================= */
+
 function enterNewClientMode(){
   newClientMode = true;
 
+  // UI: nascondo la parte "Incolla SMS" e preparo i campi cliente completi
   if(fase1) fase1.classList.add("hidden");
   if(newClientBtn) newClientBtn.classList.add("hidden");
 
   if(clienteBox){
     clienteBox.classList.remove("hidden");
-    setClienteCompact(false);
+    setClienteCompact(false); // mostra tutti i campi
   }
 
   resetCampiGestione();
@@ -2379,14 +2435,16 @@ function enterNewClientMode(){
 
   updateToggleClienteLabel();
 }
+
 function exitNewClientMode(){
   if(!newClientMode) return;
   newClientMode = false;
 
   resetUICompleta();
-  applyMode();
+  applyMode();            // ripristina visibilità (fase1 + pulsanti)
   updateToggleClienteLabel();
 }
+
 function applyMode(){
   if(manualMode){
     fase1.classList.remove("hidden");
@@ -2398,6 +2456,7 @@ function applyMode(){
     manualModeBtn.textContent = "✍️ Modalità manuale";
   }
 
+  // Modalità "Nuovo cliente": incolla nascosto + bottone Nuovo nascosto
   if(newClientMode){
     if(fase1) fase1.classList.add("hidden");
     if(newClientBtn) newClientBtn.classList.add("hidden");
@@ -2642,6 +2701,7 @@ function renderPresent(){
         setTimeout(function(){
           scrollToClientByKey(it.key);
           highlightOnceByKey(it.key);
+          // dopo la navigazione, rimuovo il flag
           setTimeout(function(){ window.__gotoClientKey = null; }, 250);
         }, 80);
       };
@@ -2783,9 +2843,11 @@ function resetUICompleta(){
   disarmFase2();
   selectedInboxIndex = -1;
 
+  // se ero in "Nuovo cliente", esco automaticamente
   newClientMode = false;
   updateToggleClienteLabel();
 }
+
 
 /* =========================
    FASE 1
@@ -2843,6 +2905,7 @@ addBtn.onclick=function(){
 
   var newKey = clientKeyFromFields(nome.value, via.value, citta.value, telefono.value);
   if(findClientIndexByKey(newKey, 0) >= 0 && (function(){
+    // blocco duplicati SOLO in OGGI
     var idxExist = findClientIndexByKey(newKey, 0);
     return (idxExist>=0 && (clients[idxExist].giorno||0)===0);
   })()){
@@ -2852,25 +2915,10 @@ addBtn.onclick=function(){
     return;
   }
 
-  var nowTs = Date.now();
-
-  // ✅ arrivoTs = orario ARRIVO SMS in attesa (se sto aggiungendo da Inbox)
-  var arrivoTs = nowTs;
-  try{
-    if(selectedInboxIndex >= 0 && inbox[selectedInboxIndex] && inbox[selectedInboxIndex].ts){
-      arrivoTs = inbox[selectedInboxIndex].ts;
-    }
-  }catch(e){}
-
   clients.push({
     giorno:0,
     uid: genUid(),
     dataKey: getTodayKey(),
-
-    // ✅ nuovi campi (PDF ORARIO = arrivoTs)
-    createdTs: nowTs,
-    arrivoTs: arrivoTs,
-
     ora: nowHM(),
     nome:nome.value,
     via:via.value,
@@ -2883,6 +2931,7 @@ addBtn.onclick=function(){
     stato:stato.value,
     note:note.value,
 
+    // ✅ v52: fatto di default
     fatto:false,
     fattoTs:0
   });
@@ -2941,24 +2990,33 @@ function closeModal(){
   modalRoot.innerHTML="";
   unlockBodyScroll();
 }
+
 function openModal(a, b, c){
+  // Compatibilità chiamate:
+  // 1) openModal(htmlBody, buttons)
+  // 2) openModal(title, buttons, htmlBody)
+  // 3) openModal(title, htmlBody, buttons)
   var title = "";
   var body  = "";
   var btns  = [];
 
   if(Array.isArray(b) && typeof c === "string"){
+    // (title, buttons, body)
     title = String(a || "");
     body  = String(c || "");
     btns  = b;
   } else if(typeof b === "string" && Array.isArray(c)){
+    // (title, body, buttons)
     title = String(a || "");
     body  = String(b || "");
     btns  = c;
   } else if(Array.isArray(b) && typeof c === "undefined"){
+    // (body, buttons) vecchia
     title = "";
     body  = String(a || "");
     btns  = b;
   } else {
+    // fallback
     title = "";
     body  = String(a || "");
     btns  = Array.isArray(b) ? b : [];
@@ -2997,6 +3055,7 @@ function openModal(a, b, c){
   });
 }
 
+
 /* =========================
    STATO PICKER (leggibile, no tendina)
    ========================= */
@@ -3009,7 +3068,6 @@ function openStatoPicker(i){
     {v:"richiamare",   label:"🔁 RICHIAMANO LORO"},
     {v:"da_richiamare",label:"⏳ DA RICHIAMARE"},
     {v:"uscita",       label:"🚗 USCITA"},
-    {v:"serbatoio",    label:"🧰 COLLEGATO SERBATOIO"},
     {v:"rifiutato",    label:"⛔ RIFIUTATO"},
     {v:"ripartita",    label:"✅ RIPARTITA"}
   ];
@@ -3036,13 +3094,12 @@ function openStatoPicker(i){
         try{ ev.stopPropagation(); }catch(e){}
         var v = b.getAttribute("data-v") || "";
         c.stato = v;
-
-        // ✅ FATTO valido solo per stati “sul posto”
-        if(!isOnSiteState(v)){
+        // ✅ se esco da USCITA, tolgo FATTO (altrimenti rimane la card verde senza tasto)
+        if(v !== "uscita"){
           c.fatto = false;
           c.fattoTs = 0;
         }
-
+        
         if((c.giorno||0)===0) invalidateTodayClosure();
         closeModal();
         render();
@@ -3068,6 +3125,7 @@ function isCompleteClient(c){
             safeTrim(c.telefono) && safeTrim(c.modello) &&
             safeTrim(c.idApparecchio) && safeTrim(c.matricola));
 }
+
 function toggleDoneClient(i){
   try{
     var c = clients[i];
@@ -3089,14 +3147,17 @@ function buildCard(c, i, meta){
   d.className="gc-card gc-"+(c.stato||"none");
   if(isCompleteClient(c)) d.classList.add("gc-complete");
 
+  // stile FATTO
   if(!!c.fatto) d.classList.add("gc-done");
 
+  // id per highlight (solo per lista attiva)
   if(!isSnap){
     var cKey = clientKeyFromClientObj(c);
     d.id = safeIdFromKey(cKey);
     if(hasPresentKey(cKey) >= 0) d.classList.add("gc-highlight-sticky");
   }
 
+  // badge stato (clickabile SOLO se non in giornata precedente)
   var stEl=document.createElement("span");
   stEl.className="gc-stato";
   stEl.textContent=statoLabel(c.stato);
@@ -3111,11 +3172,13 @@ function buildCard(c, i, meta){
   }
   d.appendChild(stEl);
 
+  // titolo
   var title=document.createElement("div");
   title.className="gc-title";
   title.textContent=c.nome||"";
   d.appendChild(title);
 
+  // orario + data arrivo
   try{
     var dateKeyForLabel = (c && c.dataKey) ? String(c.dataKey) : '';
     if(!dateKeyForLabel){
@@ -3124,7 +3187,7 @@ function buildCard(c, i, meta){
       else dateKeyForLabel = getTodayKey();
     }
     var dateLbl = dateKeyForLabel ? fmtDMFromKey(dateKeyForLabel) : '';
-    var hm = getArrivoHM(c) || (c.ora || '');
+    var hm = c.ora || '';
     if(hm || dateLbl){
       var line = '⏰ Arrivo: ' + (dateLbl ? (dateLbl + ' ') : '') + (hm || '');
       d.appendChild(row(line.trim()));
@@ -3143,6 +3206,7 @@ function buildCard(c, i, meta){
     a.textContent="📍 "+addr;
     a.onclick=function(ev){
       try{ ev.stopPropagation(); }catch(e){}
+      // GPS: se attivo e questa card e' USCITA, aggancio la destinazione
       try{ if(!isSnap) gpsStartNavigationForClient(i, addr); }catch(e2){}
       window.open("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(addr));
     };
@@ -3165,12 +3229,14 @@ function buildCard(c, i, meta){
   if(c.problema) d.appendChild(row("❗ Problema: "+c.problema));
   if(c.note) d.appendChild(row("📝 Note: "+c.note));
 
+  // ===== BOTTONI =====
   var act=document.createElement("div");
   act.className="gc-actions";
 
   var viewIsToday = (selectedDayTab===0);
   var viewIsTomorrow = (selectedDayTab===1);
 
+  // 1) GIORNATA PRECEDENTE: solo elimina (no fatto/sposta/modifica)
   if(isSnap){
     var delS=document.createElement("button");
     delS.className="btn-danger";
@@ -3184,6 +3250,7 @@ function buildCard(c, i, meta){
     return d;
   }
 
+  // 2) DOMANI: solo sposta a oggi + elimina
   if(viewIsTomorrow){
     var mv2=document.createElement("button");
     mv2.className="btn-soft";
@@ -3208,9 +3275,13 @@ function buildCard(c, i, meta){
     return d;
   }
 
-  var canExtra = isOnSiteState((c.stato||"")) && viewIsToday;
+
+  // 3) OGGI: extra bottoni SEMPRE quando stato USCITA
+  // (anche se la giornata era stata chiusa: le modifiche riaprono la giornata e richiedono nuova chiusura prima del PDF)
+  var canExtra = ((c.stato||"") === "uscita") && viewIsToday;
 
   if(canExtra){
+    // ✅ quando è FATTO: rimangono SOLO ANNULLA + ELIMINA
     if(!!c.fatto){
       var und=document.createElement("button");
       und.className="btn-undone";
@@ -3228,6 +3299,7 @@ function buildCard(c, i, meta){
       return d;
     }
 
+    // ✅ quando NON è fatto: bottoni completi
     var doneBtn=document.createElement("button");
     doneBtn.className="btn-done";
     doneBtn.textContent="✅ FATTO";
@@ -3262,6 +3334,7 @@ function buildCard(c, i, meta){
     return d;
   }
 
+  // default (nessun filtro): solo modifica + elimina
   var ed2=document.createElement("button");
   ed2.className="btn-secondary";
   ed2.textContent="✏️ Modifica";
@@ -3281,6 +3354,7 @@ function buildCard(c, i, meta){
 function render(){
   cards.innerHTML="";
 
+  // aggiorna pulsante filtro
   if(filterUsciteBtn){
     filterUsciteBtn.textContent = showOnlyUscite ? "Mostra tutti" : "Solo uscite";
     filterUsciteBtn.classList.toggle("active", showOnlyUscite);
@@ -3317,6 +3391,7 @@ function render(){
     return;
   }
 
+  // raggruppo per comune
   var order = [];
   var groups = {};
   for(var ii=0; ii<items.length; ii++){
@@ -3457,13 +3532,11 @@ function openEdit(i){
       }
 
       c.stato = modal.querySelector("#e_stato").value;
-
-      // ✅ se non è “sul posto”, azzero eventuale FATTO
-      if(!isOnSiteState(c.stato)){
+      // ✅ se non è USCITA, azzero eventuale FATTO
+      if(c.stato !== "uscita"){
         c.fatto = false;
         c.fattoTs = 0;
       }
-
       c.note = modal.querySelector("#e_note").value;
 
       if((c.giorno||0)===0) invalidateTodayClosure();
@@ -3498,6 +3571,7 @@ function openDeleteSnapshot(dayKey, snapIndex){
     };
   });
 }
+
 function openDelete(i){
   showModal(function(m){
     m.innerHTML=
@@ -3515,7 +3589,7 @@ function openDelete(i){
         salvaPresent();
         renderPresent();
       }
-      try{ if((clients[i]||{}).giorno===0) invalidateTodayClosure(); }catch(e){}
+            try{ if((clients[i]||{}).giorno===0) invalidateTodayClosure(); }catch(e){}
       clients.splice(i,1);
       closeModal();
       render();
@@ -3540,12 +3614,14 @@ function cancellaGiornata(){
     m.querySelector('#noAll').onclick = closeModal;
     m.querySelector('#siAll').onclick = function(){
       if(selectedDayTab===2 && selectedPastKey){
+        // cancello snapshot
         delete daySnapshots[selectedPastKey];
         salvaDaySnapshots();
         selectedDayTab = 0;
         selectedPastKey = '';
         salvaDayTab();
       }else{
+        // cancello clienti della tab corrente
         var g = (selectedDayTab===1) ? 1 : 0;
         clients = clients.filter(function(c){ return (c.giorno||0)!==g; });
         salvaDati();
@@ -3573,12 +3649,14 @@ function chiudiGiornata(dayKey, afterCloseCb){
   dayKey = String(dayKey || getTodayKey());
   const todayKey = getTodayKey();
 
+  // Per sicurezza: chiusura guidata SOLO per OGGI. Per i giorni passati usa il flusso dedicato.
   if(dayKey !== todayKey){
     closeAndPdfPastDay(dayKey);
     if(typeof afterCloseCb === "function") afterCloseCb();
     return;
   }
 
+  // Prendo SOLO gli interventi attualmente presenti in OGGI (senza includere cose vecchie/snapshot)
   const listNow = clients.filter(c => (c.giorno || 0) === 0);
   if(!listNow.length){
     showToast("Nessun intervento da chiudere");
@@ -3588,7 +3666,8 @@ function chiudiGiornata(dayKey, afterCloseCb){
 
   const tot = computeDayTotals(listNow);
 
-  const br = { telefonica:0, richiamare:0, da_richiamare:0, uscita:0, serbatoio:0, rifiutato:0, ripartita:0, none:0 };
+  // Conteggio per ogni tipo gestione (serve per la finestra di chiusura giornata)
+  const br = { telefonica:0, richiamare:0, da_richiamare:0, uscita:0, rifiutato:0, ripartita:0, none:0 };
   listNow.forEach(it => {
     const s = (it && it.stato) ? String(it.stato) : "";
     if(s && Object.prototype.hasOwnProperty.call(br, s)) br[s]++;
@@ -3599,9 +3678,9 @@ function chiudiGiornata(dayKey, afterCloseCb){
   const msg = `
     <div style="line-height:1.55">
       <div><b>Interventi totali:</b> ${tot.total}</div>
-      <div><b>SUL POSTO fatti:</b> ${tot.done}</div>
-      <div><b>SUL POSTO non fatti:</b> ${tot.notDone}</div>
-      <div class="muted" style="margin-top:10px">Gli interventi <b>sul posto</b> (USCITA + COLLEGATO SERBATOIO) non fatti vengono spostati a <b>DOMANI</b>. Tutto il resto viene chiuso.</div>
+      <div><b>USCITE fatte:</b> ${tot.done}</div>
+      <div><b>USCITE non fatte:</b> ${tot.notDone}</div>
+      <div class="muted" style="margin-top:10px">Le <b>USCITE</b> non fatte vengono spostate a <b>DOMANI</b>. Tutto il resto viene chiuso.</div>
 
       <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(148,163,184,.16)">
         <div style="font-weight:1000;margin-bottom:6px">Dettaglio gestione</div>
@@ -3610,7 +3689,6 @@ function chiudiGiornata(dayKey, afterCloseCb){
           🔁 Richiamano loro: <b>${br.richiamare}</b><br>
           ⏳ Da richiamare: <b>${br.da_richiamare}</b><br>
           🚗 Uscite: <b>${br.uscita}</b><br>
-          🧰 Serbatoio: <b>${br.serbatoio}</b><br>
           ✅ Ripartite: <b>${br.ripartita}</b><br>
           ⛔ Rifiutati: <b>${br.rifiutato}</b><br>
           ❓ Da decidere: <b>${br.none}</b>
@@ -3625,6 +3703,7 @@ function chiudiGiornata(dayKey, afterCloseCb){
   ]);
 
   function doClose(){
+    // Snapshot di OGGI: SOLO quello che esiste adesso (Niente somma con vecchi interventi)
     daySnapshots[dayKey] = {
       closed: true,
       pdfSent: false,
@@ -3634,23 +3713,28 @@ function chiudiGiornata(dayKey, afterCloseCb){
       todayHash: ""
     };
 
+    // PDF: mark carryOver for not-done USCITA
     try{
       (daySnapshots[dayKey].items||[]).forEach(function(it){
-        it.carryOver = (isOnSiteState((it.stato||"")) && !it.fatto);
+        it.carryOver = ((it.stato||"" ) === "uscita" && !it.fatto);
       });
     }catch(e){}
 
+
+    // Regola: sposto a DOMANI solo le USCITE non fatte.
+    // ✅ IMPORTANTE: gli altri interventi RESTANO visibili in OGGI fino al cambio giorno (mezzanotte).
     const now = Date.now();
     for (let k=0; k<clients.length; k++){
       const c = clients[k];
       const g = (c && (c.giorno||0)) || 0;
       if(g !== 0) continue;
-      if(c && isOnSiteState(c.stato) && !c.fatto){
+      if(c && c.stato === 'uscita' && !c.fatto){
         c.giorno = 1;
         c._movedAt = now;
       }
     }
 
+    // Hash dell'OGGI dopo la chiusura (serve per capire se la giornata è stata modificata)
     daySnapshots[dayKey].todayHash = computeTodayHash();
 
     salvaDaySnapshots();
@@ -3662,60 +3746,69 @@ function chiudiGiornata(dayKey, afterCloseCb){
 }
 
 function closeAndPdfPastDay(dayKey){
-  dayKey = String(dayKey||"");
-  if(!dayKey) return;
-  var snap = daySnapshots[dayKey];
-  if(!snap || !Array.isArray(snap.items) || snap.items.length===0){
-    showToast('Nessuna giornata salvata per ' + formatDayLabel(dayKey));
-    return;
-  }
+      dayKey = String(dayKey||"");
+      if(!dayKey) return;
+      var snap = daySnapshots[dayKey];
+      if(!snap || !Array.isArray(snap.items) || snap.items.length===0){
+        showToast('Nessuna giornata salvata per ' + formatDayLabel(dayKey));
+        return;
+      }
 
-  if(!isDayClosed(dayKey)){
-    var list = snap.items || [];
-    var tot = computeDayTotals(list);
-    for(var i=0;i<list.length;i++){
-      var it = list[i] || {};
-      if(isOnSiteState((it.stato||"")) && !it.fatto) it.carryOver = true;
+      if(!isDayClosed(dayKey)){
+        // chiusura silenziosa per i giorni passati
+        var list = snap.items || [];
+        var tot = computeDayTotals(list);
+        for(var i=0;i<list.length;i++){
+          var it = list[i] || {};
+          if(((it.stato||"")==="uscita") && !it.fatto) it.carryOver = true;
+        }
+        snap.closed = true;
+        snap.pdfSent = false;
+        snap.totals = tot;
+        salvaDaySnapshots();
+      }
+
+      // genera subito
+      generaPdfGiornata(dayKey);
     }
-    snap.closed = true;
-    snap.pdfSent = false;
-    snap.totals = tot;
-    salvaDaySnapshots();
-  }
-
-  generaPdfGiornata(dayKey);
-}
 
 function markPdfSent(dateKey){
-  dateKey = String(dateKey||"");
-  if(!dateKey) return;
-  var todayKey = getTodayKey();
+      dateKey = String(dateKey||"");
+      if(!dateKey) return;
+      var todayKey = getTodayKey();
 
-  if(daySnapshots[dateKey]){
-    daySnapshots[dateKey].pdfSent = true;
-  }
+      if(daySnapshots[dateKey]){
+        daySnapshots[dateKey].pdfSent = true;
+      }
 
-  if(dateKey !== todayKey){
-    delete daySnapshots[dateKey];
-    salvaDaySnapshots();
-    showToast('PDF inviato ✔️');
-    render();
-    return;
-  }
+      if(dateKey !== todayKey){
+        // Giorni passati: dopo invio PDF posso eliminare lo snapshot per non farlo riapparire
+        delete daySnapshots[dateKey];
+        salvaDaySnapshots();
+        showToast('PDF inviato ✔️');
+        render();
+        return;
+      }
 
-  try{
-    if(daySnapshots[todayKey]){
-      daySnapshots[todayKey].todayHash = computeTodayHash();
-      salvaDaySnapshots();
+      // ✅ OGGI: NON cancello gli interventi.
+      // Restano visibili fino al cambio giorno; poi verranno archiviati nella giornata precedente.
+
+      // aggiorno hash di oggi (lista ora pulita)
+      try{
+        if(daySnapshots[todayKey]){
+          daySnapshots[todayKey].todayHash = computeTodayHash();
+          salvaDaySnapshots();
+        }
+      }catch(e){}
+
+      showToast('PDF inviato ✔️');
+      render();
     }
-  }catch(e){}
 
-  showToast('PDF inviato ✔️');
-  render();
-}
+
 
 /* =========================
-   PDF HELPERS
+   PDF HELPERS (fix v79)
    ========================= */
 function formatDayLabel(dateKey){
   try{
@@ -3731,8 +3824,7 @@ function pdfStatoLabelForItem(c){
   try{
     if(!c) return 'DA DECIDERE';
     var s = (c.stato||'');
-    if(isOnSiteState(s) && c.carryOver){
-      if(s === 'serbatoio') return 'COLLEGATO SERBATOIO DOMANI';
+    if(s === 'uscita' && c.carryOver){
       return 'USCITA DOMANI';
     }
     return statoLabel(s);
@@ -3750,6 +3842,7 @@ function getPdfListForDay(dateKey){
     }
   }catch(e){}
 
+  // fallback (solo oggi)
   try{
     if(dateKey === getTodayKey()){
       return clients.filter(function(c){ return (c.giorno||0)===0; });
@@ -3758,7 +3851,6 @@ function getPdfListForDay(dateKey){
 
   return [];
 }
-
 function generaPdfGiornata(dateKey){
   dateKey = String(dateKey||getTodayKey());
 
@@ -3779,6 +3871,7 @@ function generaPdfGiornata(dateKey){
     return;
   }
 
+  // data stampa basata su dateKey
   var d = parseDateKey(dateKey) || new Date();
   var giorni = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
   var dataLabel = giorni[d.getDay()] + " " + pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "/" + String(d.getFullYear()).slice(-2);
@@ -3789,7 +3882,6 @@ function generaPdfGiornata(dateKey){
       richiamare:   [252,231,243],
       da_richiamare:[254,243,199],
       uscita:       [219,234,254],
-      serbatoio:    [236,252,203], // ✅ nuovo colore (verde-lime)
       rifiutato:    [254,226,226],
       ripartita:    [233,213,255],
       "":           [229,231,235],
@@ -3803,17 +3895,16 @@ function generaPdfGiornata(dateKey){
   pdf.setFontSize(11);
   pdf.text("Data: " + dataLabel + " • Versione: " + APP_VERSION, 14, 20);
 
+  // Totali giornata (in PDF)
   var snap = daySnapshots[String(dateKey)] || null;
   var totals = (snap && snap.totals) ? snap.totals : computeDayTotals(list);
   pdf.setFontSize(11);
-  pdf.text("Totali: Interventi " + totals.total + " • SUL POSTO fatti " + totals.done + " • SUL POSTO non fatti " + totals.notDone, 14, 26);
+  pdf.text("Totali: Interventi " + totals.total + " • USCITE fatte " + totals.done + " • USCITE non fatte " + totals.notDone, 14, 26);
 
+
+  // Dettaglio per tipo gestione (in PDF)
   function computePdfBreakdown(list){
-    var b = {
-      telefonica:0, richiamare:0, da_richiamare:0, rifiutato:0, ripartita:0,
-      uscitaDone:0, uscitaNotDone:0, uscitaTotal:0,
-      serbDone:0, serbNotDone:0, serbTotal:0
-    };
+    var b = { telefonica:0, richiamare:0, da_richiamare:0, rifiutato:0, ripartita:0, uscitaDone:0, uscitaNotDone:0, uscitaTotal:0 };
     for(var i=0;i<(list||[]).length;i++){
       var it = list[i] || {};
       var s = it.stato || '';
@@ -3821,10 +3912,6 @@ function generaPdfGiornata(dateKey){
         b.uscitaTotal++;
         if(!!it.carryOver) b.uscitaNotDone++;
         else b.uscitaDone++;
-      }else if(s === 'serbatoio'){
-        b.serbTotal++;
-        if(!!it.carryOver) b.serbNotDone++;
-        else b.serbDone++;
       }else if(s === 'telefonica'){
         b.telefonica++;
       }else if(s === 'richiamare'){
@@ -3844,7 +3931,6 @@ function generaPdfGiornata(dateKey){
   pdf.setFontSize(10);
   var detail1 = 'Dettaglio: Telefonica ' + br.telefonica + ' • Richiamano ' + br.richiamare + ' • Da richiamare ' + br.da_richiamare + ' • Ripartite ' + br.ripartita + ' • Rifiutati ' + br.rifiutato;
   var detail2 = 'Uscite: ' + br.uscitaTotal + ' (fatte ' + br.uscitaDone + ' • domani ' + br.uscitaNotDone + ')';
-  var detail3 = 'Serbatoio: ' + br.serbTotal + ' (fatti ' + br.serbDone + ' • domani ' + br.serbNotDone + ')';
 
   var y = 31;
   try{
@@ -3863,14 +3949,6 @@ function generaPdfGiornata(dateKey){
     pdf.text(detail2, 14, y);
     y += 5;
   }
-  try{
-    var l3 = pdf.splitTextToSize(detail3, 270);
-    pdf.text(l3, 14, y);
-    y += (l3.length * 4.2);
-  }catch(e){
-    pdf.text(detail3, 14, y);
-    y += 5;
-  }
 
   var startY = Math.max(38, y + 3);
 
@@ -3884,7 +3962,7 @@ function generaPdfGiornata(dateKey){
     if(c.citta) indirizzo += (indirizzo ? " - " : "") + c.citta;
 
     body.push([
-      getArrivoHM(c) || (c.ora || ""),
+      c.ora || "",
       c.nome || "",
       indirizzo,
       c.telefono || "",
@@ -3959,12 +4037,18 @@ function fmtDateTime(ts){
   return dd + "/" + mm + "/" + yy + " " + hh + ":" + mi;
 }
 var lastUpdateTs = Date.now();
+
 function touchUpdate(){
   lastUpdateTs = Date.now();
   if(!headerStatus) return;
   headerStatus.textContent = "Aggiornato: " + fmtDateTime(lastUpdateTs) + " • SW:" + SW_VER;
 }
+
+/* =========================
+   VERSION / HEADER
+   ========================= */
 function setVersionBadge(){
+  // Mantengo il nome per compatibilità: aggiorna la pill in alto (data/ora + SW)
   touchUpdate();
 }
 
@@ -3987,6 +4071,7 @@ if(gpsToggle){
   gpsToggle.addEventListener('change', function(){
     var wantOn = !!gpsToggle.checked;
     if(wantOn){
+      // chiedo permesso subito
       if(!navigator.geolocation){
         gpsEnabled = false;
         updateGpsToggleUI();
@@ -3999,6 +4084,7 @@ if(gpsToggle){
         updateGpsToggleUI();
         startGpsWatch();
         showToast('📍 GPS attivato');
+        // check immediato
         gpsHandlePosition(pos);
         gpsMaybePrompt();
       }, function(err){
@@ -4021,6 +4107,7 @@ if(gpsToggle){
 ensureUidsEverywhere();
 runDailyRollover();
 
+// ✅ Controllo cambio giorno (anche se cambi la data manualmente sul telefono)
 var __todayKeyCache = getTodayKey();
 function checkDateRollover(){
   try{
@@ -4040,6 +4127,7 @@ document.addEventListener('visibilitychange', function(){
   if(!document.hidden) checkDateRollover();
 });
 
+
 if(localStorage.getItem("rapportiManualMode") === null){
   manualMode = false;
   salvaModo();
@@ -4053,6 +4141,7 @@ applyMode();
 updateAutoBoxVisibility();
 updateToggleClienteLabel();
 
+// filtro uscite
 if(filterUsciteBtn){
   filterUsciteBtn.onclick = function(){
     showOnlyUscite = !showOnlyUscite;
@@ -4061,18 +4150,23 @@ if(filterUsciteBtn){
   };
 }
 
+// cliente compatto di default
 setClienteCompact(true);
 updateToggleClienteLabel();
 bindDayTabs();
 refreshDayTabsUI();
 
+// schermo iniziale
 if(inbox.length || presentNotifs.length) setScreen("auto");
 else if(clients.length) setScreen("clients");
 else setScreen("manage");
 
+// 1) prova subito all’avvio
 handleIncomingSmsFromUrl();
+// GPS check
 try{ gpsCheckNowAndMaybePrompt(); }catch(e){}
 
+// 2) riprova quando cambia hash o l’app torna attiva
 window.addEventListener("hashchange", handleIncomingSmsFromUrl);
 window.addEventListener("pageshow", function(){ handleIncomingSmsFromUrl(); try{ gpsCheckNowAndMaybePrompt(); }catch(e){} });
 window.addEventListener("focus", function(){ handleIncomingSmsFromUrl(); try{ gpsCheckNowAndMaybePrompt(); }catch(e){} });
